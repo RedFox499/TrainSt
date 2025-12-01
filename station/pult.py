@@ -185,60 +185,72 @@ routes = {
     #МАНЕВРОВЫЕ
     ("H2", "M6"): [
         {"type": "segment", "id": "(H2', 'M6H2)"},
-        {"type": "segment", "id": "('M6H2', 'M6')"}
+        {"type": "segment", "id": "('M6H2', 'M6')"},
+
     ],
     ("H4", "M6"): [
         {"type": "diag", "name": "H42"},
-        {"type": "segment", "id": "('M6H2', 'M6')"}
+        {"type": "segment", "id": "('M6H2', 'M6')"},
+
     ],
     ("M2", "H3"): [
         {"type": "segment", "id": "('M2', 'H1')"},
         {"type": "diag", "name": "M2H3"},
+
     ],
     ("M2", "H1"): [
         {"type": "segment", "id": "('M2', 'H1')"},
+
     ],
     ("M2", "M8"): [
         {"type": "segment", "id": "('M2', 'H1')"},
         {"type": "segment", "id": "('H1', 'M8')"},
+
     ],
     ("M2", "M1"): [
         {"type": "segment", "id": "('M2', 'H1')"},
         {"type": "segment", "id": "('H1', 'M8')"},
         {"type": "segment", "id": "('M8', 'M1')"},
+
     ],
     ("H3", "M10"): [
         {"type": "segment", "id": "('H3', 'M10')"},
+
     ],
     ("H3", "M1"): [
         {"type": "segment", "id": "('H3', 'M10')"},
         {"type": "diag", "name": "M1M10"},
         {"type": "segment", "id": "('M8', 'M1')"},
         {"type": "segment", "id": "('M1', 'pastM1')"},
+
     ],
     ("M2", "M10"): [
         {"type": "segment", "id": "('M2', 'H1')"},
         {"type": "diag", "name": "M2H3"},
         {"type": "segment", "id": "('H3', 'M10')"},
-        {"two_way": True}
+
     ],
     ("M10", "M1"): [
         {"type": "diag", "name": "M1M10"},
         {"type": "segment", "id": "('M8', 'M1')"},
         {"type": "segment", "id": "('M1', 'pastM1')"},
+
     ],
     ("M1", "M8"): [
         {"type": "segment", "id": "('M1', 'pastM1')"},
         {"type": "segment", "id": "('M8', 'M1')"},
+
     ],
     ("M8", "M1"): [
         {"type": "segment", "id": "('M8', 'M1')"},
         {"type": "segment", "id": "('M1', 'pastM1')"},
+
     ],
     ("M1", "H1"): [
         {"type": "segment", "id": "('M1', 'pastM1')"},
         {"type": "segment", "id": "('M1', 'M8')"},
         {"type": "segment", "id": "('M8', 'H1')"},
+
     ],
 }
 #########################################       ОТРИСОВКА СВЕТОФОРОВ                ##############################################
@@ -403,12 +415,9 @@ def highlight_possible_targets(start):
 
     possible = set()
 
-    for (a, b), data in routes.items():
+    for (a, b) in routes.keys():
         if a == start:
             possible.add(b)
-
-        if data["two_way"] and b == start:
-            possible.add(a)
     # 2. Обходим все точки
     for name, item_id in node_ids.items():
 
