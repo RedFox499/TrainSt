@@ -182,17 +182,64 @@ signals_config = {
 
 #########################################        МАРШРУТЫ                ##############################################
 routes = {
+    #МАНЕВРОВЫЕ
     ("H2", "M6"): [
         {"type": "segment", "id": "(H2', 'M6H2)"},
         {"type": "segment", "id": "('M6H2', 'M6')"}
     ],
-
+    ("H4", "M6"): [
+        {"type": "diag", "name": "H42"},
+        {"type": "segment", "id": "('M6H2', 'M6')"}
+    ],
     ("M2", "H3"): [
-        {"type": "segment", "id": "s_M2_D1"},
-        {"type": "diag", "name": "D1"},
-        {"type": "arrow", "id": "a_D1_H3"},
-        {"type": "segment", "id": "s_D1_H3"}
-    ]
+        {"type": "segment", "id": "('M2', 'H1')"},
+        {"type": "diag", "name": "M2H3"},
+    ],
+    ("M2", "H1"): [
+        {"type": "segment", "id": "('M2', 'H1')"},
+    ],
+    ("M2", "M8"): [
+        {"type": "segment", "id": "('M2', 'H1')"},
+        {"type": "segment", "id": "('H1', 'M8')"},
+    ],
+    ("M2", "M1"): [
+        {"type": "segment", "id": "('M2', 'H1')"},
+        {"type": "segment", "id": "('H1', 'M8')"},
+        {"type": "segment", "id": "('M8', 'M1')"},
+    ],
+    ("H3", "M10"): [
+        {"type": "segment", "id": "('H3', 'M10')"},
+    ],
+    ("H3", "M1"): [
+        {"type": "segment", "id": "('H3', 'M10')"},
+        {"type": "diag", "name": "M1M10"},
+        {"type": "segment", "id": "('M8', 'M1')"},
+        {"type": "segment", "id": "('M1', 'pastM1')"},
+    ],
+    ("M2", "M10"): [
+        {"type": "segment", "id": "('M2', 'H1')"},
+        {"type": "diag", "name": "M2H3"},
+        {"type": "segment", "id": "('H3', 'M10')"},
+        {"two_way": True}
+    ],
+    ("M10", "M1"): [
+        {"type": "diag", "name": "M1M10"},
+        {"type": "segment", "id": "('M8', 'M1')"},
+        {"type": "segment", "id": "('M1', 'pastM1')"},
+    ],
+    ("M1", "M8"): [
+        {"type": "segment", "id": "('M1', 'pastM1')"},
+        {"type": "segment", "id": "('M8', 'M1')"},
+    ],
+    ("M8", "M1"): [
+        {"type": "segment", "id": "('M8', 'M1')"},
+        {"type": "segment", "id": "('M1', 'pastM1')"},
+    ],
+    ("M1", "H1"): [
+        {"type": "segment", "id": "('M1', 'pastM1')"},
+        {"type": "segment", "id": "('M1', 'M8')"},
+        {"type": "segment", "id": "('M8', 'H1')"},
+    ],
 }
 #########################################       ОТРИСОВКА СВЕТОФОРОВ                ##############################################
 def drawSignal(name, mount="bottom", pack_side="right", count=3, colors=None):
@@ -353,15 +400,15 @@ def highlight_possible_targets(start):
     Подсвечивает зелёным возможные цели.
     Остальные — серым.
     """
-    # 1. Находим все точки, достижимые из start
+
     possible = set()
 
-    for (a, b) in routes.keys():
+    for (a, b), data in routes.items():
         if a == start:
             possible.add(b)
-        if b == start:
-            possible.add(a)
 
+        if data["two_way"] and b == start:
+            possible.add(a)
     # 2. Обходим все точки
     for name, item_id in node_ids.items():
 
@@ -383,6 +430,18 @@ def highlight_possible_targets(start):
     # (если у текста такие же теги node_<name>, "node")
     for name in possible:
         canvas.itemconfig(f"node_{name}", state="normal")
+
+
+def reset_node_selection():
+    for name, item_id in node_ids.items():
+        canvas.itemconfig(item_id, fill="black", state="normal")
+    selected_nodes.clear()
+def disable_all_except_selected():
+    for name, item in node_ids.items():
+        if name in selected_nodes:
+            canvas.itemconfig(item, state="normal")     # 2 выбранные — оставляем кликабельными (если надо)
+        else:
+            canvas.itemconfig(item, fill = "grey", state="disabled")   # все остальные выключаем
 
 #########################################        ФУНКЦИЯ НАЖАТИЕ ДВУХ ТОЧЕК               ##############################################
 def get_node_name_from_event(event):
@@ -424,12 +483,19 @@ def on_node_click(event):
     if name in selected_nodes:
         selected_nodes.remove(name)
         canvas.itemconfig(node_ids[name], fill="black")
+        if len(selected_nodes) == 0:
+            reset_node_selection()
+        if len(selected_nodes) == 1:
+            highlight_possible_targets(selected_nodes[0])
         return
+
     if len(selected_nodes) >= MAX_SELECTED:
         return
 
     selected_nodes.append(name)
     canvas.itemconfig(node_ids[name], fill="cyan")
+    print(len(selected_nodes))
+
     if len(selected_nodes) == 1:
         highlight_possible_targets(name)
 
@@ -437,11 +503,12 @@ def on_node_click(event):
     if len(selected_nodes) == 2:
         first = selected_nodes[0]
         second = selected_nodes[1]
-        on_two_nodes_selected(first, second)
-    print(len(selected_nodes))
-    print(selected_nodes)
+        disable_all_except_selected()
 
-#########################################        ФУНКЦИЯ ПРИ НАЖАТИИ ДВУХ КНОПОК (ПОСТРОЕНИЕ МАРШРУТА И Т.Д.)             ##############################################
+        on_two_nodes_selected(first, second)
+
+
+#########################################        ФУНКЦИЯ ПРИ НАЖАТИИ ДВУХ КНОПОК (ПОСТРОЕНИЕ МАРШРУТА И Т.Д.)           ##############################################
 def on_two_nodes_selected(a, b):
     print("Выбраны точки:", a, b)
 
@@ -510,10 +577,10 @@ for id in node_ids:
 for id in segment_ids:
     canvas.itemconfig(segment_ids[id], fill="grey")
 for id in segment_ids:
-    paint_segment(id, "red")
+    paint_segment(id, "green")
 
 for id in diag_ids:
-   paint_diagonal(id, "pink")
+   paint_diagonal(id, "lime")
 
 root.mainloop()
 
