@@ -82,6 +82,20 @@ occupied_diagonals = set()
 # текущее положение каждой диагонали: name -> "left"/"right"/"both"/"none"
 diagonal_modes = {}
 
+switch_indicator_ids = {}          # name -> id прямоугольника
+switch_list = ["M1M10", "M2H3", "H42", "2T1"]
+
+# нормальное (плюсовое) положение стрелок
+default_switch_mode = {
+    "M1M10": "left",
+    "M2H3": "left",
+    "H42":  "left",
+    "2T1":  "left",
+}
+
+last_switch_check = {}
+
+
 #########################################        КОНФИГ ДИАГОНАЛЕЙ               ##############################################
 diagonal_config = {
     "M1M10": {
@@ -286,6 +300,7 @@ route_switch_modes = {
     ("M2", "H2"): {
         "2T1": "right",
         "H42":  "left",
+        "M1M10": "right",
     }
 }
 
@@ -389,19 +404,79 @@ def apply_diagonal_mode(nameDiag, mode):
         else:
             setBranchRight(nameDiag, right_cfg["disconnected"])
 
+def get_switch_state_color(name):
+    mode = diagonal_modes.get(name)
+    normal = default_switch_mode.get(name, "left")
+    if mode is None:
+        return "grey"
+    if mode == normal:
+        return "green"    # плюс, нормальное положение
+    else:
+        return "yellow"   # переведена
+
+def update_switch_indicator(name):
+    rect = switch_indicator_ids.get(name)
+    if rect is None:
+        return
+    color = get_switch_state_color(name)
+    canvas.itemconfig(rect, fill=color)
+
 def set_diagonal_mode(nameDiag, mode):
     apply_diagonal_mode(nameDiag, mode)
     diagonal_modes[nameDiag] = mode
+    update_switch_indicator(nameDiag)
 
+#########################################  МИНИ-Таблица стрелок (правый нижний угол)  #########################################
+def create_switch_table():
+    w = int(canvas["width"])
+    h = int(canvas["height"])
+
+    dy = 25
+    total_height = dy * len(switch_list)
+    y_start = h - total_height - 20
+
+    x_text = w - 220
+    x_rect = w - 60
+
+    for i, name in enumerate(switch_list, start=1):
+        y = y_start + (i - 1) * dy
+        canvas.create_text(x_text, y, text=f"{i}. {name}", anchor="w")
+        rect = canvas.create_rectangle(
+            x_rect - 8, y - 8, x_rect + 8, y + 8,
+            outline="black", fill="grey"
+        )
+        switch_indicator_ids[name] = rect
+        update_switch_indicator(name)
+
+def blink_switches(diags, duration_ms=2000, interval_ms=200):
+    if not diags:
+        return
+
+    end_time = time.time() + duration_ms / 1000.0
+    final_colors = {d: get_switch_state_color(d) for d in diags}
+
+    def _step(state=True):
+        if time.time() >= end_time:
+            for d in diags:
+                rect = switch_indicator_ids.get(d)
+                if rect is not None:
+                    canvas.itemconfig(rect, fill=final_colors[d])
+            return
+
+        for d in diags:
+            rect = switch_indicator_ids.get(d)
+            if rect is not None:
+                canvas.itemconfig(rect, fill="cyan" if state else final_colors[d])
+
+        root.after(interval_ms, _step, not state)
+
+    _step(True)
 #########################################        СТРЕЛКИ/ДИАГОНАЛИ               ##############################################
 def AddDiagonal(x1, y1, x2, y2, offsetleft, offsetright, nameDiag):
     l1 = canvas.create_line(x1, y1, x1 - offsetleft, y1, width=4, fill="black")
     l2 = canvas.create_line(x2, y2, x2 + offsetright, y2, width=4, fill="black")
     l3 = canvas.create_line(x1, y1, x2, y2, width=4, fill="black")
     diag_ids[(nameDiag)] = [l1, l2, l3]
-
-def ChangeDir():
-    pass
 
 #########################################       ЛИНИИ              ##############################################
 for a, b in segments:
@@ -594,48 +669,17 @@ def on_node_click(event):
         on_two_nodes_selected(first, second)
 
 #########################################        ФУНКЦИЯ ПРИ ВЫБОРЕ ДВУХ ТОЧЕК   ##############################################
-"""def on_two_nodes_selected(a, b):
-    print("Выбраны точки маршрута:", a, "->", b)
-
-    key = (a, b)
-    if key not in route_switch_modes:
-        key = (b, a)
-
-    if key not in route_switch_modes:
-        print("Для этого маршрута нет настроек стрелок")
-        return
-
-    needed = route_switch_modes[key]
-    changed = []
-
-    for diag_name, need_mode in needed.items():
-        current_mode = diagonal_modes.get(diag_name)
-        if current_mode != need_mode:
-            set_diagonal_mode(diag_name, need_mode)
-            changed.append(f"{diag_name}: {current_mode} -> {need_mode}")
-
-    print("Устанавливаем маршрут")
-    paint_route(a, b, "cyan")
-    blink_route(a, b, duration_ms=2000, interval_ms=200)
-
-    if changed:
-        print("Изменены стрелки:")
-        for line in changed:
-            print("  ", line)
-        reset_node_selection()
-    else:
-        reset_node_selection()
-        print("Стрелки уже стояли как нужно.")
-    root.after(2050, lambda: paint_route(a, b, "yellow"))
-"""
 def on_two_nodes_selected(a, b):
+    global last_switch_check
     print("Выбраны точки маршрута:", a, "->", b)
 
+    # 1. Проверка конфликтов по занятым сегментам/стрелкам
     if check_route_conflict(a, b):
         print("Маршрут конфликтует с уже установленными!")
         reset_node_selection()
         return
 
+    # 2. Ищем настройки стрелок для этого маршрута
     key = (a, b)
     if key not in route_switch_modes:
         key = (b, a)
@@ -645,26 +689,58 @@ def on_two_nodes_selected(a, b):
         reset_node_selection()
         return
 
-    needed = route_switch_modes[key]
-    changed = []
+    route_cfg = route_switch_modes[key]   # только нужные стрелки для ЭТОГО маршрута
 
-    for diag_name, need_mode in needed.items():
-        current_mode = diagonal_modes.get(diag_name)
-        if current_mode != need_mode:
-            set_diagonal_mode(diag_name, need_mode)
-            changed.append(f"{diag_name}: {current_mode} -> {need_mode}")
+    last_switch_check = {}
+    changed = []
+    main_diag = None  # какая стрелка будет мигать в табличке
+
+    # 3. Применяем нужные положения стрелок (ТОЛЬКО из route_cfg)
+    if not route_cfg:
+        print("Для этого маршрута стрелки не задействованы.")
+    else:
+        for diag_name, need_mode in route_cfg.items():
+            current_mode = diagonal_modes.get(diag_name)
+            ok = (current_mode == need_mode)
+
+            last_switch_check[diag_name] = {
+                "needed": need_mode,
+                "current": current_mode,
+                "ok": ok,
+            }
+
+            if not ok:
+                if main_diag is None:
+                    main_diag = diag_name
+                set_diagonal_mode(diag_name, need_mode)
+                changed.append(f"{diag_name}: {current_mode} -> {need_mode}")
+
+        if main_diag is None and route_cfg:
+            main_diag = next(iter(route_cfg.keys()))
 
     print("Устанавливаем маршрут")
     paint_route(a, b, "cyan")
     blink_route(a, b, duration_ms=2000, interval_ms=200)
 
+    if main_diag is not None:
+        blink_switches([main_diag], duration_ms=2000, interval_ms=200)
+
+    if changed:
+        print("Изменены стрелки:")
+        for line in changed:
+            print("  ", line)
+    else:
+        if route_cfg:
+            print("Стрелки уже стояли как нужно.")
+        else:
+            print("Маршрут без задействования стрелок.")
+
     reset_node_selection()
 
-    # === теперь ждём окончания мигания и только потом регистрируем маршрут ===
     def finalize():
-        rid = register_route(a, b)   # записываем маршрут как активный
-        paint_route(a, b, "yellow")  # окончательная покраска
-        print(active_routes)
+        rid = register_route(a, b)
+        paint_route(a, b, "yellow")
+        print("Активные маршруты:", active_routes)
 
     root.after(2050, finalize)
 
@@ -700,6 +776,8 @@ for name, cfg in signals_config.items():
 canvas.tag_bind("node", "<Button-1>", on_node_click)
 canvas.tag_bind("node", "<Enter>", on_enter)
 canvas.tag_bind("node", "<Leave>", on_leave)
+create_switch_table()
+
 button = tkinter.Button(root, text="Снести", command=snos)
 button.place(x=1, y=1)
 for id_ in node_ids:
