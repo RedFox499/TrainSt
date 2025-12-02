@@ -1,10 +1,15 @@
+import tkinter
 import tkinter as tk
 import time
+from tkinter.messagebox import showinfo
 
 root = tk.Tk()
 canvas = tk.Canvas(root, width=1150, height=600, bg="white")
 canvas.pack()
 
+
+def showInfo(title, msg):
+    showinfo(title=title, message=msg)
 #########################################        ФУНКЦИЯ ТУПИКОВ                ##############################################
 def drawDeadEnd(name, direction, offset):
     x = positions[name][0]
@@ -69,6 +74,11 @@ segment_ids = {}
 diag_ids = {}
 signal_ids = {}
 
+active_routes = {}  # route_id -> {"start": a, "end": b, "segments": [...]}
+route_counter = 1   # уникальные номера маршрутов
+
+occupied_segments = set()
+occupied_diagonals = set()
 # текущее положение каждой диагонали: name -> "left"/"right"/"both"/"none"
 diagonal_modes = {}
 
@@ -224,6 +234,12 @@ routes = {
         {"type": "segment", "id": ("M1", "M8")},
         {"type": "segment", "id": ("M8", "H1")},
     ],
+    ("M2", "H2"): [
+        {"type": "segment", "id": ("M2", "H1")},
+        {"type": "diag", "name": "2T1"},
+        {"type": "segment", "id": ("H2", "M6H2")},
+        {"type": "segment", "id": ("M6", "M6H2")},
+    ],
 }
 
 # какие положения стрелок нужны для маршрута (можно подправить под реальную схему)
@@ -234,61 +250,43 @@ route_switch_modes = {
     },
     ("H4", "M6"): {
         "H42":  "right",
-        "M1M10": "left",
-        "M2H3": "left",
         "2T1":  "left",
     },
     ("M2", "H3"): {
         "M2H3": "right",
-        "M1M10": "left",
     },
     ("M2", "M10"): {
         "M2H3": "right",
     },
     ("H3", "M1"): {
         "M1M10": "right",
-        "M2H3": "left",
-        "H42":  "left",
-        "2T1":  "left",
     },
+    ("H3","M10"):{},
     ("M10", "M1"): {
         "M1M10": "right",
-        "M2H3": "left",
-        "H42":  "left",
-        "2T1":  "left",
     },
-
-    # --- ДОБАВИЛ ДЛЯ ГЛАВНОГО ХОДА ---
     ("M2", "H1"): {
-        "M1M10": "left",
         "M2H3": "left",
-        "H42":  "left",
         "2T1":  "left",
     },
     ("M2", "M8"): {
-        "M1M10": "left",
         "M2H3": "left",
-        "H42":  "left",
-        "2T1":  "left",
     },
     ("M2", "M1"): {
         "M1M10": "left",   # идём по прямому, стрелка на M1M10 не на бок
         "M2H3": "left",
-        "H42":  "left",
         "2T1":  "left",
     },
     ("M1", "M8"): {
         "M1M10": "left",
-        "M2H3": "left",
-        "H42":  "left",
-        "2T1":  "left",
     },
     ("M1", "H1"): {
         "M1M10": "left",
-        "M2H3": "left",
-        "H42":  "left",
-        "2T1":  "left",
     },
+    ("M2", "H2"): {
+        "2T1": "right",
+        "H42":  "left",
+    }
 }
 
 #########################################       ОТРИСОВКА СВЕТОФОРОВ                ##############################################
@@ -336,8 +334,11 @@ def paint_diagonal(name, color):
     for l in range(len(diag_ids[(name)])):
         canvas.itemconfig(diag_ids[name][l], fill=color)
 
-def paint_segment(name, color):
-    canvas.itemconfig(segment_ids[name], fill=color)
+def paint_segment(key, color):
+    seg_id = segment_ids.get(key)
+    if seg_id is None:
+        return
+    canvas.itemconfig(seg_id, fill=color)
 
 def paint_route(start, end, color="yellow"):
     key = (start, end)
@@ -424,13 +425,12 @@ set_diagonal_mode("2T1", "left")
 
 #########################################        ПОДСВЕТКА МАРШРУТОВ               ##############################################
 def highlight_possible_targets(start):
+
     possible = set()
 
     for (a, b) in routes.keys():
         if a == start:
             possible.add(b)
-        if b == start:
-            possible.add(a)
 
     for name, item_id in node_ids.items():
         if name == start:
@@ -488,6 +488,64 @@ def on_leave(event):
 
     if name not in selected_nodes:
         canvas.itemconfig(node_ids[name], fill="black")
+#########################################        КОНФЛИКТЫ МАРШРУТОВ ПОСТРОЕНИЕ НОВЫХ               ##############################################
+def next_route_id():
+    global route_counter
+    rid = route_counter
+    route_counter += 1
+    return rid
+
+def get_route(start, end):
+    key = (start, end)
+    if key in routes:
+        return routes[key]
+    return None
+
+def check_route_conflict(start, end):
+    for step in routes.get((start,end)):
+        if step["type"] == "segment":
+            if step["id"] in occupied_segments:
+                return True
+        elif step["type"] == "diag":
+            if step["name"] in occupied_diagonals:
+                return True
+    return False
+
+def register_route(start, end):
+    global route_counter
+    rid = route_counter
+    route_counter += 1
+    for step in routes.get((start,end)):
+        if step["type"] == "segment":
+            a, b = step["id"]
+            occupied_segments.add((a,b))
+            occupied_segments.add((b,a))
+        elif step["type"] == "diag":
+            occupied_diagonals.add(step["name"])
+
+    active_routes[rid] = {
+        "start": start,
+        "end": end,
+        "segments": routes.get((start,end)),
+    }
+    return rid
+
+def release_route(route_id):
+    global route_counter
+    if route_id not in active_routes:
+        return
+    data = active_routes[route_id]
+    for step in data["segments"]:
+        if step["type"] == "segment":
+            a, b = step["id"]
+            paint_segment((a,b), "green")
+            occupied_segments.discard((a,b))
+            occupied_segments.discard((b, a))
+        elif step["type"] == "diag":
+            paint_diagonal(step["name"], "lime")
+            occupied_diagonals.discard(step["name"])
+    del active_routes[route_id]
+    route_counter -= 1
 
 #########################################        МИГАНИЕ МАРШРУТА               ##############################################
 def blink_route(start, end, duration_ms=2000, interval_ms=200):
@@ -504,7 +562,6 @@ def blink_route(start, end, duration_ms=2000, interval_ms=200):
         root.after(interval_ms, _step, not state)
 
     _step(True)
-
 #########################################        ОБРАБОТКА КЛИКА ПО УЗЛУ          ##############################################
 def on_node_click(event):
     name = get_node_name_from_event(event)
@@ -537,7 +594,7 @@ def on_node_click(event):
         on_two_nodes_selected(first, second)
 
 #########################################        ФУНКЦИЯ ПРИ ВЫБОРЕ ДВУХ ТОЧЕК   ##############################################
-def on_two_nodes_selected(a, b):
+"""def on_two_nodes_selected(a, b):
     print("Выбраны точки маршрута:", a, "->", b)
 
     key = (a, b)
@@ -557,7 +614,7 @@ def on_two_nodes_selected(a, b):
             set_diagonal_mode(diag_name, need_mode)
             changed.append(f"{diag_name}: {current_mode} -> {need_mode}")
 
-    print("Устанавливаем маршрут, мигаем 2 секунды...")
+    print("Устанавливаем маршрут")
     paint_route(a, b, "cyan")
     blink_route(a, b, duration_ms=2000, interval_ms=200)
 
@@ -569,7 +626,52 @@ def on_two_nodes_selected(a, b):
     else:
         reset_node_selection()
         print("Стрелки уже стояли как нужно.")
+    root.after(2050, lambda: paint_route(a, b, "yellow"))
+"""
+def on_two_nodes_selected(a, b):
+    print("Выбраны точки маршрута:", a, "->", b)
 
+    if check_route_conflict(a, b):
+        print("Маршрут конфликтует с уже установленными!")
+        reset_node_selection()
+        return
+
+    key = (a, b)
+    if key not in route_switch_modes:
+        key = (b, a)
+
+    if key not in route_switch_modes:
+        print("Для этого маршрута нет настроек стрелок")
+        reset_node_selection()
+        return
+
+    needed = route_switch_modes[key]
+    changed = []
+
+    for diag_name, need_mode in needed.items():
+        current_mode = diagonal_modes.get(diag_name)
+        if current_mode != need_mode:
+            set_diagonal_mode(diag_name, need_mode)
+            changed.append(f"{diag_name}: {current_mode} -> {need_mode}")
+
+    print("Устанавливаем маршрут")
+    paint_route(a, b, "cyan")
+    blink_route(a, b, duration_ms=2000, interval_ms=200)
+
+    reset_node_selection()
+
+    # === теперь ждём окончания мигания и только потом регистрируем маршрут ===
+    def finalize():
+        rid = register_route(a, b)   # записываем маршрут как активный
+        paint_route(a, b, "yellow")  # окончательная покраска
+        print(active_routes)
+
+    root.after(2050, finalize)
+
+def snos():
+    for active in list(active_routes.keys()):
+        release_route(active)
+    print(active_routes)
 #########################################        ТУПИКИ               ##############################################
 drawDeadEnd("pastM1", "right", 0)
 drawDeadEnd("past2", "right", 0)
@@ -598,7 +700,8 @@ for name, cfg in signals_config.items():
 canvas.tag_bind("node", "<Button-1>", on_node_click)
 canvas.tag_bind("node", "<Enter>", on_enter)
 canvas.tag_bind("node", "<Leave>", on_leave)
-
+button = tkinter.Button(root, text="Снести", command=snos)
+button.place(x=1, y=1)
 for id_ in node_ids:
     canvas.itemconfig(node_ids[id_], fill="black")
 for id_ in segment_ids:
