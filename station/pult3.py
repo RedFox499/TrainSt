@@ -95,6 +95,23 @@ default_switch_mode = {
 
 last_switch_check = {}
 
+seg_occ_train = {
+    ("M1", "pastM1"): 1,
+    ("M1", "M8"): 1,
+    ("M8", "H1"): 1,
+    ("H1", "M2"): 1,
+    ("M2", "CH"): 1,
+    ("past2", "H2"): 1,
+    ("H2", "M6H2"): 1,
+    ("M6H2", "M6"): 1,
+    ("M10", "H3"): 1,
+    ("past4", "H4"): 1,
+    ("M6", "beforeM6"): 1,
+}
+diag_occ_train = {
+
+}
+
 
 #########################################        КОНФИГ ДИАГОНАЛЕЙ               ##############################################
 diagonal_config = {
@@ -254,6 +271,9 @@ routes = {
         {"type": "segment", "id": ("H2", "M6H2")},
         {"type": "segment", "id": ("M6", "M6H2")},
     ],
+    ("H1", "M8"): [
+        {"type": "segment", "id": ("H1", "M8")},
+    ],
 }
 
 # какие положения стрелок нужны для маршрута (можно подправить под реальную схему)
@@ -301,8 +321,13 @@ route_switch_modes = {
         "2T1": "right",
         "H42":  "left",
         "M1M10": "right",
+    },
+    ("H1", "M8"): {
     }
 }
+
+
+
 
 #########################################       ОТРИСОВКА СВЕТОФОРОВ                ##############################################
 def drawSignal(name, mount="bottom", pack_side="right", count=3, colors=None):
@@ -498,6 +523,40 @@ set_diagonal_mode("M2H3", "left")
 set_diagonal_mode("H42", "left")
 set_diagonal_mode("2T1", "left")
 
+
+def update_all_occupancy():
+    print("начал")
+    # --- 1) сегменты ---
+    for (a, b), seg_id in segment_ids.items():
+
+        # 1) поезд занимает -> красный
+        if seg_occ_train.get((a, b), 1) == 0 or seg_occ_train.get((b, a), 1) == 0 :
+            paint_segment((a,b), "red")
+            continue
+        # 2) маршрут занимает -> жёлтый
+        if (a, b) in occupied_segments or (b, a) in occupied_segments:
+            paint_segment((a,b), "yellow")
+            continue
+        # 3) свободный -> чёрный
+        paint_segment((a,b), "black")
+
+    # --- 2) диагонали ---
+    for diag_name, lines in diag_ids.items():
+
+        # 1) поезд на диагонали -> красный
+        if diag_occ_train.get(diag_name, 1) == 0:
+            paint_diagonal(diag_name, "red")
+            continue
+
+        # 2) маршрут использует диагональ -> жёлтый
+        if diag_name in occupied_diagonals:
+            paint_diagonal(diag_name, "yellow")
+            continue
+
+        # 3) свободна -> чёрная
+        paint_diagonal(diag_name, "black")
+    root.after(1500, update_all_occupancy)
+
 #########################################        ПОДСВЕТКА МАРШРУТОВ               ##############################################
 def highlight_possible_targets(start):
 
@@ -563,6 +622,7 @@ def on_leave(event):
 
     if name not in selected_nodes:
         canvas.itemconfig(node_ids[name], fill="black")
+
 #########################################        КОНФЛИКТЫ МАРШРУТОВ ПОСТРОЕНИЕ НОВЫХ               ##############################################
 def next_route_id():
     global route_counter
@@ -579,11 +639,14 @@ def get_route(start, end):
 def check_route_conflict(start, end):
     for step in routes.get((start,end)):
         if step["type"] == "segment":
-            if step["id"] in occupied_segments:
+            a, b = step["id"]
+            if step["id"] in occupied_segments or seg_occ_train.get((a, b), 1) == 0 or seg_occ_train.get((b, a), 1) == 0:
                 return True
         elif step["type"] == "diag":
-            if step["name"] in occupied_diagonals:
+            if step["name"] in occupied_diagonals :
                 return True
+
+
     return False
 
 def register_route(start, end):
@@ -747,7 +810,10 @@ def on_two_nodes_selected(a, b):
 def snos():
     for active in list(active_routes.keys()):
         release_route(active)
-    print(active_routes)
+
+def check():
+    print("ЗаНЯТЫЕ СЕГМЕНТЫ: ", occupied_segments)
+    print("ЗАНЯТЫЕ ДИАГОНАЛИ: ", occupied_diagonals)
 #########################################        ТУПИКИ               ##############################################
 drawDeadEnd("pastM1", "right", 0)
 drawDeadEnd("past2", "right", 0)
@@ -780,13 +846,20 @@ create_switch_table()
 
 button = tkinter.Button(root, text="Снести", command=snos)
 button.place(x=1, y=1)
-for id_ in node_ids:
-    canvas.itemconfig(node_ids[id_], fill="black")
-for id_ in segment_ids:
-    canvas.itemconfig(segment_ids[id_], fill="grey")
+button = tkinter.Button(root, text="Проверка", command=check)
+button.place(x=50, y=1)
+
+def do():
+    if seg_occ_train[("H1", "M2")] == 0:
+        seg_occ_train[("H1", "M2")] = 1
+    else:
+        seg_occ_train[("H1", "M2")] = 0
+
+button69 = tkinter.Button(root, text="prost", command=do)
+button69.place(x=100, y=2)
 for id_ in segment_ids:
     paint_segment(id_, "green")
 for id_ in diag_ids:
     paint_diagonal(id_, "lime")
-
+update_all_occupancy()
 root.mainloop()
