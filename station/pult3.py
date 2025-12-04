@@ -697,7 +697,6 @@ def release_route(route_id):
             paint_diagonal(step["name"], "black")
             occupied_diagonals.discard(step["name"])
     del active_routes[route_id]
-    route_counter -= 1
 
 #########################################        МИГАНИЕ МАРШРУТА               ##############################################
 def blink_route(start, end, duration_ms=2000, interval_ms=200):
@@ -819,7 +818,8 @@ def snos():
         release_route(active)
 
 def check():
-    check_if_route_finished()
+    print("Активные маршруты")
+    print(active_routes)
 #########################################        ТУПИКИ               ##############################################
 drawDeadEnd("pastM1", "right", 0)
 drawDeadEnd("past2", "right", 0)
