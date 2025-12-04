@@ -654,13 +654,11 @@ def get_route(start, end):
 
 def check_route_conflict(start, end):
     for step in routes.get((start,end)):
-        print(step)
         if step["type"] == "segment":
             a, b = step["id"]
             if step["id"] in occupied_segments or seg_occ_train.get((a, b), 1) == 0 or seg_occ_train.get((b, a), 1) == 0:
                 return True
         elif step["type"] == "diag":
-            print(diag_occ_train.get(step["type"],1))
             if step["name"] in occupied_diagonals or diag_occ_train.get(step["name"],1) == 0:
                 return True
     return False
@@ -682,7 +680,6 @@ def register_route(start, end):
         "end": end,
         "segments": routes.get((start,end)),
     }
-    print(active_routes)
     return rid
 
 def release_route(route_id):
@@ -751,7 +748,6 @@ def on_node_click(event):
 #########################################        ФУНКЦИЯ ПРИ ВЫБОРЕ ДВУХ ТОЧЕК   ##############################################
 def on_two_nodes_selected(a, b):
     global last_switch_check
-    print("Выбраны точки маршрута:", a, "->", b)
 
     # 1. Проверка конфликтов по занятым сегментам/стрелкам
     if check_route_conflict(a, b):
@@ -775,30 +771,25 @@ def on_two_nodes_selected(a, b):
     changed = []
     main_diag = None  # какая стрелка будет мигать в табличке
 
-    # 3. Применяем нужные положения стрелок (ТОЛЬКО из route_cfg)
-    if not route_cfg:
-        print("Для этого маршрута стрелки не задействованы.")
-    else:
-        for diag_name, need_mode in route_cfg.items():
-            current_mode = diagonal_modes.get(diag_name)
-            ok = (current_mode == need_mode)
+    for diag_name, need_mode in route_cfg.items():
+        current_mode = diagonal_modes.get(diag_name)
+        ok = (current_mode == need_mode)
 
-            last_switch_check[diag_name] = {
-                "needed": need_mode,
-                "current": current_mode,
-                "ok": ok,
-            }
+        last_switch_check[diag_name] = {
+            "needed": need_mode,
+            "current": current_mode,
+            "ok": ok,
+        }
 
-            if not ok:
-                if main_diag is None:
-                    main_diag = diag_name
-                set_diagonal_mode(diag_name, need_mode)
-                changed.append(f"{diag_name}: {current_mode} -> {need_mode}")
+        if not ok:
+            if main_diag is None:
+                main_diag = diag_name
+            set_diagonal_mode(diag_name, need_mode)
+            changed.append(f"{diag_name}: {current_mode} -> {need_mode}")
 
-        if main_diag is None and route_cfg:
-            main_diag = next(iter(route_cfg.keys()))
+    if main_diag is None and route_cfg:
+        main_diag = next(iter(route_cfg.keys()))
 
-    print("Устанавливаем маршрут")
     paint_route(a, b, "cyan")
     blink_route(a, b, duration_ms=2000, interval_ms=200)
 
@@ -820,7 +811,6 @@ def on_two_nodes_selected(a, b):
     def finalize():
         rid = register_route(a, b)
         paint_route(a, b, "yellow")
-        print("Активные маршруты:", active_routes)
 
     root.after(2050, finalize)
 
