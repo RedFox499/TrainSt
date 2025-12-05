@@ -2,16 +2,11 @@ import tkinter
 import tkinter as tk
 import time
 from tkinter.messagebox import showinfo
-import serial
-import serial.tools.list_ports
 
 root = tk.Tk()
-root.title("Станция")
 canvas = tk.Canvas(root, width=1150, height=600, bg="white")
 canvas.pack()
 
-CANVAS_W = 1150
-CANVAS_H = 600
 
 def showInfo(title, msg):
     showinfo(title=title, message=msg)
@@ -100,17 +95,7 @@ default_switch_mode = {
 
 last_switch_check = {}
 
-current_mode = "train"
-btn_maneuver = None
-btn_train = None
 
-arduino = None
-arduino_status_label = None
-
-route_to_arduino_cmd = {
-    ("CH", "M1"): 'A',
-    ("M1", "CH"): 'A',  # на всякий случай, если сделаешь обратный маршрут
-}
 
 seg_occ_train = {
     ("M1", "pastM1"): 1,
@@ -296,23 +281,6 @@ routes = {
     ],
 }
 
-train_routes = {
-    ("CH", "M1"): [
-        {"type": "segment", "id": ("CH", "M2")},
-        {"type": "segment", "id": ("M2", "H1")},
-        {"type": "segment", "id": ("H1", "M8")},
-        {"type": "segment", "id": ("M8", "M1")},
-    ],
-    ("CH", "H2"): [
-        {"type": "segment", "id": ("CH", "M2")},
-        {"type": "segment", "id": ("M2", "H1")},
-        {"type": "segment", "id": ("M2", "H1")},
-        {"type": "diag", "name": "2T1"},
-        {"type": "segment", "id": ("H2", "M6H2")},
-        {"type": "segment", "id": ("M6", "M6H2")},
-    ]
-}
-
 # какие положения стрелок нужны для маршрута (можно подправить под реальную схему)
 route_switch_modes = {
     ("H2", "M6"): {
@@ -360,32 +328,10 @@ route_switch_modes = {
         "M1M10": "right",
     },
     ("H1", "M8"): {
-    },
-    ("CH", "M1"): {"M2H3": "left", "M1M10": "left"},
-    ("CH", "H2"): {"2T1": "right"}
+    }
 }
 
-def format_routes(routes_dict):
-    if not routes_dict:
-        return "Маршруты не заданы."
-    seen = set()
-    lines = []
-    for a, b in routes_dict.keys():
-        if (a, b) in seen:
-            continue
-        seen.add((a, b))
-        lines.append(f"{a} \u2192 {b}")
-    return "\n".join(lines)
 
-def show_maneuver_routes():
-    set_mode("maneuver")
-    msg = "Маневровые маршруты:\n\n" + format_routes(routes)
-    showInfo("МАНЕВРОВЫЕ", msg)
-
-def show_train_routes():
-    set_mode("train")
-    msg = "Поездные маршруты:\n\n" + format_routes(train_routes)
-    showInfo("ПОЕЗДНЫЕ", msg)
 
 
 #########################################       ОТРИСОВКА СВЕТОФОРОВ                ##############################################
@@ -441,34 +387,19 @@ def paint_segment(key, color):
 
 def paint_route(start, end, color="yellow"):
     key = (start, end)
-    if current_mode == "maneuver":
+    if key not in routes:
+        key = (end, start)
         if key not in routes:
-            key = (end, start)
-            if key not in routes:
-                print("Маршрут не найден")
-                return
+            print("Маршрут не найден")
+            return
 
-        for step in routes[key]:
-            if step["type"] == "segment":
-                paint_segment(step["id"], color)
-            elif step["type"] == "diag":
-                paint_diagonal(step["name"], color)
-            else:
-                print("Неизвестный тип шага:", step)
-    if current_mode == "train":
-        if key not in train_routes:
-            key = (end, start)
-            if key not in train_routes:
-                print("Маршрут не найден")
-                return
-
-        for step in train_routes[key]:
-            if step["type"] == "segment":
-                paint_segment(step["id"], color)
-            elif step["type"] == "diag":
-                paint_diagonal(step["name"], color)
-            else:
-                print("Неизвестный тип шага:", step)
+    for step in routes[key]:
+        if step["type"] == "segment":
+            paint_segment(step["id"], color)
+        elif step["type"] == "diag":
+            paint_diagonal(step["name"], color)
+        else:
+            print("Неизвестный тип шага:", step)
 
 #########################################        ФУНКЦИИ ВКЛ/ОТКЛ СТРЕЛОК               ##############################################
 def setBranchRight(nameDiag, offset):
@@ -648,14 +579,11 @@ def update_all_occupancy():
 def highlight_possible_targets(start):
 
     possible = set()
-    if current_mode == "maneuver":
-        for (a, b) in routes.keys():
-            if a == start:
-                possible.add(b)
-    if current_mode == "train":
-        for (a, b) in train_routes.keys():
-            if a == start:
-                possible.add(b)
+
+    for (a, b) in routes.keys():
+        if a == start:
+            possible.add(b)
+
     for name, item_id in node_ids.items():
         if name == start:
             canvas.itemconfig(item_id, fill="yellow")
@@ -721,121 +649,40 @@ def next_route_id():
     return rid
 
 def get_route(start, end):
-    if current_mode == "maneuver":
-        key = (start, end)
-        if key in routes:
-            return routes[key]
-        return None
-    if current_mode == "train":
-        key = (start, end)
-        if key in train_routes:
-            return train_routes[key]
-        return None
-
-def has_switch_conflict(a, b):
-    """
-    Проверяет, можно ли построить маршрут a->b или он ломает существующие стрелки.
-    """
-    key = (a, b)
-    if key not in route_switch_modes:
-        key = (b, a)
-        if key not in route_switch_modes:
-            return False  # маршрут не использует стрелки вообще
-
-    needed = route_switch_modes[key]
-
-    # пробегаем по ВСЕМ активным маршрутам
-    for rid, data in active_routes.items():
-
-        other_key = (data["start"], data["end"])
-        if other_key not in route_switch_modes:
-            other_key = (data["end"], data["start"])
-            if other_key not in route_switch_modes:
-                continue
-
-        other_needed = route_switch_modes[other_key]
-
-        # теперь сравниваем стрелки
-        for diag_name, mode_needed in needed.items():
-
-            # если эта стрелка не используется другим маршрутом — всё норм
-            if diag_name not in other_needed:
-                continue
-
-            other_mode = other_needed[diag_name]
-
-            # если маршруты требуют РАЗНОЕ положение → конфликт
-            if other_mode != mode_needed:
-                print(f"КОНФЛИКТ: стрелка {diag_name} уже занята маршрутом #{rid}, "
-                      f"она стоит в положении {other_mode}, "
-                      f"а требуется {mode_needed}")
-                return True
-
-    return False
-
-
-
+    key = (start, end)
+    if key in routes:
+        return routes[key]
+    return None
 
 def check_route_conflict(start, end):
-    if current_mode == "maneuver":
-        if has_switch_conflict(start, end):
-            return True
-        for step in routes.get((start,end)):
-            if step["type"] == "segment":
-                a, b = step["id"]
-                if step["id"] in occupied_segments or seg_occ_train.get((a, b), 1) == 0 or seg_occ_train.get((b, a), 1) == 0:
-                    return True
-            elif step["type"] == "diag":
-                if step["name"] in occupied_diagonals or diag_occ_train.get(step["name"],1) == 0:
-                    return True
-        return False
-    if current_mode == "train":
-        if has_switch_conflict(start, end):
-            return True
-        for step in train_routes.get((start,end)):
-            if step["type"] == "segment":
-                a, b = step["id"]
-                if step["id"] in occupied_segments or seg_occ_train.get((a, b), 1) == 0 or seg_occ_train.get((b, a), 1) == 0:
-                    return True
-            elif step["type"] == "diag":
-                if step["name"] in occupied_diagonals or diag_occ_train.get(step["name"],1) == 0:
-                    return True
-        return False
+    for step in routes.get((start,end)):
+        if step["type"] == "segment":
+            a, b = step["id"]
+            if step["id"] in occupied_segments or seg_occ_train.get((a, b), 1) == 0 or seg_occ_train.get((b, a), 1) == 0:
+                return True
+        elif step["type"] == "diag":
+            if step["name"] in occupied_diagonals or diag_occ_train.get(step["name"],1) == 0:
+                return True
+    return False
 
 def register_route(start, end):
     global route_counter
     rid = route_counter
     route_counter += 1
-    if current_mode == "maneuver":
-        for step in routes.get((start,end)):
-            if step["type"] == "segment":
-                a, b = step["id"]
-                occupied_segments.add((a,b))
-                occupied_segments.add((b,a))
-            elif step["type"] == "diag":
-                occupied_diagonals.add(step["name"])
+    for step in routes.get((start,end)):
+        if step["type"] == "segment":
+            a, b = step["id"]
+            occupied_segments.add((a,b))
+            occupied_segments.add((b,a))
+        elif step["type"] == "diag":
+            occupied_diagonals.add(step["name"])
 
-        active_routes[rid] = {
-            "start": start,
-            "end": end,
-            "segments": routes.get((start,end)),
-        }
-        return rid
-    if current_mode == "train":
-        for step in train_routes.get((start,end)):
-            if step["type"] == "segment":
-                a, b = step["id"]
-                occupied_segments.add((a,b))
-                occupied_segments.add((b,a))
-            elif step["type"] == "diag":
-                occupied_diagonals.add(step["name"])
-
-        active_routes[rid] = {
-            "start": start,
-            "end": end,
-            "segments": train_routes.get((start,end)),
-        }
-        return rid
+    active_routes[rid] = {
+        "start": start,
+        "end": end,
+        "segments": routes.get((start,end)),
+    }
+    return rid
 
 def release_route(route_id):
     global route_counter
@@ -898,14 +745,6 @@ def on_node_click(event):
         second = selected_nodes[1]
         disable_all_except_selected()
         on_two_nodes_selected(first, second)
-    if name == "CH":
-        send_arduino_cmd('1')  # на Arduino case '1' = yellow
-    elif name == "M2":
-        send_arduino_cmd('2')  # на Arduino case '2' = green
-    elif name == "H1":
-        send_arduino_cmd('3')
-    elif name == "M8":
-        send_arduino_cmd('4')
 
 #########################################        ФУНКЦИЯ ПРИ ВЫБОРЕ ДВУХ ТОЧЕК   ##############################################
 def on_two_nodes_selected(a, b):
@@ -983,58 +822,6 @@ def snos():
 def check():
     print("Активные маршруты")
     print(active_routes)
-
-#########################################        Arduino: функции подключения/отправки ##########################################
-def init_arduino():
-    """
-    Поиск порта и подключение к Arduino.
-    Если автопоиск не найдёт – поправь вручную arduino_port.
-    """
-    global arduino, arduino_status_label
-
-    try:
-        ports = list(serial.tools.list_ports.comports())
-        arduino_port = None
-
-        for p in ports:
-            if "Arduino" in p.description or "CH340" in p.description:
-                arduino_port = p.device
-                break
-
-        # если не нашли автоматически – выставь свой порт
-        if arduino_port is None:
-            # ПОДСТАВЬ СВОЙ ПОРТ (например "COM3" или "/dev/ttyACM0")
-            arduino_port = "COM3"
-
-        arduino = serial.Serial(arduino_port, 9600, timeout=1)
-        time.sleep(2)  # дать Arduino перезапуститься
-
-        print(f"Arduino подключен к {arduino_port}")
-        if arduino_status_label is not None:
-            arduino_status_label.config(text=f"Arduino: {arduino_port}", fg="green")
-
-    except Exception as e:
-        print("Не удалось подключиться к Arduino:", e)
-        arduino = None
-        if arduino_status_label is not None:
-            arduino_status_label.config(text="Arduino: нет соединения", fg="red")
-
-
-def send_arduino_cmd(ch: str):
-    """
-    Отправляет один символ на Arduino (например 'A' или '0').
-    """
-    global arduino
-    if arduino is None:
-        print("Arduino не подключен, команда не отправлена:", ch)
-        return
-    try:
-        arduino.write(ch.encode("ascii"))
-        print("Отправлено на Arduino:", ch)
-    except Exception as e:
-        print("Ошибка отправки в Arduino:", e)
-####################################################################################################
-
 #########################################        ТУПИКИ               ##############################################
 drawDeadEnd("pastM1", "right", 0)
 drawDeadEnd("past2", "right", 0)
@@ -1059,75 +846,16 @@ for name, cfg in signals_config.items():
         cfg.get("colors")
     )
 
-#########################################        ВИЗУАЛ РЕЖИМА                    ##############################################
-def apply_mode_visuals():
-    for name, item_id in node_ids.items():
-        color = "black"
-        state = "normal"
-        if current_mode == "maneuver" and name == "CH":
-            color = "grey"
-            state = "disabled"
-        canvas.itemconfig(item_id, fill=color, state=state)
-
-
-def set_mode(mode):
-    global current_mode
-    current_mode = mode
-
-    if btn_maneuver is not None and btn_train is not None:
-        if mode == "maneuver":
-            btn_maneuver.config(bg="#4CAF50", fg="white")
-            btn_train.config(bg="#D32F2F", fg="white")
-        else:
-            btn_train.config(bg="#4CAF50", fg="white")
-            btn_maneuver.config(bg="#D32F2F", fg="white")
-
-    selected_nodes.clear()
-    apply_mode_visuals()
-
 #########################################        БИНДЫ И НАЧАЛЬНАЯ ОКРАСКА        ##############################################
 canvas.tag_bind("node", "<Button-1>", on_node_click)
 canvas.tag_bind("node", "<Enter>", on_enter)
 canvas.tag_bind("node", "<Leave>", on_leave)
 create_switch_table()
 
-# метка статуса Arduino
-arduino_status_label = tkinter.Label(root, text="Arduino: проверка...", fg="orange")
-arduino_status_label.place(x=70, y=3)
-
 button = tkinter.Button(root, text="Снести", command=snos)
 button.place(x=1, y=1)
 button = tkinter.Button(root, text="Проверка", command=check)
 button.place(x=50, y=1)
-
-buttons_y = CANVAS_H - 80
-
-btn_maneuver = tkinter.Button(
-    root,
-    text="МАНЕВРОВЫЕ",
-    font=("Arial", 14, "bold"),
-    bg="#4CAF50",
-    fg="white",
-    width=15,
-    height=2,
-    command=show_maneuver_routes
-)
-btn_train = tkinter.Button(
-    root,
-    text="ПОЕЗДНЫЕ",
-    font=("Arial", 14, "bold"),
-    bg="#D32F2F",
-    fg="white",
-    width=15,
-    height=2,
-    command=show_train_routes
-)
-
-center_x = CANVAS_W // 2
-offset = 140
-
-btn_maneuver.place(x=center_x - offset - 80, y=buttons_y)
-btn_train.place(x=center_x + offset - 80, y=buttons_y)
 
 def do():
     if seg_occ_train[("H1", "M2")] == 0:
@@ -1139,7 +867,6 @@ def do2():
         seg_occ_train[("M8", "H1")] = 1
     else:
         seg_occ_train[("M8", "H1")] = 0
-
 button69 = tkinter.Button(root, text="prost", command=do)
 button69.place(x=100, y=2)
 button6969 = tkinter.Button(root, text="prost2", command=do2)
