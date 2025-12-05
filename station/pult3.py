@@ -109,7 +109,10 @@ seg_occ_train = {
     ("M6", "beforeM6"): 1,
 }
 diag_occ_train = {
-
+    "M1M10": 1,
+    "M2H3": 1,
+    "H42": 1,
+    "2T1": 1,
 }
 
 
@@ -523,11 +526,27 @@ set_diagonal_mode("M2H3", "left")
 set_diagonal_mode("H42", "left")
 set_diagonal_mode("2T1", "left")
 
+def check_if_route_finished(seg, rev):
+    for rid in list(active_routes.keys()):
+        data = active_routes[rid]
+        segs = data["segments"]
+        real_segs = [step["id"] for step in segs if step.get("type") == "segment"]
+        last_seg = real_segs[-1]
+        if seg == last_seg or rev == last_seg:
+            release_route(rid)
+
+
 
 def update_all_occupancy():
-    print("начал")
+
     # --- 1) сегменты ---
     for (a, b), seg_id in segment_ids.items():
+        for seg in seg_occ_train:
+            rev = (seg[1], seg[0])
+            if seg_occ_train.get(seg, 1) == 0:
+                occupied_segments.discard(seg)
+                occupied_segments.discard(rev)
+                check_if_route_finished(seg, rev)
 
         # 1) поезд занимает -> красный
         if seg_occ_train.get((a, b), 1) == 0 or seg_occ_train.get((b, a), 1) == 0 :
@@ -542,17 +561,14 @@ def update_all_occupancy():
 
     # --- 2) диагонали ---
     for diag_name, lines in diag_ids.items():
-
         # 1) поезд на диагонали -> красный
         if diag_occ_train.get(diag_name, 1) == 0:
             paint_diagonal(diag_name, "red")
             continue
-
         # 2) маршрут использует диагональ -> жёлтый
         if diag_name in occupied_diagonals:
             paint_diagonal(diag_name, "yellow")
             continue
-
         # 3) свободна -> чёрная
         paint_diagonal(diag_name, "black")
     root.after(1500, update_all_occupancy)
@@ -643,10 +659,8 @@ def check_route_conflict(start, end):
             if step["id"] in occupied_segments or seg_occ_train.get((a, b), 1) == 0 or seg_occ_train.get((b, a), 1) == 0:
                 return True
         elif step["type"] == "diag":
-            if step["name"] in occupied_diagonals :
+            if step["name"] in occupied_diagonals or diag_occ_train.get(step["name"],1) == 0:
                 return True
-
-
     return False
 
 def register_route(start, end):
@@ -676,26 +690,25 @@ def release_route(route_id):
     for step in data["segments"]:
         if step["type"] == "segment":
             a, b = step["id"]
-            paint_segment((a,b), "green")
+            paint_segment((a,b), "black")
             occupied_segments.discard((a,b))
             occupied_segments.discard((b, a))
         elif step["type"] == "diag":
-            paint_diagonal(step["name"], "lime")
+            paint_diagonal(step["name"], "black")
             occupied_diagonals.discard(step["name"])
     del active_routes[route_id]
-    route_counter -= 1
 
 #########################################        МИГАНИЕ МАРШРУТА               ##############################################
 def blink_route(start, end, duration_ms=2000, interval_ms=200):
-    """Мигает маршрутом между cyan и green в течение duration_ms."""
+
     end_time = time.time() + duration_ms / 1000.0
 
     def _step(state=True):
         if time.time() >= end_time:
-            paint_route(start, end, "green")
+            paint_route(start, end, "black")
             return
 
-        color = "cyan" if state else "green"
+        color = "cyan" if state else "black"
         paint_route(start, end, color)
         root.after(interval_ms, _step, not state)
 
@@ -734,7 +747,6 @@ def on_node_click(event):
 #########################################        ФУНКЦИЯ ПРИ ВЫБОРЕ ДВУХ ТОЧЕК   ##############################################
 def on_two_nodes_selected(a, b):
     global last_switch_check
-    print("Выбраны точки маршрута:", a, "->", b)
 
     # 1. Проверка конфликтов по занятым сегментам/стрелкам
     if check_route_conflict(a, b):
@@ -758,30 +770,25 @@ def on_two_nodes_selected(a, b):
     changed = []
     main_diag = None  # какая стрелка будет мигать в табличке
 
-    # 3. Применяем нужные положения стрелок (ТОЛЬКО из route_cfg)
-    if not route_cfg:
-        print("Для этого маршрута стрелки не задействованы.")
-    else:
-        for diag_name, need_mode in route_cfg.items():
-            current_mode = diagonal_modes.get(diag_name)
-            ok = (current_mode == need_mode)
+    for diag_name, need_mode in route_cfg.items():
+        current_mode = diagonal_modes.get(diag_name)
+        ok = (current_mode == need_mode)
 
-            last_switch_check[diag_name] = {
-                "needed": need_mode,
-                "current": current_mode,
-                "ok": ok,
-            }
+        last_switch_check[diag_name] = {
+            "needed": need_mode,
+            "current": current_mode,
+            "ok": ok,
+        }
 
-            if not ok:
-                if main_diag is None:
-                    main_diag = diag_name
-                set_diagonal_mode(diag_name, need_mode)
-                changed.append(f"{diag_name}: {current_mode} -> {need_mode}")
+        if not ok:
+            if main_diag is None:
+                main_diag = diag_name
+            set_diagonal_mode(diag_name, need_mode)
+            changed.append(f"{diag_name}: {current_mode} -> {need_mode}")
 
-        if main_diag is None and route_cfg:
-            main_diag = next(iter(route_cfg.keys()))
+    if main_diag is None and route_cfg:
+        main_diag = next(iter(route_cfg.keys()))
 
-    print("Устанавливаем маршрут")
     paint_route(a, b, "cyan")
     blink_route(a, b, duration_ms=2000, interval_ms=200)
 
@@ -803,7 +810,6 @@ def on_two_nodes_selected(a, b):
     def finalize():
         rid = register_route(a, b)
         paint_route(a, b, "yellow")
-        print("Активные маршруты:", active_routes)
 
     root.after(2050, finalize)
 
@@ -812,8 +818,8 @@ def snos():
         release_route(active)
 
 def check():
-    print("ЗаНЯТЫЕ СЕГМЕНТЫ: ", occupied_segments)
-    print("ЗАНЯТЫЕ ДИАГОНАЛИ: ", occupied_diagonals)
+    print("Активные маршруты")
+    print(active_routes)
 #########################################        ТУПИКИ               ##############################################
 drawDeadEnd("pastM1", "right", 0)
 drawDeadEnd("past2", "right", 0)
@@ -854,12 +860,15 @@ def do():
         seg_occ_train[("H1", "M2")] = 1
     else:
         seg_occ_train[("H1", "M2")] = 0
-
+def do2():
+    if seg_occ_train[("M8", "H1")] == 0:
+        seg_occ_train[("M8", "H1")] = 1
+    else:
+        seg_occ_train[("M8", "H1")] = 0
 button69 = tkinter.Button(root, text="prost", command=do)
 button69.place(x=100, y=2)
-for id_ in segment_ids:
-    paint_segment(id_, "green")
-for id_ in diag_ids:
-    paint_diagonal(id_, "lime")
+button6969 = tkinter.Button(root, text="prost2", command=do2)
+button6969.place(x=150, y=2)
+
 update_all_occupancy()
 root.mainloop()
