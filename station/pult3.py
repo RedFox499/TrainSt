@@ -4,6 +4,8 @@ import time
 from tkinter.messagebox import showinfo
 import serial
 import serial.tools.list_ports
+from serial import SerialException
+from serial.tools import list_ports
 
 root = tk.Tk()
 root.title("Станция")
@@ -71,6 +73,17 @@ segments = [
     ("M6", "beforeM6"),
 ]
 
+SEGMENT_ORDER = [
+    ("M1", "pastM1"),  # бит 0
+    ("M1", "M8"),      # бит 1
+    ("M8", "H1"),      # бит 2
+    ("H1", "M2"),      # бит 3
+    ("M2", "CH"),      # бит 4
+    ("past2", "H2"),   # бит 5
+    ("H2", "M6H2"),    # бит 6
+    ("M6H2", "M6"),    # бит 7
+]
+
 #########################################        МАССИВЫ ЭЛЕМЕНТОВ               ##############################################
 selected_nodes = []
 MAX_SELECTED = 2
@@ -106,6 +119,9 @@ btn_train = None
 
 arduino = None
 arduino_status_label = None
+
+ser = None                  # объект Serial для Arduino
+last_bits = None            # прошлое состояние 8 бит
 
 route_to_arduino_cmd = {
     ("CH", "M1"): 'A',
@@ -606,6 +622,11 @@ def check_if_route_finished(seg, rev):
         if seg == last_seg or rev == last_seg:
             release_route(rid)
 
+def set_arduino_status(connected: bool, text: str = ""):
+    if connected:
+        arduino_status_label.config(text=f"Arduino: {text}", bg="green", fg="black")
+    else:
+        arduino_status_label.config(text="Arduino: not connected", bg="red", fg="white")
 
 
 def update_all_occupancy():
@@ -642,7 +663,7 @@ def update_all_occupancy():
             continue
         # 3) свободна -> чёрная
         paint_diagonal(diag_name, "black")
-    root.after(1500, update_all_occupancy)
+    root.after(10, update_all_occupancy)
 
 #########################################        ПОДСВЕТКА МАРШРУТОВ               ##############################################
 def highlight_possible_targets(start):
@@ -1059,6 +1080,7 @@ for name, cfg in signals_config.items():
         cfg.get("colors")
     )
 
+
 #########################################        ВИЗУАЛ РЕЖИМА                    ##############################################
 def apply_mode_visuals():
     for name, item_id in node_ids.items():
@@ -1093,7 +1115,7 @@ create_switch_table()
 
 # метка статуса Arduino
 arduino_status_label = tkinter.Label(root, text="Arduino: проверка...", fg="orange")
-arduino_status_label.place(x=70, y=3)
+arduino_status_label.place(x=120, y=3)
 
 button = tkinter.Button(root, text="Снести", command=snos)
 button.place(x=1, y=1)
@@ -1141,9 +1163,117 @@ def do2():
         seg_occ_train[("M8", "H1")] = 0
 
 button69 = tkinter.Button(root, text="prost", command=do)
-button69.place(x=100, y=2)
+button69.place(x=250, y=2)
 button6969 = tkinter.Button(root, text="prost2", command=do2)
-button6969.place(x=150, y=2)
+button6969.place(x=300, y=2)
 
+#########################################        ARDUINO: ПОИСК ПОРТА И ОПРОС      ##############################################
+def find_arduino_port():
+    ports = list_ports.comports()
+    for p in ports:
+        desc = p.description.lower()
+        if "arduino" in desc or "ch340" in desc or "usb serial" in desc:
+            print(f"Найдено Arduino-подобное устройство: {p.device} ({p.description})")
+            return p.device
+
+    if ports:
+        print(f"Не удалось однозначно определить Arduino, беру первый порт: {ports[0].device}")
+        return ports[0].device
+
+    print("COM-порты не найдены вообще.")
+    return None
+
+
+def init_arduino(port=None, baudrate=9600):
+    global ser
+
+    if port is None:
+        port = find_arduino_port()
+        if port is None:
+            set_arduino_status(False)
+            print("Arduino не найдено, попробую снова через 2 секунды.")
+            root.after(2000, init_arduino)
+            return
+
+    try:
+        ser = serial.Serial(port, baudrate, timeout=0)
+        time.sleep(2)             # даём плате перезапуститься
+        ser.reset_input_buffer()  # чистим мусор
+        print(f"Arduino подключено на {port}")
+        set_arduino_status(True, text=port)
+    except SerialException as e:
+        ser = None
+        set_arduino_status(False)
+        print(f"Не удалось открыть {port}: {e}")
+        print("Попробую переподключиться через 2 секунды.")
+        root.after(2000, init_arduino)
+
+def bytes_to_bits(data: bytes, bits_needed: int) -> list[int]:
+    bits: list[int] = []
+    for byte in data:
+        for bit_index in range(8):
+            bits.append((byte >> bit_index) & 1)
+            if len(bits) >= bits_needed:
+                return bits
+    while len(bits) < bits_needed:
+        bits.append(0)
+
+    return bits
+
+def apply_bits_to_segments(bits: list[int]):
+    """
+    bits[i] относится к SEGMENT_ORDER[i].
+
+    1 в бите = кнопка НАЖАТА -> сегмент ЗАНЯТ (0)
+    0 в бите = кнопка ОТПУЩЕНА -> сегмент СВОБОДЕН (1)
+    """
+    global last_bits
+
+    if last_bits is None:
+        last_bits = bits[:]
+        for idx, (bit_value, seg) in enumerate(zip(bits, SEGMENT_ORDER)):
+            occ = 0 if bit_value == 1 else 1
+            seg_occ_train[seg] = occ
+            print(f"[INIT BTN {idx}] raw_bit={bit_value} segment={seg} -> seg_occ_train={occ}")
+        return
+
+    for idx, (bit_value, seg) in enumerate(zip(bits, SEGMENT_ORDER)):
+        old_bit = last_bits[idx]
+        if bit_value == old_bit:
+            continue  # ничего не изменилось — пропускаем
+
+        # тут важная инверсия:
+        # 1 (нажата) -> 0 (занят)
+        # 0 (отпущена) -> 1 (свободен)
+        occ = 0 if bit_value == 1 else 1
+        seg_occ_train[seg] = occ
+        print(f"[BTN {idx}] raw_bit={bit_value} segment={seg} -> seg_occ_train={occ}")
+
+    last_bits = bits[:]
+
+
+def poll_arduino():
+    global ser
+
+    if ser is not None and ser.is_open:
+        try:
+            data = ser.read(1)  # один байт = 8 кнопок
+        except SerialException as e:
+            print(f"Ошибка чтения из Arduino: {e}")
+            ser = None
+            set_arduino_status(False)
+            root.after(2000, init_arduino)
+        else:
+            if data:
+                val = data[0]
+                bits = bytes_to_bits(data, bits_needed=len(SEGMENT_ORDER))
+                apply_bits_to_segments(bits)
+
+
+    root.after(20, poll_arduino)
+
+#########################################        ЗАПУСК ЦИКЛОВ                    ##############################################
+init_arduino()          # порт ищется автоматически
 update_all_occupancy()
+poll_arduino()
 root.mainloop()
