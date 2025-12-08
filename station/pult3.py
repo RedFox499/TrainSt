@@ -103,6 +103,7 @@ diagonal_modes = {}
 switch_indicator_ids = {}          # name -> id прямоугольника
 switch_list = ["M1M10", "M2H3", "H42", "2T1"]
 
+blinking_routes = set()
 # нормальное (плюсовое) положение стрелок
 default_switch_mode = {
     "M1M10": "left",
@@ -113,19 +114,19 @@ default_switch_mode = {
 
 last_switch_check = {}
 
-current_mode = "train"
+current_mode = "maneuver"
 btn_maneuver = None
 btn_train = None
 
 arduino = None
 arduino_status_label = None
 
-ser = None                  # объект Serial для Arduino
-last_bits = None            # прошлое состояние 8 бит
+ser = None
+last_bits = None
 
 route_to_arduino_cmd = {
     ("CH", "M1"): 'A',
-    ("M1", "CH"): 'A',  # на всякий случай, если сделаешь обратный маршрут
+    ("M1", "CH"): 'A',
 }
 
 seg_occ_train = {
@@ -588,9 +589,9 @@ def blink_switches(diags, duration_ms=2000, interval_ms=200):
     _step(True)
 #########################################        СТРЕЛКИ/ДИАГОНАЛИ               ##############################################
 def AddDiagonal(x1, y1, x2, y2, offsetleft, offsetright, nameDiag):
-    l1 = canvas.create_line(x1, y1, x1 - offsetleft, y1, width=4, fill="black")
-    l2 = canvas.create_line(x2, y2, x2 + offsetright, y2, width=4, fill="black")
-    l3 = canvas.create_line(x1, y1, x2, y2, width=4, fill="black")
+    l1 = canvas.create_line(x1, y1, x1 - offsetleft, y1, width=2, fill="black")
+    l2 = canvas.create_line(x2, y2, x2 + offsetright, y2, width=2, fill="black")
+    l3 = canvas.create_line(x1, y1, x2, y2, width=2, fill="black")
     diag_ids[(nameDiag)] = [l1, l2, l3]
 
 #########################################       ЛИНИИ              ##############################################
@@ -613,6 +614,10 @@ set_diagonal_mode("M2H3", "left")
 set_diagonal_mode("H42", "left")
 set_diagonal_mode("2T1", "left")
 
+
+def inblinking(start, end):
+    pass
+
 def check_if_route_finished(seg, rev):
     for rid in list(active_routes.keys()):
         data = active_routes[rid]
@@ -631,7 +636,6 @@ def set_arduino_status(connected: bool, text: str = ""):
 
 def update_all_occupancy():
 
-    # --- 1) сегменты ---
     for (a, b), seg_id in segment_ids.items():
         for seg in seg_occ_train:
             rev = (seg[1], seg[0])
@@ -640,24 +644,24 @@ def update_all_occupancy():
                 occupied_segments.discard(rev)
                 check_if_route_finished(seg, rev)
 
-        # 1) поезд занимает -> красный
         if seg_occ_train.get((a, b), 1) == 0 or seg_occ_train.get((b, a), 1) == 0 :
             paint_segment((a,b), "red")
             continue
-        # 2) маршрут занимает -> жёлтый
+
         if (a, b) in occupied_segments or (b, a) in occupied_segments:
             paint_segment((a,b), "yellow")
             continue
         # 3) свободный -> чёрный
-        paint_segment((a,b), "black")
 
-    # --- 2) диагонали ---
+        paint_segment((a, b), "black")
+
+
     for diag_name, lines in diag_ids.items():
-        # 1) поезд на диагонали -> красный
+
         if diag_occ_train.get(diag_name, 1) == 0:
             paint_diagonal(diag_name, "red")
             continue
-        # 2) маршрут использует диагональ -> жёлтый
+
         if diag_name in occupied_diagonals:
             paint_diagonal(diag_name, "yellow")
             continue
@@ -875,8 +879,20 @@ def release_route(route_id):
     del active_routes[route_id]
 
 #########################################        МИГАНИЕ МАРШРУТА               ##############################################
-def blink_route(start, end, duration_ms=2000, interval_ms=200):
+def is_segment_in_blinking_route(seg):
+    a, b = seg
+    for (start, end) in blinking_routes:
+        route = routes.get((start, end)) or routes.get((end, start))
+        if not route:
+            continue
+        for step in route:
+            if step.get("type") == "segment":
+                if step["id"] == (a,b) or step["id"] == (b,a):
+                    return True
+    return False
 
+def blink_route(start, end, duration_ms=2000, interval_ms=200):
+    blinking_routes.add((start,end))
     end_time = time.time() + duration_ms / 1000.0
 
     def _step(state=True):
@@ -887,7 +903,6 @@ def blink_route(start, end, duration_ms=2000, interval_ms=200):
         color = "cyan" if state else "black"
         paint_route(start, end, color)
         root.after(interval_ms, _step, not state)
-
     _step(True)
 #########################################        ОБРАБОТКА КЛИКА ПО УЗЛУ          ##############################################
 def on_node_click(event):
@@ -919,14 +934,7 @@ def on_node_click(event):
         second = selected_nodes[1]
         disable_all_except_selected()
         on_two_nodes_selected(first, second)
-    if name == "CH":
-        send_arduino_cmd('1')  # на Arduino case '1' = yellow
-    elif name == "M2":
-        send_arduino_cmd('2')  # на Arduino case '2' = green
-    elif name == "H1":
-        send_arduino_cmd('3')
-    elif name == "M8":
-        send_arduino_cmd('4')
+
 
 #########################################        ФУНКЦИЯ ПРИ ВЫБОРЕ ДВУХ ТОЧЕК   ##############################################
 def on_two_nodes_selected(a, b):
@@ -974,6 +982,7 @@ def on_two_nodes_selected(a, b):
         main_diag = next(iter(route_cfg.keys()))
 
     paint_route(a, b, "cyan")
+
     blink_route(a, b, duration_ms=2000, interval_ms=200)
 
     if main_diag is not None:
@@ -1009,7 +1018,6 @@ def check():
 def init_arduino():
     """
     Поиск порта и подключение к Arduino.
-    Если автопоиск не найдёт – поправь вручную arduino_port.
     """
     global arduino, arduino_status_label
 
@@ -1040,20 +1048,6 @@ def init_arduino():
         if arduino_status_label is not None:
             arduino_status_label.config(text="Arduino: нет соединения", fg="red")
 
-
-def send_arduino_cmd(ch: str):
-    """
-    Отправляет один символ на Arduino (например 'A' или '0').
-    """
-    global arduino
-    if arduino is None:
-        print("Arduino не подключен, команда не отправлена:", ch)
-        return
-    try:
-        arduino.write(ch.encode("ascii"))
-        print("Отправлено на Arduino:", ch)
-    except Exception as e:
-        print("Ошибка отправки в Arduino:", e)
 ####################################################################################################
 
 #########################################        ТУПИКИ               ##############################################
@@ -1079,8 +1073,6 @@ for name, cfg in signals_config.items():
         cfg["count"],
         cfg.get("colors")
     )
-
-
 #########################################        ВИЗУАЛ РЕЖИМА                    ##############################################
 def apply_mode_visuals():
     for name, item_id in node_ids.items():
@@ -1090,7 +1082,6 @@ def apply_mode_visuals():
             color = "grey"
             state = "disabled"
         canvas.itemconfig(item_id, fill=color, state=state)
-
 
 def set_mode(mode):
     global current_mode
@@ -1175,14 +1166,11 @@ def find_arduino_port():
         if "arduino" in desc or "ch340" in desc or "usb serial" in desc:
             print(f"Найдено Arduino-подобное устройство: {p.device} ({p.description})")
             return p.device
-
     if ports:
         print(f"Не удалось однозначно определить Arduino, беру первый порт: {ports[0].device}")
         return ports[0].device
-
     print("COM-порты не найдены вообще.")
     return None
-
 
 def init_arduino(port=None, baudrate=9600):
     global ser
@@ -1191,8 +1179,6 @@ def init_arduino(port=None, baudrate=9600):
         port = find_arduino_port()
         if port is None:
             set_arduino_status(False)
-            print("Arduino не найдено, попробую снова через 2 секунды.")
-            root.after(2000, init_arduino)
             return
 
     try:
