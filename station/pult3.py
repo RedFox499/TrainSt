@@ -32,6 +32,8 @@ def drawDeadEnd(name, direction, offset):
 positions = {
     "M1": (1000, 330),
     "M8": (850, 330),
+    "M8mid": (970, 330),
+
     "H1": (500, 330),
     "1STR": (380, 330),
     "M2": (150, 330),
@@ -53,18 +55,24 @@ positions = {
     "past2": (970, 230),
     "pastM1": (1090, 330),
     "beforeM6": (260, 230),
+    "M2H1_mid": (350, 330),
 }
 
 segments = [
-    ("M1", "pastM1"),
-    ("M1", "M8"),
+    ("pastM1", "M1"),
+
+    ("M8mid", "M8"),
+    ("M8mid", "M1"),
+
     ("M8", "H1"),
-    ("H1", "M2"),
+
     ("M2", "CH"),
 
     ("past2", "H2"),
     ("H2", "M6H2"),
-    ("M6H2", "M6"),
+    ("M6", "M6H2"),
+    ("M2", "M2H1_mid"),
+    ("H1", "M2H1_mid"),
 
     ("M10", "H3"),
 
@@ -91,6 +99,23 @@ node_ids = {}
 segment_ids = {}
 diag_ids = {}
 signal_ids = {}
+segment_to_block = {}
+
+segment_groups = {
+    "block_M2_H1": [
+        ("M2","M2H1_mid"),
+        ("M2H1_mid","H1")
+    ],
+    "block_M6,H2": [
+        ("H2", "M6H2"),
+        ("M6", "M6H2"),
+    ],
+    "block_M8_M1":[
+        ("M8mid", "M8"),
+        ("M8mid", "M1"),
+    ],
+
+}
 
 active_routes = {}  # route_id -> {"start": a, "end": b, "segments": [...]}
 route_counter = 1   # уникальные номера маршрутов
@@ -112,6 +137,7 @@ default_switch_mode = {
     "2T1":  "left",
 }
 
+
 last_switch_check = {}
 
 current_mode = "maneuver"
@@ -131,11 +157,13 @@ route_to_arduino_cmd = {
 
 seg_occ_train = {
     ("M1", "pastM1"): 1,
-    ("M1", "M8"): 1,
+    ("M8", "M8mid"): 1,
+    ("M1", "M8mid"): 1,
     ("M8", "H1"): 1,
-    ("H1", "M2"): 1,
     ("M2", "CH"): 1,
     ("past2", "H2"): 1,
+    ("M2", "M2H1_mid"): 1,
+    ("M2H1_mid", "H1"): 1,
     ("H2", "M6H2"): 1,
     ("M6H2", "M6"): 1,
     ("M10", "H3"): 1,
@@ -149,6 +177,11 @@ diag_occ_train = {
     "2T1": 1,
 }
 
+
+for block, segs in segment_groups.items():
+    for seg in segs:
+        segment_to_block[seg] = block
+        segment_to_block[(seg[1], seg[0])] = block
 
 #########################################        КОНФИГ ДИАГОНАЛЕЙ               ##############################################
 diagonal_config = {
@@ -255,20 +288,24 @@ routes = {
         {"type": "segment", "id": ("M6H2", "M6")},
     ],
     ("M2", "H3"): [
-        {"type": "segment", "id": ("M2", "H1")},
+        {"type": "segment", "id": ("M2", "M2H1_mid")},
         {"type": "diag", "name": "M2H3"},
     ],
     ("M2", "H1"): [
-        {"type": "segment", "id": ("M2", "H1")},
+        {"type": "segment", "id": ("M2", "M2H1_mid")},
+        {"type": "segment", "id": ("M2H1_mid", "H1")},
     ],
     ("M2", "M8"): [
-        {"type": "segment", "id": ("M2", "H1")},
+        {"type": "segment", "id": ("M2", "M2H1_mid")},
+        {"type": "segment", "id": ("M2H1_mid", "H1")},
         {"type": "segment", "id": ("H1", "M8")},
     ],
     ("M2", "M1"): [
-        {"type": "segment", "id": ("M2", "H1")},
+        {"type": "segment", "id": ("M2", "M2H1_mid")},
+        {"type": "segment", "id": ("M2H1_mid", "H1")},
         {"type": "segment", "id": ("H1", "M8")},
-        {"type": "segment", "id": ("M8", "M1")},
+        {"type": "segment", "id": ("M8mid", "M8")},
+        {"type": "segment", "id": ("M8mid", "M1")},
     ],
     ("H3", "M10"): [
         {"type": "segment", "id": ("H3", "M10")},
@@ -286,15 +323,18 @@ routes = {
     ],
     ("M10", "M1"): [
         {"type": "diag", "name": "M1M10"},
-        {"type": "segment", "id": ("M8", "M1")},
+        {"type": "segment", "id": ("M8mid", "M1")},
+
         {"type": "segment", "id": ("M1", "pastM1")},
     ],
     ("M1", "M8"): [
         {"type": "segment", "id": ("M1", "pastM1")},
-        {"type": "segment", "id": ("M8", "M1")},
+        {"type": "segment", "id": ("M8mid", "M8")},
+        {"type": "segment", "id": ("M8mid", "M1")},
     ],
     ("M8", "M1"): [
-        {"type": "segment", "id": ("M8", "M1")},
+        {"type": "segment", "id": ("M8mid", "M8")},
+        {"type": "segment", "id": ("M8mid", "M1")},
         {"type": "segment", "id": ("M1", "pastM1")},
     ],
     ("M1", "H1"): [
@@ -303,10 +343,10 @@ routes = {
         {"type": "segment", "id": ("M8", "H1")},
     ],
     ("M2", "H2"): [
-        {"type": "segment", "id": ("M2", "H1")},
+        {"type": "segment", "id": ("M2","M2H1_mid")},
         {"type": "diag", "name": "2T1"},
         {"type": "segment", "id": ("H2", "M6H2")},
-        {"type": "segment", "id": ("M6", "M6H2")},
+
     ],
     ("H1", "M8"): [
         {"type": "segment", "id": ("H1", "M8")},
@@ -314,20 +354,38 @@ routes = {
 }
 
 train_routes = {
-    ("CH", "M1"): [
+    ("CH", "4"): [
         {"type": "segment", "id": ("CH", "M2")},
-        {"type": "segment", "id": ("M2", "H1")},
-        {"type": "segment", "id": ("H1", "M8")},
+        {"type": "segment", "id": ("M2", "M2H1_mid")},
+        {"type": "diag", "name": "2T1"},
+        {"type": "diag", "name": "H42"},
         {"type": "segment", "id": ("M8", "M1")},
+        {"type": "segment", "id": ("past4", "H4")},
     ],
-    ("CH", "H2"): [
+    ("CH", "3"): [
         {"type": "segment", "id": ("CH", "M2")},
         {"type": "segment", "id": ("M2", "H1")},
         {"type": "segment", "id": ("M2", "H1")},
         {"type": "diag", "name": "2T1"},
         {"type": "segment", "id": ("H2", "M6H2")},
         {"type": "segment", "id": ("M6", "M6H2")},
-    ]
+    ],
+    ("CH", "2"): [
+        {"type": "segment", "id": ("CH", "M2")},
+        {"type": "segment", "id": ("M2", "H1")},
+        {"type": "segment", "id": ("M2", "H1")},
+        {"type": "diag", "name": "2T1"},
+        {"type": "segment", "id": ("H2", "M6H2")},
+        {"type": "segment", "id": ("M6", "M6H2")},
+    ],
+    ("CH", "1"): [
+        {"type": "segment", "id": ("CH", "M2")},
+        {"type": "segment", "id": ("M2", "H1")},
+        {"type": "segment", "id": ("M2", "H1")},
+        {"type": "diag", "name": "2T1"},
+        {"type": "segment", "id": ("H2", "M6H2")},
+        {"type": "segment", "id": ("M6", "M6H2")},
+    ],
 }
 
 # какие положения стрелок нужны для маршрута (можно подправить под реальную схему)
@@ -374,12 +432,13 @@ route_switch_modes = {
     ("M2", "H2"): {
         "2T1": "right",
         "H42":  "left",
-        "M1M10": "right",
+        "M2H3": "left",
     },
     ("H1", "M8"): {
     },
     ("CH", "M1"): {"M2H3": "left", "M1M10": "left"},
-    ("CH", "H2"): {"2T1": "right"}
+    ("CH", "H2"): {"2T1": "right"},
+    ("CH", "4"): {"2T1": "right", "H42": "right"},
 }
 
 def format_routes(routes_dict):
@@ -489,6 +548,7 @@ def paint_route(start, end, color="yellow"):
 
 #########################################        ФУНКЦИИ ВКЛ/ОТКЛ СТРЕЛОК               ##############################################
 def setBranchRight(nameDiag, offset):
+
     x1, y1, x2, y2 = canvas.coords(diag_ids[nameDiag][0])
     canvas.coords(diag_ids[nameDiag][0], x1, y1 + offset, x2, y2 + offset)
     x1, y1, x2, y2 = canvas.coords(diag_ids[nameDiag][2])
@@ -500,6 +560,13 @@ def setBranchLeft(nameDiag, offset):
     x1, y1, x2, y2 = canvas.coords(diag_ids[nameDiag][2])
     canvas.coords(diag_ids[nameDiag][2], x1, y1, x2, y2 + offset)
 
+
+def branchWidth(namediag, width):
+    for lines in range(len(diag_ids[(namediag)])):
+        canvas.itemconfig(diag_ids[namediag][lines], width=width)
+
+
+
 def apply_diagonal_mode(nameDiag, mode):
     cfg = diagonal_config.get(nameDiag)
     if cfg is None:
@@ -510,15 +577,40 @@ def apply_diagonal_mode(nameDiag, mode):
     if left_cfg["exists"]:
         if mode in ("left", "both"):
             setBranchLeft(nameDiag, left_cfg["connected"])
+            branchWidth(nameDiag, 6)
         else:
             setBranchLeft(nameDiag, left_cfg["disconnected"])
+            branchWidth(nameDiag, 2)
 
     right_cfg = cfg["right"]
     if right_cfg["exists"]:
         if mode in ("right", "both"):
             setBranchRight(nameDiag, right_cfg["connected"])
+            branchWidth(nameDiag, 6)
+            if nameDiag == "M1H10":
+                print("fdfgdfg")
+            if nameDiag == "2T1":
+                canvas.itemconfig(segment_ids[("H1","M2H1_mid")], width=2)
+                canvas.itemconfig(segment_ids[("M6", "M6H2")], width=2)
+            if nameDiag == "M2H3":
+                canvas.itemconfig(segment_ids[("H1", "M2H1_mid")], width=2)
+            if nameDiag == "M1M10":
+                canvas.itemconfig(segment_ids[("M8mid", "M8")], width=2)
+            if nameDiag == "H42":
+                canvas.itemconfig(segment_ids[("M6H2", "H2")], width=2)
         else:
             setBranchRight(nameDiag, right_cfg["disconnected"])
+            branchWidth(nameDiag, 2)
+            if nameDiag == "2T1":
+                canvas.itemconfig(segment_ids[("H1", "M2H1_mid")], width=6)
+                canvas.itemconfig(segment_ids[("M6", "M6H2")], width=6)
+            if nameDiag == "M2H3":
+                canvas.itemconfig(segment_ids[("H1", "M2H1_mid")], width=6)
+                canvas.itemconfig(segment_ids[("M6", "M6H2")], width=6)
+            if nameDiag == "M1M10":
+                canvas.itemconfig(segment_ids[("M8mid", "M8")], width=6)
+
+
 
 def get_switch_state_color(name):
     mode = diagonal_modes.get(name)
@@ -589,16 +681,16 @@ def blink_switches(diags, duration_ms=2000, interval_ms=200):
     _step(True)
 #########################################        СТРЕЛКИ/ДИАГОНАЛИ               ##############################################
 def AddDiagonal(x1, y1, x2, y2, offsetleft, offsetright, nameDiag):
-    l1 = canvas.create_line(x1, y1, x1 - offsetleft, y1, width=2, fill="black")
-    l2 = canvas.create_line(x2, y2, x2 + offsetright, y2, width=2, fill="black")
-    l3 = canvas.create_line(x1, y1, x2, y2, width=2, fill="black")
+    l1 = canvas.create_line(x1, y1, x1 - offsetleft, y1, width=3, fill="black")
+    l2 = canvas.create_line(x2, y2, x2 + offsetright, y2, width=3, fill="black")
+    l3 = canvas.create_line(x1, y1, x2, y2, width=3, fill="black")
     diag_ids[(nameDiag)] = [l1, l2, l3]
 
 #########################################       ЛИНИИ              ##############################################
 for a, b in segments:
     x1, y1 = positions[a]
     x2, y2 = positions[b]
-    seg = canvas.create_line(x1 - 5, y1, x2 + 5, y2, width=4, fill="black")
+    seg = canvas.create_line(x1 - 5, y1, x2 + 5, y2, width=6, fill="black")
     segment_ids[(a, b)] = seg
     segment_ids[(b, a)] = seg
 
@@ -606,7 +698,7 @@ for a, b in segments:
 AddDiagonal(260, 330, 350, 430, 20, 38, "M2H3")
 AddDiagonal(965, 330, 890, 430, -22, -37, "M1M10")
 AddDiagonal(560, 130, 470, 230, -57, -20, "H42")
-AddDiagonal(420, 230, 350, 330, -20, -20, "2T1")
+AddDiagonal(420, 230, 350, 330, -30, -30, "2T1")
 
 # начальное положение стрелок
 set_diagonal_mode("M1M10", "left")
@@ -626,6 +718,11 @@ def check_if_route_finished(seg, rev):
         last_seg = real_segs[-1]
         if seg == last_seg or rev == last_seg:
             release_route(rid)
+        block = segment_to_block.get(seg)
+        if block:
+            for s in segment_groups[block]:
+                if s == last_seg or rev == last_seg:
+                    release_route(rid)
 
 def set_arduino_status(connected: bool, text: str = ""):
     if connected:
@@ -636,23 +733,41 @@ def set_arduino_status(connected: bool, text: str = ""):
 
 def update_all_occupancy():
 
+    for seg in seg_occ_train:
+        rev = (seg[1], seg[0])
+        if seg_occ_train.get(seg, 1) == 0:
+            occupied_segments.discard(seg)
+            occupied_segments.discard(rev)
+            check_if_route_finished(seg, rev)
+            block = segment_to_block.get(seg)
+            if block is None:
+                continue
+            segs_in_block = segment_groups[block]
+            for s in segs_in_block:
+                occupied_segments.discard(s)
+                occupied_segments.discard((s[1], s[0]))
     for (a, b), seg_id in segment_ids.items():
-        for seg in seg_occ_train:
-            rev = (seg[1], seg[0])
-            if seg_occ_train.get(seg, 1) == 0:
-                occupied_segments.discard(seg)
-                occupied_segments.discard(rev)
-                check_if_route_finished(seg, rev)
+
+        seg = (a, b)
+
+        block = segment_to_block.get(seg)
+        if block:
+            # если ЛЮБОЙ сегмент блока занят → весь блок красный
+            if any(seg_occ_train.get(s, 1) == 0 for s in segment_groups[block]):
+                paint_segment(seg, "red")
+                continue
+            for s in segment_groups[block]:
+                if s in occupied_segments:
+                    paint_segment(seg, "yellow")
+                    continue
+            paint_segment(s, "black")
 
         if seg_occ_train.get((a, b), 1) == 0 or seg_occ_train.get((b, a), 1) == 0 :
             paint_segment((a,b), "red")
             continue
-
         if (a, b) in occupied_segments or (b, a) in occupied_segments:
             paint_segment((a,b), "yellow")
             continue
-        # 3) свободный -> чёрный
-
         paint_segment((a, b), "black")
 
 
@@ -1057,7 +1172,7 @@ drawDeadEnd("past4", "right", 0)
 drawDeadEnd("beforeM6", "left", 0)
 
 #########################################        СТАНЦИИ(КРУГИ/ТЕКСТ)             ##############################################
-bannedNames = ["pastM1", "beforeM6", "past2", "1STR", "past4", "M6H2"]
+bannedNames = ["pastM1", "beforeM6", "past2", "1STR", "past4", "M6H2", "M2H1_mid", "M8mid"]
 for name, (x, y) in positions.items():
     if name in bannedNames:
         continue
@@ -1143,10 +1258,10 @@ btn_maneuver.place(x=center_x - offset - 80, y=buttons_y)
 btn_train.place(x=center_x + offset - 80, y=buttons_y)
 
 def do():
-    if seg_occ_train[("H1", "M2")] == 0:
-        seg_occ_train[("H1", "M2")] = 1
+    if seg_occ_train[("M2", "M2H1_mid")] == 0:
+        seg_occ_train[("M2", "M2H1_mid")] = 1
     else:
-        seg_occ_train[("H1", "M2")] = 0
+        seg_occ_train[("M2", "M2H1_mid")] = 0
 def do2():
     if seg_occ_train[("M8", "H1")] == 0:
         seg_occ_train[("M8", "H1")] = 1
