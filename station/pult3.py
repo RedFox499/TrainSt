@@ -317,7 +317,7 @@ routes = {
         {"type": "segment", "id": ("M1", "pastM1")},
     ],
     ("M2", "M10"): [
-        {"type": "segment", "id": ("M2", "H1")},
+        {"type": "segment", "id": ("M2","M2H1_mid")},
         {"type": "diag", "name": "M2H3"},
         {"type": "segment", "id": ("H3", "M10")},
     ],
@@ -332,14 +332,10 @@ routes = {
         {"type": "segment", "id": ("M8mid", "M8")},
         {"type": "segment", "id": ("M8mid", "M1")},
     ],
-    ("M8", "M1"): [
-        {"type": "segment", "id": ("M8mid", "M8")},
-        {"type": "segment", "id": ("M8mid", "M1")},
-        {"type": "segment", "id": ("M1", "pastM1")},
-    ],
     ("M1", "H1"): [
         {"type": "segment", "id": ("M1", "pastM1")},
-        {"type": "segment", "id": ("M1", "M8")},
+        {"type": "segment", "id": ("M8mid", "M8")},
+        {"type": "segment", "id": ("M8mid", "M1")},
         {"type": "segment", "id": ("M8", "H1")},
     ],
     ("M2", "H2"): [
@@ -347,9 +343,6 @@ routes = {
         {"type": "diag", "name": "2T1"},
         {"type": "segment", "id": ("H2", "M6H2")},
 
-    ],
-    ("H1", "M8"): [
-        {"type": "segment", "id": ("H1", "M8")},
     ],
 }
 
@@ -364,81 +357,45 @@ train_routes = {
     ],
     ("CH", "3"): [
         {"type": "segment", "id": ("CH", "M2")},
-        {"type": "segment", "id": ("M2", "H1")},
-        {"type": "segment", "id": ("M2", "H1")},
-        {"type": "diag", "name": "2T1"},
-        {"type": "segment", "id": ("H2", "M6H2")},
-        {"type": "segment", "id": ("M6", "M6H2")},
+        {"type": "segment", "id": ("M2", "M2H1_mid")},
+        {"type": "diag", "name": "M2H3"},
+        {"type": "segment", "id": ("H3", "M10")},
     ],
     ("CH", "2"): [
         {"type": "segment", "id": ("CH", "M2")},
-        {"type": "segment", "id": ("M2", "H1")},
-        {"type": "segment", "id": ("M2", "H1")},
+        {"type": "segment", "id": ("M2", "M2H1_mid")},
         {"type": "diag", "name": "2T1"},
         {"type": "segment", "id": ("H2", "M6H2")},
-        {"type": "segment", "id": ("M6", "M6H2")},
+        {"type": "segment", "id": ("H2", "past2")},
     ],
     ("CH", "1"): [
         {"type": "segment", "id": ("CH", "M2")},
-        {"type": "segment", "id": ("M2", "H1")},
-        {"type": "segment", "id": ("M2", "H1")},
-        {"type": "diag", "name": "2T1"},
-        {"type": "segment", "id": ("H2", "M6H2")},
-        {"type": "segment", "id": ("M6", "M6H2")},
+        {"type": "segment", "id": ("M2", "M2H1_mid")},
+        {"type": "segment", "id": ("H1", "M2H1_mid")},
+        {"type": "segment", "id": ("H1", "M8")},
     ],
 }
 
 # какие положения стрелок нужны для маршрута (можно подправить под реальную схему)
 route_switch_modes = {
-    ("H2", "M6"): {
-        "H42":  "left",
-        "2T1":  "left",
-    },
-    ("H4", "M6"): {
-        "H42":  "right",
-        "2T1":  "left",
-    },
-    ("M2", "H3"): {
-        "M2H3": "right",
-    },
-    ("M2", "M10"): {
-        "M2H3": "right",
-    },
-    ("H3", "M1"): {
-        "M1M10": "right",
-    },
+    ("H2", "M6"): {"H42":  "left","2T1":  "left"},
+    ("H4", "M6"): {"H42":  "right","2T1":  "left"},
+    ("M2", "H3"): {"M2H3": "right"},
+    ("M2", "M10"): {"M2H3": "right"},
+    ("H3", "M1"): {"M1M10": "right"},
     ("H3","M10"):{},
-    ("M10", "M1"): {
-        "M1M10": "right",
-    },
-    ("M2", "H1"): {
-        "M2H3": "left",
-        "2T1":  "left",
-    },
-    ("M2", "M8"): {
-        "M2H3": "left",
-    },
-    ("M2", "M1"): {
-        "M1M10": "left",   # идём по прямому, стрелка на M1M10 не на бок
-        "M2H3": "left",
-        "2T1":  "left",
-    },
-    ("M1", "M8"): {
-        "M1M10": "left",
-    },
-    ("M1", "H1"): {
-        "M1M10": "left",
-    },
-    ("M2", "H2"): {
-        "2T1": "right",
-        "H42":  "left",
-        "M2H3": "left",
-    },
-    ("H1", "M8"): {
-    },
-    ("CH", "M1"): {"M2H3": "left", "M1M10": "left"},
-    ("CH", "H2"): {"2T1": "right"},
+    ("M10", "M1"): {"M1M10": "right"},
+    ("M2", "H1"): {"M2H3": "left","2T1":  "left"},
+    ("M2", "M8"): {"M2H3": "left"},
+    ("M2", "M1"): {"M1M10": "left","M2H3": "left","2T1":  "left"},
+    ("M1", "M8"): {"M1M10": "left"},
+    ("M1", "H1"): {"M1M10": "left"},
+    ("M2", "H2"): {"2T1": "right", "H42":  "left", "M2H3": "left"},
+    ("H1", "M8"): {},
     ("CH", "4"): {"2T1": "right", "H42": "right"},
+    ("CH", "3"): {"M2H3": "right"},
+    ("CH", "2"): {"2T1": "right", "H42": "left"},
+    ("CH", "1"): {"2T1": "left", "M2H3": "left"}
 }
 
 def format_routes(routes_dict):
@@ -578,17 +535,18 @@ def apply_diagonal_mode(nameDiag, mode):
         if mode in ("left", "both"):
             setBranchLeft(nameDiag, left_cfg["connected"])
             branchWidth(nameDiag, 6)
+            if nameDiag == "H42":
+                canvas.itemconfig(segment_ids[("M6H2", "H2")], width=6)
         else:
             setBranchLeft(nameDiag, left_cfg["disconnected"])
             branchWidth(nameDiag, 2)
+
 
     right_cfg = cfg["right"]
     if right_cfg["exists"]:
         if mode in ("right", "both"):
             setBranchRight(nameDiag, right_cfg["connected"])
             branchWidth(nameDiag, 6)
-            if nameDiag == "M1H10":
-                print("fdfgdfg")
             if nameDiag == "2T1":
                 canvas.itemconfig(segment_ids[("H1","M2H1_mid")], width=2)
                 canvas.itemconfig(segment_ids[("M6", "M6H2")], width=2)
