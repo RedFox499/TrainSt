@@ -562,7 +562,7 @@ def apply_diagonal_mode(nameDiag, mode):
             if nameDiag == "2T1":
                 canvas.itemconfig(segment_ids[("H1", "M2H1_mid")], width=6)
                 canvas.itemconfig(segment_ids[("M6", "M6H2")], width=6)
-            if nameDiag == "M2H3":
+            if nameDiag == "M2H3" and nameDiag == "2T1":
                 canvas.itemconfig(segment_ids[("H1", "M2H1_mid")], width=6)
                 canvas.itemconfig(segment_ids[("M6", "M6H2")], width=6)
             if nameDiag == "M1M10":
