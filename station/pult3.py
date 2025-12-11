@@ -60,12 +60,10 @@ positions = {
 
 segments = [
     ("pastM1", "M1"),
-
     ("M8mid", "M8"),
     ("M8mid", "M1"),
 
     ("M8", "H1"),
-
     ("M2", "CH"),
 
     ("past2", "H2"),
@@ -75,21 +73,19 @@ segments = [
     ("H1", "M2H1_mid"),
 
     ("M10", "H3"),
-
     ("past4", "H4"),
-
     ("M6", "beforeM6"),
 ]
 
 SEGMENT_ORDER = [
     ("M1", "pastM1"),  # бит 0
-    ("M1", "M8"),      # бит 1
+    ("M8mid", "M1"),   # бит 1
     ("M8", "H1"),      # бит 2
-    ("H1", "M2"),      # бит 3
+    ("M2", "M2H1_mid"), # бит 3
     ("M2", "CH"),      # бит 4
     ("past2", "H2"),   # бит 5
     ("H2", "M6H2"),    # бит 6
-    ("M6H2", "M6"),    # бит 7
+    ("past4", "H4"),
 ]
 
 #########################################        МАССИВЫ ЭЛЕМЕНТОВ               ##############################################
@@ -386,7 +382,7 @@ route_switch_modes = {
     ("H3","M10"):{},
     ("M10", "M1"): {"M1M10": "right"},
     ("M2", "H1"): {"M2H3": "left","2T1":  "left"},
-    ("M2", "M8"): {"M2H3": "left"},
+    ("M2", "M8"): {"M2H3": "left", "2T1":  "left"},
     ("M2", "M1"): {"M1M10": "left","M2H3": "left","2T1":  "left"},
     ("M1", "M8"): {"M1M10": "left"},
     ("M1", "H1"): {"M1M10": "left"},
@@ -562,12 +558,11 @@ def apply_diagonal_mode(nameDiag, mode):
             if nameDiag == "2T1":
                 canvas.itemconfig(segment_ids[("H1", "M2H1_mid")], width=6)
                 canvas.itemconfig(segment_ids[("M6", "M6H2")], width=6)
-            if nameDiag == "M2H3" and nameDiag == "2T1":
+            if nameDiag == "M2H3":
                 canvas.itemconfig(segment_ids[("H1", "M2H1_mid")], width=6)
                 canvas.itemconfig(segment_ids[("M6", "M6H2")], width=6)
             if nameDiag == "M1M10":
                 canvas.itemconfig(segment_ids[("M8mid", "M8")], width=6)
-
 
 
 def get_switch_state_color(name):
@@ -690,7 +685,6 @@ def set_arduino_status(connected: bool, text: str = ""):
 
 
 def update_all_occupancy():
-
     for seg in seg_occ_train:
         rev = (seg[1], seg[0])
         if seg_occ_train.get(seg, 1) == 0:
@@ -818,6 +812,9 @@ def next_route_id():
     route_counter += 1
     return rid
 
+global settingRoute
+settingRoute = False
+
 def get_route(start, end):
     if current_mode == "maneuver":
         key = (start, end)
@@ -901,6 +898,7 @@ def check_route_conflict(start, end):
         return False
 
 def register_route(start, end):
+
     global route_counter
     rid = route_counter
     route_counter += 1
@@ -1009,18 +1007,22 @@ def on_node_click(event):
         on_two_nodes_selected(first, second)
 
 
+
 #########################################        ФУНКЦИЯ ПРИ ВЫБОРЕ ДВУХ ТОЧЕК   ##############################################
 def on_two_nodes_selected(a, b):
     global last_switch_check
+    global settingRoute
 
     # 1. Проверка конфликтов по занятым сегментам/стрелкам
     if check_route_conflict(a, b):
         print("Маршрут конфликтует с уже установленными!")
         reset_node_selection()
         return
-
+    if settingRoute == True:
+        return
     # 2. Ищем настройки стрелок для этого маршрута
     key = (a, b)
+
     if key not in route_switch_modes:
         key = (b, a)
 
@@ -1053,7 +1055,7 @@ def on_two_nodes_selected(a, b):
 
     if main_diag is None and route_cfg:
         main_diag = next(iter(route_cfg.keys()))
-
+    settingRoute = True
     paint_route(a, b, "cyan")
 
     blink_route(a, b, duration_ms=2000, interval_ms=200)
@@ -1076,6 +1078,9 @@ def on_two_nodes_selected(a, b):
     def finalize():
         rid = register_route(a, b)
         paint_route(a, b, "yellow")
+        global settingRoute
+        settingRoute = False
+
 
     root.after(2050, finalize)
 
