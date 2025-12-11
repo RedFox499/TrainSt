@@ -1019,6 +1019,7 @@ def on_two_nodes_selected(a, b):
         reset_node_selection()
         return
     if settingRoute == True:
+        reset_node_selection()
         return
     # 2. Ищем настройки стрелок для этого маршрута
     key = (a, b)
