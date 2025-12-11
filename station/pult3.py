@@ -407,11 +407,17 @@ def format_routes(routes_dict):
     return "\n".join(lines)
 
 def show_maneuver_routes():
+    global settingRoute
+    if settingRoute == True:
+        return
     set_mode("maneuver")
     msg = "Маневровые маршруты:\n\n" + format_routes(routes)
     showInfo("МАНЕВРОВЫЕ", msg)
 
 def show_train_routes():
+    global settingRoute
+    if settingRoute == True:
+        return
     set_mode("train")
     msg = "Поездные маршруты:\n\n" + format_routes(train_routes)
     showInfo("ПОЕЗДНЫЕ", msg)
