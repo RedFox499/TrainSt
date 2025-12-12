@@ -6,6 +6,7 @@ import serial
 import serial.tools.list_ports
 from serial import SerialException
 from serial.tools import list_ports
+from tkinter import ttk
 
 root = tk.Tk()
 root.title("Станция")
@@ -1118,11 +1119,22 @@ def on_two_nodes_selected(a, b):
         paint_route(a, b, "yellow")
         global settingRoute
         settingRoute = False
-
+        current_values = list(combobox1["values"])
+        current_values.append(rid)
+        combobox1["values"] = tuple(current_values)
 
     root.after(2100, finalize)
 
 def snos():
+    options = list(combobox1['values'])
+    selected_item = combobox1.get()
+    num = int(selected_item)
+    options.remove(selected_item)
+    release_route(num)
+    combobox1["values"] = options
+    combobox1.SelectedIndex = 0
+
+def snosAll():
     for active in list(active_routes.keys()):
         release_route(active)
 
@@ -1222,12 +1234,16 @@ create_switch_table()
 
 # метка статуса Arduino
 arduino_status_label = tkinter.Label(root, text="Arduino: проверка...", fg="orange")
-arduino_status_label.place(x=120, y=3)
-
+arduino_status_label.place(x=360, y=20)
+n = tkinter.StringVar()
+combobox1 = ttk.Combobox(root, width = 25, textvariable = n, )
+combobox1.place(x=510,y=20)
 button = tkinter.Button(root, text="Снести", command=snos)
-button.place(x=1, y=1)
+button.place(x=700, y=18)
+buttonAll = tkinter.Button(root, text="Убрать всё", command=snosAll)
+buttonAll.place(x=770, y=18)
 button = tkinter.Button(root, text="Проверка", command=check)
-button.place(x=50, y=1)
+button.place(x=860, y=18)
 
 buttons_y = CANVAS_H - 80
 
@@ -1270,9 +1286,9 @@ def do2():
         seg_occ_train[("M8", "H1")] = 0
 
 button69 = tkinter.Button(root, text="prost", command=do)
-button69.place(x=250, y=2)
+button69.place(x=250, y=18)
 button6969 = tkinter.Button(root, text="prost2", command=do2)
-button6969.place(x=300, y=2)
+button6969.place(x=300, y=18)
 
 #########################################        ARDUINO: ПОИСК ПОРТА И ОПРОС      ##############################################
 def find_arduino_port():
