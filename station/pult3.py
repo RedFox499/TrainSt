@@ -275,14 +275,6 @@ signals_config = {
 # ВАЖНО: id сегмента – кортеж, как в segment_ids
 routes = {
     # МАНЕВРОВЫЕ
-    ("H2", "M6"): [
-        {"type": "segment", "id": ("H2", "M6H2")},
-        {"type": "segment", "id": ("M6H2", "M6")},
-    ],
-    ("H4", "M6"): [
-        {"type": "diag", "name": "H42"},
-        {"type": "segment", "id": ("M6H2", "M6")},
-    ],
     ("M2", "H3"): [
         {"type": "segment", "id": ("M2", "M2H1_mid")},
         {"type": "diag", "name": "M2H3"},
@@ -303,8 +295,58 @@ routes = {
         {"type": "segment", "id": ("M8mid", "M8")},
         {"type": "segment", "id": ("M8mid", "M1")},
     ],
+    ("M2", "M10"): [
+        {"type": "segment", "id": ("M2", "M2H1_mid")},
+        {"type": "diag", "name": "M2H3"},
+        {"type": "segment", "id": ("H3", "M10")},
+    ],
+    ("M2", "H2"): [
+        {"type": "segment", "id": ("M2","M2H1_mid")},
+        {"type": "diag", "name": "2T1"},
+        {"type": "segment", "id": ("H2", "M6H2")},
+    ],
+    ("M2", "H4"): [
+        {"type": "segment", "id": ("M2","M2H1_mid")},
+        {"type": "diag", "name": "2T1"},
+        {"type": "segment", "id": ("H2", "M6H2")},
+        {"type": "diag", "name": "H42"},
+
+    ],
+    ("H2", "M6"): [
+        {"type": "segment", "id": ("H2", "M6H2")},
+        {"type": "segment", "id": ("M6H2", "M6")},
+    ],
+    ("H2", "M2"): [
+        {"type": "segment", "id": ("H2", "M6H2")},
+        {"type": "diag", "name": "2T1"},
+        {"type": "segment", "id": ("M2","M2H1_mid")}
+    ],
+    ("H4", "M6"): [
+        {"type": "diag", "name": "H42"},
+        {"type": "segment", "id": ("M6H2", "M6")},
+    ],
+    ("H4", "M2"): [
+        {"type": "diag", "name": "H42"},
+        {"type": "diag", "name": "2T1"},
+        {"type": "segment", "id": ("M2", "M2H1_mid")},
+    ],
+    ("M6", "H4"):[
+        {"type": "segment", "id": ("M6H2", "M6")},
+        {"type": "diag", "name": "H42"},
+        {"type": "segment", "id": ("past4", "H4")},
+    ],
+    ("M6", "H2"):[
+        {"type": "segment", "id": ("M6H2", "M6")},
+        {"type": "segment", "id": ("M6H2", "H2")},
+        {"type": "segment", "id": ("H2", "past2")},
+    ],
     ("H3", "M10"): [
         {"type": "segment", "id": ("H3", "M10")},
+        {"type": "diag", "name": "M1M10"},
+    ],
+    ("H1", "M2"): [
+        {"type": "segment", "id": ("M2H1_mid", "H1")},
+        {"type": "segment", "id": ("M2", "M2H1_mid")},
     ],
     ("H3", "M1"): [
         {"type": "segment", "id": ("H3", "M10")},
@@ -312,33 +354,26 @@ routes = {
         {"type": "segment", "id": ("M8", "M1")},
         {"type": "segment", "id": ("M1", "pastM1")},
     ],
-    ("M2", "M10"): [
-        {"type": "segment", "id": ("M2","M2H1_mid")},
-        {"type": "diag", "name": "M2H3"},
-        {"type": "segment", "id": ("H3", "M10")},
-    ],
     ("M10", "M1"): [
         {"type": "diag", "name": "M1M10"},
         {"type": "segment", "id": ("M8mid", "M1")},
-
         {"type": "segment", "id": ("M1", "pastM1")},
     ],
     ("M1", "M8"): [
         {"type": "segment", "id": ("M1", "pastM1")},
+        {"type": "segment", "id": ("M8mid", "M1")},
+        {"type": "segment", "id": ("M8mid", "M8")},
+    ],
+    ("M8", "M1"): [
         {"type": "segment", "id": ("M8mid", "M8")},
         {"type": "segment", "id": ("M8mid", "M1")},
+        {"type": "segment", "id": ("M1", "pastM1")},
     ],
     ("M1", "H1"): [
         {"type": "segment", "id": ("M1", "pastM1")},
-        {"type": "segment", "id": ("M8mid", "M8")},
         {"type": "segment", "id": ("M8mid", "M1")},
+        {"type": "segment", "id": ("M8mid", "M8")},
         {"type": "segment", "id": ("M8", "H1")},
-    ],
-    ("M2", "H2"): [
-        {"type": "segment", "id": ("M2","M2H1_mid")},
-        {"type": "diag", "name": "2T1"},
-        {"type": "segment", "id": ("H2", "M6H2")},
-
     ],
 }
 
@@ -391,8 +426,12 @@ route_switch_modes = {
     ("CH", "4"): {"2T1": "right", "H42": "right"},
     ("CH", "3"): {"M2H3": "right"},
     ("CH", "2"): {"2T1": "right", "H42": "left"},
-    ("CH", "1"): {"2T1": "left", "M2H3": "left"}
+    ("CH", "1"): {"2T1": "left", "M2H3": "left"},
+    ("M2", "H4"): {"M2H3": "left", "2T1": "right", "H42": "right"},
+    ("H2", "M2"): {"H42": "left", "2T1": "right", "M2H3": "left"},
 }
+
+
 
 def format_routes(routes_dict):
     if not routes_dict:
@@ -421,7 +460,6 @@ def show_train_routes():
     set_mode("train")
     msg = "Поездные маршруты:\n\n" + format_routes(train_routes)
     showInfo("ПОЕЗДНЫЕ", msg)
-
 
 #########################################       ОТРИСОВКА СВЕТОФОРОВ                ##############################################
 def drawSignal(name, mount="bottom", pack_side="right", count=3, colors=None):
@@ -524,8 +562,6 @@ def branchWidth(namediag, width):
     for lines in range(len(diag_ids[(namediag)])):
         canvas.itemconfig(diag_ids[namediag][lines], width=width)
 
-
-
 def apply_diagonal_mode(nameDiag, mode):
     cfg = diagonal_config.get(nameDiag)
     if cfg is None:
@@ -542,6 +578,8 @@ def apply_diagonal_mode(nameDiag, mode):
         else:
             setBranchLeft(nameDiag, left_cfg["disconnected"])
             branchWidth(nameDiag, 2)
+            if nameDiag == "M2H3":
+                canvas.itemconfig(segment_ids[("H1", "M2H1_mid")], width=2)
 
 
     right_cfg = cfg["right"]
@@ -549,11 +587,10 @@ def apply_diagonal_mode(nameDiag, mode):
         if mode in ("right", "both"):
             setBranchRight(nameDiag, right_cfg["connected"])
             branchWidth(nameDiag, 6)
+
             if nameDiag == "2T1":
-                canvas.itemconfig(segment_ids[("H1","M2H1_mid")], width=2)
-                canvas.itemconfig(segment_ids[("M6", "M6H2")], width=2)
-            if nameDiag == "M2H3":
                 canvas.itemconfig(segment_ids[("H1", "M2H1_mid")], width=2)
+                canvas.itemconfig(segment_ids[("M6", "M6H2")], width=2)
             if nameDiag == "M1M10":
                 canvas.itemconfig(segment_ids[("M8mid", "M8")], width=2)
             if nameDiag == "H42":
@@ -561,12 +598,12 @@ def apply_diagonal_mode(nameDiag, mode):
         else:
             setBranchRight(nameDiag, right_cfg["disconnected"])
             branchWidth(nameDiag, 2)
+            if nameDiag == "M2H3":
+                canvas.itemconfig(segment_ids[("H1", "M2H1_mid")], width=2)
             if nameDiag == "2T1":
                 canvas.itemconfig(segment_ids[("H1", "M2H1_mid")], width=6)
                 canvas.itemconfig(segment_ids[("M6", "M6H2")], width=6)
-            if nameDiag == "M2H3":
-                canvas.itemconfig(segment_ids[("H1", "M2H1_mid")], width=6)
-                canvas.itemconfig(segment_ids[("M6", "M6H2")], width=6)
+
             if nameDiag == "M1M10":
                 canvas.itemconfig(segment_ids[("M8mid", "M8")], width=6)
 
@@ -665,10 +702,6 @@ set_diagonal_mode("M2H3", "left")
 set_diagonal_mode("H42", "left")
 set_diagonal_mode("2T1", "left")
 
-
-def inblinking(start, end):
-    pass
-
 def check_if_route_finished(seg, rev):
     for rid in list(active_routes.keys()):
         data = active_routes[rid]
@@ -740,7 +773,7 @@ def update_all_occupancy():
             continue
         # 3) свободна -> чёрная
         paint_diagonal(diag_name, "black")
-    root.after(10, update_all_occupancy)
+    root.after(100, update_all_occupancy)
 
 #########################################        ПОДСВЕТКА МАРШРУТОВ               ##############################################
 def highlight_possible_targets(start):
@@ -862,9 +895,7 @@ def has_switch_conflict(a, b):
             # если эта стрелка не используется другим маршрутом — всё норм
             if diag_name not in other_needed:
                 continue
-
             other_mode = other_needed[diag_name]
-
             # если маршруты требуют РАЗНОЕ положение → конфликт
             if other_mode != mode_needed:
                 print(f"КОНФЛИКТ: стрелка {diag_name} уже занята маршрутом #{rid}, "
@@ -873,9 +904,6 @@ def has_switch_conflict(a, b):
                 return True
 
     return False
-
-
-
 
 def check_route_conflict(start, end):
     if current_mode == "maneuver":
@@ -1012,9 +1040,12 @@ def on_node_click(event):
         disable_all_except_selected()
         on_two_nodes_selected(first, second)
 
-
-
 #########################################        ФУНКЦИЯ ПРИ ВЫБОРЕ ДВУХ ТОЧЕК   ##############################################
+def visualSwitch(key):
+    list = [("M2", "H1"), ("M2", "M8"), ("M2", "M1"), ("H1", "M2"), ("M1", "M2")]
+    needRoutes = [('H1', 'M2H1_mid')]
+    if key in list:
+        canvas.itemconfig(segment_ids[needRoutes[0]], width=6)
 def on_two_nodes_selected(a, b):
     global last_switch_check
     global settingRoute
@@ -1027,6 +1058,7 @@ def on_two_nodes_selected(a, b):
     if settingRoute == True:
         reset_node_selection()
         return
+
     # 2. Ищем настройки стрелок для этого маршрута
     key = (a, b)
 
@@ -1053,7 +1085,6 @@ def on_two_nodes_selected(a, b):
             "current": current_mode,
             "ok": ok,
         }
-
         if not ok:
             if main_diag is None:
                 main_diag = diag_name
@@ -1081,7 +1112,7 @@ def on_two_nodes_selected(a, b):
             print("Маршрут без задействования стрелок.")
 
     reset_node_selection()
-
+    visualSwitch(key)
     def finalize():
         rid = register_route(a, b)
         paint_route(a, b, "yellow")
