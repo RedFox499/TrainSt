@@ -1096,10 +1096,10 @@ def on_two_nodes_selected(a, b):
     settingRoute = True
     paint_route(a, b, "cyan")
 
-    blink_route(a, b, duration_ms=2000, interval_ms=200)
+    blink_route(a, b, duration_ms=2000, interval_ms=150)
 
     if main_diag is not None:
-        blink_switches([main_diag], duration_ms=2000, interval_ms=200)
+        blink_switches([main_diag], duration_ms=2000, interval_ms=150)
 
     if changed:
         print("Изменены стрелки:")
@@ -1120,7 +1120,7 @@ def on_two_nodes_selected(a, b):
         settingRoute = False
 
 
-    root.after(2050, finalize)
+    root.after(2100, finalize)
 
 def snos():
     for active in list(active_routes.keys()):
