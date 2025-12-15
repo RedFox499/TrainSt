@@ -93,6 +93,7 @@ SEGMENT_ORDER = [
 selected_nodes = []
 MAX_SELECTED = 2
 node_ids = {}
+switch_ids = {}
 segment_ids = {}
 diag_ids = {}
 signal_ids = {}
@@ -223,19 +224,19 @@ signals_config = {
     },
 
     "H1": {
-        "mount": "bottom",
+        "mount": "top",
         "pack_side": "left",
         "count": 4,
         "colors": ["white", "red", "green", "yellow"],
     },
     "H2": {
-        "mount": "bottom",
+        "mount": "top",
         "pack_side": "left",
         "count": 4,
         "colors": ["white", "red", "green", "yellow"],
     },
     "H3": {
-        "mount": "bottom",
+        "mount": "top",
         "pack_side": "left",
         "count": 4,
         "colors": ["white", "red", "green", "yellow"],
@@ -248,7 +249,7 @@ signals_config = {
     },
 
     "M6": {
-        "mount": "top",
+        "mount": "bottom",
         "pack_side": "right",
         "count": 2,
         "colors": ["red", "white"],
@@ -600,8 +601,8 @@ def apply_diagonal_mode(nameDiag, mode):
         else:
             setBranchRight(nameDiag, right_cfg["disconnected"])
             branchWidth(nameDiag, 2)
-            if nameDiag == "ALB_Turn2-4":
-                canvas.itemconfig(segment_ids[("H1", "M2H1_mid")], width=2)
+            #if nameDiag == "ALB_Turn2-4":
+                #canvas.itemconfig(segment_ids[("H1", "M2H1_mid")], width=2)
             if nameDiag == "ALB_Turn4-6":
                 canvas.itemconfig(segment_ids[("H1", "M2H1_mid")], width=6)
                 canvas.itemconfig(segment_ids[("M6", "M6H2")], width=6)
@@ -615,9 +616,9 @@ def get_switch_state_num(name):
     if mode is None:
         return "-"
     if mode == normal:
-        return "1"
-    else:
         return "0"
+    else:
+        return "1"
 
 def get_switch_state_color(name):
     mode = diagonal_modes.get(name)
@@ -659,8 +660,10 @@ def create_switch_table():
 
     for i, name in enumerate(switch_list, start=1):
         y = y_start + (i - 1) * dy
-        canvas.create_text(x_text, y, text=f"{i}. {name}", anchor="w", font=("Bahnschrift SemiBold", 12))
+        switch = canvas.create_text(x_text, y, text=f"{i}. {name}", anchor="w", font=("Bahnschrift SemiBold", 12), tags=(f"switch_{name}", "switch"))
+        switch_ids[name] = switch
         label = canvas.create_text(x_rect-30, y+1, text="0", font=("Bahnschrift SemiBold", 12))
+
         rect = canvas.create_rectangle(
             x_rect - 8, y - 8, x_rect + 8, y + 8,
             outline="black", fill="grey"
@@ -845,6 +848,17 @@ def get_node_name_from_event(event):
             return t.replace("node_", "")
     return None
 
+def get_switch_name_from_event(event):
+    items = canvas.find_withtag("current")
+    if not items:
+        return None
+    item = items[0]
+    tags = canvas.gettags(item)
+    for t in tags:
+        if t.startswith("switch_"):
+            return t.replace("switch_", "")
+    return None
+
 def on_enter(event):
     name = get_node_name_from_event(event)
     if name is None:
@@ -860,6 +874,15 @@ def on_leave(event):
 
     if name not in selected_nodes:
         canvas.itemconfig(node_ids[name], fill="black")
+
+
+def switch_on_enter(event):
+    name = get_switch_name_from_event(event)
+    canvas.itemconfig(switch_ids[name], fill="pink")
+
+def switch_on_leave(event):
+    name = get_switch_name_from_event(event)
+    canvas.itemconfig(switch_ids[name], fill="black")
 
 #########################################        КОНФЛИКТЫ МАРШРУТОВ ПОСТРОЕНИЕ НОВЫХ               ##############################################
 def next_route_id():
@@ -1058,12 +1081,46 @@ def on_node_click(event):
         disable_all_except_selected()
         on_two_nodes_selected(first, second)
 
+def on_switch_mode_selected(name,mode):
+    text = canvas.itemcget(switch_text_ids[name], "text")
+    for num in active_routes:
+        for step in active_routes[num]["segments"]:
+            if step["type"] == "diag":
+                if step["name"] == name:
+                    showInfo("Ошибка", "Используемая стрелка!")
+                    return
+    if mode == 0 and text != "0":
+        if name == "ALB_Turn2-4":
+            canvas.itemconfig(segment_ids[("H1", "M2H1_mid")], width=6)
+        set_diagonal_mode(name, "left")
+    elif mode == 1 and text != "1":
+
+        set_diagonal_mode(name, "right")
+    else:
+        return
+
+
+
+def on_switch_click(event):
+    name = get_switch_name_from_event(event)
+    menu = tk.Menu(root, tearoff=0)
+    menu.add_command(
+        label="0",
+        command=lambda: on_switch_mode_selected(name, 0)
+    )
+    menu.add_command(
+        label="1",
+        command=lambda: on_switch_mode_selected(name, 1)
+    )
+    menu.tk_popup(event.x_root, event.y_root)
+
 #########################################        ФУНКЦИЯ ПРИ ВЫБОРЕ ДВУХ ТОЧЕК   ##############################################
 def visualSwitch(key):
     list = [("M2", "H1"), ("M2", "M8"), ("M2", "M1"), ("H1", "M2"), ("M1", "M2")]
     needRoutes = [('H1', 'M2H1_mid')]
     if key in list:
         canvas.itemconfig(segment_ids[needRoutes[0]], width=6)
+
 def on_two_nodes_selected(a, b):
     global last_switch_check
     global settingRoute
@@ -1210,6 +1267,8 @@ for name, (x, y) in positions.items():
     node = canvas.create_text(x, y - 25, text=name, tags=(f"node_{name}", "node"))
     node_ids[name] = node
 
+
+
 #########################################        РИСУЕМ ВСЕ СВЕТОФОРЫ            ##############################################
 for name, cfg in signals_config.items():
     drawSignal(
@@ -1248,6 +1307,10 @@ def set_mode(mode):
 canvas.tag_bind("node", "<Button-1>", on_node_click)
 canvas.tag_bind("node", "<Enter>", on_enter)
 canvas.tag_bind("node", "<Leave>", on_leave)
+
+canvas.tag_bind("switch", "<Button-1>", on_switch_click)
+canvas.tag_bind("switch", "<Enter>", switch_on_enter)
+canvas.tag_bind("switch", "<Leave>", switch_on_leave)
 create_switch_table()
 
 # метка статуса Arduino
