@@ -122,16 +122,17 @@ occupied_diagonals = set()
 # текущее положение каждой диагонали: name -> "left"/"right"/"both"/"none"
 diagonal_modes = {}
 
-switch_indicator_ids = {}          # name -> id прямоугольника
-switch_list = ["M1M10", "M2H3", "H42", "2T1"]
+switch_text_ids = {} # name = id текста
+switch_indicator_ids = {}          # name = id прямоугольника
+switch_list = ["ALB_Turn1", "ALB_Turn2-4", "ALB_Turn6-8", "ALB_Turn4-6"]
 
 blinking_routes = set()
 # нормальное (плюсовое) положение стрелок
 default_switch_mode = {
-    "M1M10": "left",
-    "M2H3": "left",
-    "H42":  "left",
-    "2T1":  "left",
+    "ALB_Turn1": "left",
+    "ALB_Turn2-4": "left",
+    "ALB_Turn6-8":  "left",
+    "ALB_Turn4-6":  "left",
 }
 
 
@@ -168,10 +169,10 @@ seg_occ_train = {
     ("M6", "beforeM6"): 1,
 }
 diag_occ_train = {
-    "M1M10": 1,
-    "M2H3": 1,
-    "H42": 1,
-    "2T1": 1,
+    "ALB_Turn1": 1,
+    "ALB_Turn2-4": 1,
+    "ALB_Turn6-8": 1,
+    "ALB_Turn4-6": 1,
 }
 
 
@@ -182,24 +183,24 @@ for block, segs in segment_groups.items():
 
 #########################################        КОНФИГ ДИАГОНАЛЕЙ               ##############################################
 diagonal_config = {
-    "M1M10": {
+    "ALB_Turn1": {
         "left":  {"exists": True, "connected": 0,  "disconnected": 0},
         "right": {"exists": True, "connected": -5, "disconnected": +5},
         "default": "both"
     },
-    "M2H3": {
+    "ALB_Turn2-4": {
         "left":  {"exists": True, "connected": 0,  "disconnected": 0},
         "right": {"exists": True, "connected": -5, "disconnected": +5},
         "default": "both"
     },
 
-    "H42": {
+    "ALB_Turn6-8": {
         "left":  {"exists": True, "connected": -5, "disconnected": +5},
         "right": {"exists": True, "connected": 0,  "disconnected": 0},
         "default": "both"
     },
 
-    "2T1": {
+    "ALB_Turn4-6": {
         "left":  {"exists": True, "connected": -5, "disconnected": +5},
         "right": {"exists": True, "connected": -5, "disconnected": +5},
         "default": "both"
@@ -278,7 +279,7 @@ routes = {
     # МАНЕВРОВЫЕ
     ("M2", "H3"): [
         {"type": "segment", "id": ("M2", "M2H1_mid")},
-        {"type": "diag", "name": "M2H3"},
+        {"type": "diag", "name": "ALB_Turn2-4"},
     ],
     ("M2", "H1"): [
         {"type": "segment", "id": ("M2", "M2H1_mid")},
@@ -298,19 +299,19 @@ routes = {
     ],
     ("M2", "M10"): [
         {"type": "segment", "id": ("M2", "M2H1_mid")},
-        {"type": "diag", "name": "M2H3"},
+        {"type": "diag", "name": "ALB_Turn2-4"},
         {"type": "segment", "id": ("H3", "M10")},
     ],
     ("M2", "H2"): [
         {"type": "segment", "id": ("M2","M2H1_mid")},
-        {"type": "diag", "name": "2T1"},
+        {"type": "diag", "name": "ALB_Turn4-6"},
         {"type": "segment", "id": ("H2", "M6H2")},
     ],
     ("M2", "H4"): [
         {"type": "segment", "id": ("M2","M2H1_mid")},
-        {"type": "diag", "name": "2T1"},
+        {"type": "diag", "name": "ALB_Turn4-6"},
         {"type": "segment", "id": ("H2", "M6H2")},
-        {"type": "diag", "name": "H42"},
+        {"type": "diag", "name": "ALB_Turn6-8"},
 
     ],
     ("H2", "M6"): [
@@ -319,21 +320,21 @@ routes = {
     ],
     ("H2", "M2"): [
         {"type": "segment", "id": ("H2", "M6H2")},
-        {"type": "diag", "name": "2T1"},
+        {"type": "diag", "name": "ALB_Turn4-6"},
         {"type": "segment", "id": ("M2","M2H1_mid")}
     ],
     ("H4", "M6"): [
-        {"type": "diag", "name": "H42"},
+        {"type": "diag", "name": "ALB_Turn6-8"},
         {"type": "segment", "id": ("M6H2", "M6")},
     ],
     ("H4", "M2"): [
-        {"type": "diag", "name": "H42"},
-        {"type": "diag", "name": "2T1"},
+        {"type": "diag", "name": "ALB_Turn6-8"},
+        {"type": "diag", "name": "ALB_Turn4-6"},
         {"type": "segment", "id": ("M2", "M2H1_mid")},
     ],
     ("M6", "H4"):[
         {"type": "segment", "id": ("M6H2", "M6")},
-        {"type": "diag", "name": "H42"},
+        {"type": "diag", "name": "ALB_Turn6-8"},
         {"type": "segment", "id": ("past4", "H4")},
     ],
     ("M6", "H2"):[
@@ -343,7 +344,7 @@ routes = {
     ],
     ("H3", "M10"): [
         {"type": "segment", "id": ("H3", "M10")},
-        {"type": "diag", "name": "M1M10"},
+        {"type": "diag", "name": "ALB_Turn1"},
     ],
     ("H1", "M2"): [
         {"type": "segment", "id": ("M2H1_mid", "H1")},
@@ -351,12 +352,12 @@ routes = {
     ],
     ("H3", "M1"): [
         {"type": "segment", "id": ("H3", "M10")},
-        {"type": "diag", "name": "M1M10"},
+        {"type": "diag", "name": "ALB_Turn1"},
         {"type": "segment", "id": ("M8", "M1")},
         {"type": "segment", "id": ("M1", "pastM1")},
     ],
     ("M10", "M1"): [
-        {"type": "diag", "name": "M1M10"},
+        {"type": "diag", "name": "ALB_Turn1"},
         {"type": "segment", "id": ("M8mid", "M1")},
         {"type": "segment", "id": ("M1", "pastM1")},
     ],
@@ -382,21 +383,21 @@ train_routes = {
     ("CH", "4"): [
         {"type": "segment", "id": ("CH", "M2")},
         {"type": "segment", "id": ("M2", "M2H1_mid")},
-        {"type": "diag", "name": "2T1"},
-        {"type": "diag", "name": "H42"},
+        {"type": "diag", "name": "ALB_Turn4-6"},
+        {"type": "diag", "name": "ALB_Turn6-8"},
         {"type": "segment", "id": ("M8", "M1")},
         {"type": "segment", "id": ("past4", "H4")},
     ],
     ("CH", "3"): [
         {"type": "segment", "id": ("CH", "M2")},
         {"type": "segment", "id": ("M2", "M2H1_mid")},
-        {"type": "diag", "name": "M2H3"},
+        {"type": "diag", "name": "ALB_Turn2-4"},
         {"type": "segment", "id": ("H3", "M10")},
     ],
     ("CH", "2"): [
         {"type": "segment", "id": ("CH", "M2")},
         {"type": "segment", "id": ("M2", "M2H1_mid")},
-        {"type": "diag", "name": "2T1"},
+        {"type": "diag", "name": "ALB_Turn4-6"},
         {"type": "segment", "id": ("H2", "M6H2")},
         {"type": "segment", "id": ("H2", "past2")},
     ],
@@ -410,26 +411,26 @@ train_routes = {
 
 # какие положения стрелок нужны для маршрута (можно подправить под реальную схему)
 route_switch_modes = {
-    ("H2", "M6"): {"H42":  "left","2T1":  "left"},
-    ("H4", "M6"): {"H42":  "right","2T1":  "left"},
-    ("M2", "H3"): {"M2H3": "right"},
-    ("M2", "M10"): {"M2H3": "right"},
-    ("H3", "M1"): {"M1M10": "right"},
+    ("H2", "M6"): {"ALB_Turn6-8":  "left","ALB_Turn4-6":  "left"},
+    ("H4", "M6"): {"ALB_Turn6-8":  "right","ALB_Turn4-6":  "left"},
+    ("M2", "H3"): {"ALB_Turn2-4": "right"},
+    ("M2", "M10"): {"ALB_Turn2-4": "right"},
+    ("H3", "M1"): {"ALB_Turn1": "right"},
     ("H3","M10"):{},
-    ("M10", "M1"): {"M1M10": "right"},
-    ("M2", "H1"): {"M2H3": "left","2T1":  "left"},
-    ("M2", "M8"): {"M2H3": "left", "2T1":  "left"},
-    ("M2", "M1"): {"M1M10": "left","M2H3": "left","2T1":  "left"},
-    ("M1", "M8"): {"M1M10": "left"},
-    ("M1", "H1"): {"M1M10": "left"},
-    ("M2", "H2"): {"2T1": "right", "H42":  "left", "M2H3": "left"},
+    ("M10", "M1"): {"ALB_Turn1": "right"},
+    ("M2", "H1"): {"ALB_Turn2-4": "left","ALB_Turn4-6":  "left"},
+    ("M2", "M8"): {"ALB_Turn2-4": "left", "ALB_Turn4-6":  "left"},
+    ("M2", "M1"): {"ALB_Turn1": "left","ALB_Turn2-4": "left","ALB_Turn4-6":  "left"},
+    ("M1", "M8"): {"ALB_Turn1": "left"},
+    ("M1", "H1"): {"ALB_Turn1": "left"},
+    ("M2", "H2"): {"ALB_Turn4-6": "right", "ALB_Turn6-8":  "left", "ALB_Turn2-4": "left"},
     ("H1", "M8"): {},
-    ("CH", "4"): {"2T1": "right", "H42": "right"},
-    ("CH", "3"): {"M2H3": "right"},
-    ("CH", "2"): {"2T1": "right", "H42": "left"},
-    ("CH", "1"): {"2T1": "left", "M2H3": "left"},
-    ("M2", "H4"): {"M2H3": "left", "2T1": "right", "H42": "right"},
-    ("H2", "M2"): {"H42": "left", "2T1": "right", "M2H3": "left"},
+    ("CH", "4"): {"ALB_Turn4-6": "right", "ALB_Turn6-8": "right"},
+    ("CH", "3"): {"ALB_Turn2-4": "right"},
+    ("CH", "2"): {"ALB_Turn4-6": "right", "ALB_Turn6-8": "left"},
+    ("CH", "1"): {"ALB_Turn4-6": "left", "ALB_Turn2-4": "left"},
+    ("M2", "H4"): {"ALB_Turn2-4": "left", "ALB_Turn4-6": "right", "ALB_Turn6-8": "right"},
+    ("H2", "M2"): {"ALB_Turn6-8": "left", "ALB_Turn4-6": "right", "ALB_Turn2-4": "left"},
 }
 
 
@@ -574,12 +575,12 @@ def apply_diagonal_mode(nameDiag, mode):
         if mode in ("left", "both"):
             setBranchLeft(nameDiag, left_cfg["connected"])
             branchWidth(nameDiag, 6)
-            if nameDiag == "H42":
+            if nameDiag == "ALB_Turn6-8":
                 canvas.itemconfig(segment_ids[("M6H2", "H2")], width=6)
         else:
             setBranchLeft(nameDiag, left_cfg["disconnected"])
             branchWidth(nameDiag, 2)
-            if nameDiag == "M2H3":
+            if nameDiag == "ALB_Turn2-4":
                 canvas.itemconfig(segment_ids[("H1", "M2H1_mid")], width=2)
 
 
@@ -589,25 +590,34 @@ def apply_diagonal_mode(nameDiag, mode):
             setBranchRight(nameDiag, right_cfg["connected"])
             branchWidth(nameDiag, 6)
 
-            if nameDiag == "2T1":
+            if nameDiag == "ALB_Turn4-6":
                 canvas.itemconfig(segment_ids[("H1", "M2H1_mid")], width=2)
                 canvas.itemconfig(segment_ids[("M6", "M6H2")], width=2)
-            if nameDiag == "M1M10":
+            if nameDiag == "ALB_Turn1":
                 canvas.itemconfig(segment_ids[("M8mid", "M8")], width=2)
-            if nameDiag == "H42":
+            if nameDiag == "ALB_Turn6-8":
                 canvas.itemconfig(segment_ids[("M6H2", "H2")], width=2)
         else:
             setBranchRight(nameDiag, right_cfg["disconnected"])
             branchWidth(nameDiag, 2)
-            if nameDiag == "M2H3":
+            if nameDiag == "ALB_Turn2-4":
                 canvas.itemconfig(segment_ids[("H1", "M2H1_mid")], width=2)
-            if nameDiag == "2T1":
+            if nameDiag == "ALB_Turn4-6":
                 canvas.itemconfig(segment_ids[("H1", "M2H1_mid")], width=6)
                 canvas.itemconfig(segment_ids[("M6", "M6H2")], width=6)
 
-            if nameDiag == "M1M10":
+            if nameDiag == "ALB_Turn1":
                 canvas.itemconfig(segment_ids[("M8mid", "M8")], width=6)
 
+def get_switch_state_num(name):
+    mode = diagonal_modes.get(name)
+    normal = default_switch_mode.get(name, "left")
+    if mode is None:
+        return "-"
+    if mode == normal:
+        return "1"
+    else:
+        return "0"
 
 def get_switch_state_color(name):
     mode = diagonal_modes.get(name)
@@ -621,10 +631,14 @@ def get_switch_state_color(name):
 
 def update_switch_indicator(name):
     rect = switch_indicator_ids.get(name)
+    labelSwitch = switch_text_ids.get(name)
     if rect is None:
         return
     color = get_switch_state_color(name)
+    text = get_switch_state_num(name)
     canvas.itemconfig(rect, fill=color)
+    canvas.itemconfig(labelSwitch, text=text)
+
 
 def set_diagonal_mode(nameDiag, mode):
     apply_diagonal_mode(nameDiag, mode)
@@ -645,11 +659,13 @@ def create_switch_table():
 
     for i, name in enumerate(switch_list, start=1):
         y = y_start + (i - 1) * dy
-        canvas.create_text(x_text, y, text=f"{i}. {name}", anchor="w")
+        canvas.create_text(x_text, y, text=f"{i}. {name}", anchor="w", font=("Bahnschrift SemiBold", 12))
+        label = canvas.create_text(x_rect-30, y+1, text="0", font=("Bahnschrift SemiBold", 12))
         rect = canvas.create_rectangle(
             x_rect - 8, y - 8, x_rect + 8, y + 8,
             outline="black", fill="grey"
         )
+        switch_text_ids[name] = label
         switch_indicator_ids[name] = rect
         update_switch_indicator(name)
 
@@ -692,16 +708,16 @@ for a, b in segments:
     segment_ids[(b, a)] = seg
 
 #########################################        ДИАГОНАЛИ/СТРЕЛКИ               ##############################################
-AddDiagonal(260, 330, 350, 430, 20, 38, "M2H3")
-AddDiagonal(965, 330, 890, 430, -22, -37, "M1M10")
-AddDiagonal(560, 130, 470, 230, -57, -20, "H42")
-AddDiagonal(420, 230, 350, 330, -30, -30, "2T1")
+AddDiagonal(260, 330, 350, 430, 20, 38, "ALB_Turn2-4")
+AddDiagonal(965, 330, 890, 430, -22, -37, "ALB_Turn1")
+AddDiagonal(560, 130, 470, 230, -57, -20, "ALB_Turn6-8")
+AddDiagonal(420, 230, 350, 330, -30, -30, "ALB_Turn4-6")
 
 # начальное положение стрелок
-set_diagonal_mode("M1M10", "left")
-set_diagonal_mode("M2H3", "left")
-set_diagonal_mode("H42", "left")
-set_diagonal_mode("2T1", "left")
+set_diagonal_mode("ALB_Turn1", "left")
+set_diagonal_mode("ALB_Turn2-4", "left")
+set_diagonal_mode("ALB_Turn6-8", "left")
+set_diagonal_mode("ALB_Turn4-6", "left")
 
 def check_if_route_finished(seg, rev):
     for rid in list(active_routes.keys()):
@@ -983,6 +999,7 @@ def release_route(route_id):
             paint_diagonal(step["name"], "black")
             occupied_diagonals.discard(step["name"])
     del active_routes[route_id]
+    comboboxDelete(route_id)
 
 #########################################        МИГАНИЕ МАРШРУТА               ##############################################
 def is_segment_in_blinking_route(seg):
@@ -1125,14 +1142,15 @@ def on_two_nodes_selected(a, b):
 
     root.after(2100, finalize)
 
-def snos():
+def comboboxDelete(ids):
     options = list(combobox1['values'])
+    options.remove(str(ids))
+    combobox1["values"] = options
+
+def snos():
     selected_item = combobox1.get()
     num = int(selected_item)
-    options.remove(selected_item)
     release_route(num)
-    combobox1["values"] = options
-    combobox1.SelectedIndex = 0
 
 def snosAll():
     for active in list(active_routes.keys()):
