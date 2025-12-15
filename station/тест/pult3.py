@@ -220,19 +220,19 @@ signals_config = {
     },
 
     "H1": {
-        "mount": "bottom",
+        "mount": "top",
         "pack_side": "left",
         "count": 4,
         "colors": ["white", "red", "green", "yellow"],
     },
     "H2": {
-        "mount": "bottom",
+        "mount": "top",
         "pack_side": "left",
         "count": 4,
         "colors": ["white", "red", "green", "yellow"],
     },
     "H3": {
-        "mount": "bottom",
+        "mount": "top",
         "pack_side": "left",
         "count": 4,
         "colors": ["white", "red", "green", "yellow"],
@@ -336,162 +336,146 @@ def find_active_entry_route_from_CH():
 # 0 в бите = лампа ВКЛ, 1 = ВЫКЛ.
 # Значения ниже — примеры, которые нужно подогнать под реальную распайку.
 
-# "Стоянка": один красный на CH, все остальные выключены
-PATTERN_IDLE_CH_RED = 0b11011111   # один ноль = один красный, остальное 1
+# 0 в бите = лампа ВКЛ, 1 = ВЫКЛ
+# формат байта для регистра светофора CH такой же, как в тестовом скетче.
+# СЮДА ты подставляешь проверенные в Arduino IDE значения.
+CH_595_PATTERNS = {
+    # один красный (как в твоём тесте с 0b00000111)
+    "red":         0b11011111,
 
-# "Маршрут CH-2/3/4": два жёлтых на CH, остальные выкл
-PATTERN_CH_TWO_YELLOW = 0b10110111  # два нуля = два жёлтых, остальное 1
+    # два жёлтых (пока пример — поставишь свой байт, когда измеришь на железе)
+    "two_yellow":  0b10110111,
 
-# Все лампы выкл (если понадобится)
-PATTERN_ALL_OFF = 0b11111111
+    # один жёлтый (не мигающий) — тоже пример
+    "one_yellow":  0b10111111,
 
+    "green": 0b11101111,
 
-def build_signal_byte_for_arduino_by_route() -> int:
+    # всё выключено (если понадобится)
+    "off":  0b11111111,
+}
+
+# какие аспекты должны быть у светофоров при разных маршрутах CH
+# ключ None — когда маршрут с CH не установлен
+ROUTE_SIGNAL_ASPECTS = {
+    None: {
+        "CH": "red",
+        "H1": "red",
+        "H2": "red",
+        "H3": "red",
+        "H4": "red",
+    },
+    "1": {   # CH → 1 (главный путь)
+        "CH": "one_yellow",
+        "H1": "red",
+        "H2": "red",
+        "H3": "red",
+        "H4": "red",
+    },
+    "2": {   # CH → 2 (боковой)
+        "CH": "two_yellow",
+        "H1": "red",
+        "H2": "red",
+        "H3": "red",
+        "H4": "red",
+    },
+    "3": {   # CH → 3
+        "CH": "two_yellow",
+        "H1": "red",
+        "H2": "red",
+        "H3": "red",
+        "H4": "red",
+    },
+    "4": {   # CH → 4
+        "CH": "two_yellow",
+        "H1": "red",
+        "H2": "red",
+        "H3": "red",
+        "H4": "red",
+    },
+}
+
+# ================== МАППИНГ АСПЕКТА -> ЛАМПЫ В GUI ==================
+def get_gui_lamps_for_aspect(name: str, aspect: str):
     """
-    Возвращает один байт для регистра:
-    - по умолчанию: красный на CH (PATTERN_IDLE_CH_RED)
-    - если есть поездной маршрут CH-2/3/4 – потом сюда добавим два жёлтых
+    По имени светофора и аспекту возвращаем:
+      lit   – индексы ламп, которые горят постоянно
+      blink – индексы ламп, которые мигают
     """
-    pattern = PATTERN_IDLE_CH_RED
+    roles = signal_lamp_roles.get(name, {})
+    lit = set()
+    blink = set()
 
-    dest = find_active_entry_route_from_CH()
-    if dest is None:
-        # нет маршрута CH-... -> держим красный
-        return pattern
+    if aspect == "red":
+        idx = roles.get("red")
+        if idx is not None:
+            lit.add(idx)
 
-    if dest == "1":
-        # пока тоже оставим красный (потом сделаем зелёный + открытый H1)
-        return pattern
+    elif aspect == "yellow":
+        idx = roles.get("yellow")
+        if idx is not None:
+            lit.add(idx)
 
-    if dest in ("2", "3", "4"):
-        # здесь будут два жёлтых – пока просто заглушка
-        return PATTERN_CH_TWO_YELLOW
-
-    return pattern
-
-
-def send_signal_bytes(pattern: int):
-    """
-    Отправляем в Arduino:
-        'L' + 1 байт (pattern)
-    Arduino потом делает shiftOut(DATA, CLOCK, LSBFIRST, pattern)
-    """
-    global ser
-    print(f"[PY] SIGNAL -> L {pattern:08b}")
-    if ser is None or not ser.is_open:
-        print("[PY] Arduino не подключено, байты не отправлены")
-        return
-    try:
-        ser.write(bytes([ord('L'), pattern & 0xFF]))
-        print("[PY] Байты отправлены")
-    except SerialException as e:
-        print(f"[PY] Ошибка отправки байтов сигналов в Arduino: {e}")
-
-
-#########################################       ОТРИСОВКА СВЕТОФОРОВ                ##############################################
-def drawSignal(name, mount="bottom", pack_side="right", count=3, colors=None):
-    x, y = positions[name]
-
-    r = 4
-    gap = 2 * r + 2
-    stand_len = 15
-    bar_len = 10
-
-    dy_sign = -1 if mount == "top" else 1
-    sx, sy = x, y + dy_sign * stand_len
-
-    canvas.create_line(x, y, sx, sy, width=2, fill="black")
-
-    hx_sign = 1 if pack_side == "right" else -1
-
-    hx0, hy0 = sx, sy
-    hx1, hy1 = sx + hx_sign * bar_len, sy
-    canvas.create_line(hx0, hy0, hx1, hy1, width=2, fill="black")
-
-    ids = []
-    start_cx = hx1 + hx_sign * (r + 1)
-
-    for i in range(count):
-        cx = start_cx + hx_sign * i * gap
-        cy = sy
-
-        fill_color = ""
-        if colors is not None and i < len(colors):
-            fill_color = colors[i]
-
-        oid = canvas.create_oval(
-            cx - r, cy - r,
-            cx + r, cy + r,
-            outline="black", width=1, fill=fill_color
-        )
-        ids.append(oid)
-
-    signal_ids[name] = ids
-
-
-def recalc_signal_aspects():
-    """
-    Считаем аспекты (какие лампы горят) для GUI
-    и одновременно готовим байты для Arduino.
-    """
-    signal_aspects.clear()
-
-    # По умолчанию – везде красный (визуал)
-    for name in TRAIN_SIGNALS:
-        roles = signal_lamp_roles.get(name, {})
-        lit: set[int] = set()
-        blink: set[int] = set()
-        red_idx = roles.get("red")
-        if red_idx is not None:
-            lit.add(red_idx)
-        signal_aspects[name] = (lit, blink)
-
-    dest = find_active_entry_route_from_CH()
-
-    if dest is None:
-        # нет маршрута, только красный на CH (и на остальных)
-        pattern = build_signal_byte_for_arduino_by_route()
-        send_signal_bytes(pattern)
-        return
-
-    # CH -> 1: CH зелёный, H1 зелёный в GUI
-    if dest == "1":
-        roles_ch = signal_lamp_roles.get("CH", {})
-        gc = roles_ch.get("green")
-        if gc is not None:
-            signal_aspects["CH"] = ({gc}, set())
-
-        roles_h1 = signal_lamp_roles.get("H1", {})
-        gh = roles_h1.get("green")
-        if gh is not None:
-            signal_aspects["H1"] = ({gh}, set())
-
-    # CH -> 2/3/4: на боковой, CH – два жёлтых, приёмный – зелёный
-    elif dest in ("2", "3", "4"):
-        roles_ch = signal_lamp_roles.get("CH", {})
-        low_idx = roles_ch.get("yellow_low") or roles_ch.get("yellow")
-        high_idx = roles_ch.get("yellow_high") or low_idx
-        lit = set()
+    elif aspect == "two_yellow":
+        low_idx = roles.get("yellow_low") or roles.get("yellow")
+        high_idx = roles.get("yellow_high") or low_idx
         if low_idx is not None:
             lit.add(low_idx)
         if high_idx is not None:
             lit.add(high_idx)
-        signal_aspects["CH"] = (lit, set())
 
-        if dest == "2":
-            hname = "H2"
-        elif dest == "3":
-            hname = "H3"
-        else:
-            hname = "H4"
-        roles_h = signal_lamp_roles.get(hname, {})
-        gh = roles_h.get("green")
-        if gh is not None:
-            signal_aspects[hname] = ({gh}, set())
+    elif aspect == "one_yellow":
+        idx = roles.get("yellow_low") or roles.get("yellow")
+        if idx is not None:
+            lit.add(idx)
 
-    # в конце – байты для Arduino
+    elif aspect == "one_yellow_blink":
+        idx = roles.get("yellow_low") or roles.get("yellow")
+        if idx is not None:
+            lit.add(idx)
+            blink.add(idx)
+
+    # "off" или любой неизвестный аспект -> всё погашено
+    return lit, blink
+
+# ================== ВЫБОР БАЙТА ДЛЯ ARDUINO ==================
+def build_signal_byte_for_arduino_by_route() -> int:
+    """
+    Возвращаем БАЙТ для 74HC595, который управляет входным светофором CH.
+    Аспект берём из ROUTE_SIGNAL_ASPECTS, а потом -> CH_595_PATTERNS.
+    """
+    dest = find_active_entry_route_from_CH()
+
+    # берём таблицу для текущего направления, или None (нет маршрута)
+    route_cfg = ROUTE_SIGNAL_ASPECTS.get(dest, ROUTE_SIGNAL_ASPECTS[None])
+
+    # аспект именно для CH
+    aspect_ch = route_cfg.get("CH", "red")
+
+    # конвертируем аспект в байт для регистра
+    return CH_595_PATTERNS.get(aspect_ch, CH_595_PATTERNS["red"])
+
+# ================== ПЕРЕСЧЁТ СВЕТОФОРОВ (GUI + ARDUINO) ==================
+def recalc_signal_aspects():
+    """
+    1) Ставим огни в GUI по ROUTE_SIGNAL_ASPECTS
+    2) Отправляем байт в Arduino (входной светофор CH)
+    """
+    signal_aspects.clear()
+
+    dest = find_active_entry_route_from_CH()
+    route_cfg = ROUTE_SIGNAL_ASPECTS.get(dest, ROUTE_SIGNAL_ASPECTS[None])
+
+    # --- GUI: все TRAIN_SIGNALS по таблице ---
+    for name in TRAIN_SIGNALS:
+        aspect = route_cfg.get(name, "red")
+        lit, blink = get_gui_lamps_for_aspect(name, aspect)
+        signal_aspects[name] = (lit, blink)
+
+    # --- Arduino: строим байт для CH и отправляем ---
     pattern = build_signal_byte_for_arduino_by_route()
-    send_signal_bytes(pattern)
+    # второй байт пока не используем (пешеходные/доп. светофоры выключены)
+    send_signal_bytes(pattern, 0xFF)
 
 
 def update_signals_visual():
@@ -812,6 +796,26 @@ def send_arduino_cmd(cmd: str):
         print(f"--> Arduino: {cmd!r}")
     except SerialException as e:
         print(f"Ошибка отправки в Arduino: {e}")
+
+def send_signal_bytes(byte_ch: int, byte_ped: int = 0xFF):
+    """
+    Отправка состояний светофоров в Arduino.
+
+    Протокол:
+      'L', <byte_ch>, <byte_ped>
+
+    byte_ch  – байт для входного светофора (CH, твой регистр на A1/A2/A3)
+    byte_ped – байт для второго регистра (пока можно всегда 0xFF = всё выкл)
+    """
+    global ser
+    print(f"[PY] SIGNAL -> L {byte_ch:08b} {byte_ped:08b}")
+    if ser is None or not ser.is_open:
+        print("send_signal_bytes: нет соединения с Arduino")
+        return
+    try:
+        ser.write(bytes([ord('L'), byte_ch & 0xFF, byte_ped & 0xFF]))
+    except SerialException as e:
+        print(f"Ошибка отправки байтов сигналов в Arduino: {e}")
 
 
 def send_servo_for_switch(nameDiag: str, mode: str):
@@ -1363,6 +1367,49 @@ for name, (x, y) in positions.items():
 
 
 #########################################        РИСУЕМ ВСЕ СВЕТОФОРЫ            ##############################################
+def drawSignal(name, mount="bottom", pack_side="right", count=3, colors=None):
+    x, y = positions[name]
+
+    r = 4              # радиус кружочка
+    gap = 2 * r + 2    # расстояние между огнями
+    stand_len = 15     # длина стойки
+    bar_len = 10       # длина горизонтальной перекладины
+
+    # куда ставим светофор — сверху или снизу от пути
+    dy_sign = -1 if mount == "top" else 1
+    sx, sy = x, y + dy_sign * stand_len
+
+    # стойка
+    canvas.create_line(x, y, sx, sy, width=2, fill="black")
+
+    # горизонтальная перекладина
+    hx_sign = 1 if pack_side == "right" else -1
+    hx0, hy0 = sx, sy
+    hx1, hy1 = sx + hx_sign * bar_len, sy
+    canvas.create_line(hx0, hy0, hx1, hy1, width=2, fill="black")
+
+    # сами огни
+    ids = []
+    start_cx = hx1 + hx_sign * (r + 1)
+
+    for i in range(count):
+        cx = start_cx + hx_sign * i * gap
+        cy = sy
+
+        fill_color = ""
+        if colors is not None and i < len(colors):
+            fill_color = colors[i]
+
+        oid = canvas.create_oval(
+            cx - r, cy - r,
+            cx + r, cy + r,
+            outline="black", width=1, fill=fill_color
+        )
+        ids.append(oid)
+
+    # сохраняем id кружков для дальнейшего управления
+    signal_ids[name] = ids
+
 for name, cfg in signals_config.items():
     drawSignal(
         name,
