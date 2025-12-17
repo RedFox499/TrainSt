@@ -130,6 +130,7 @@ switch_text_ids = {} # name = id текста
 switch_indicator_ids = {}          # name = id прямоугольника
 switch_list = ["ALB_Turn1", "ALB_Turn2", "ALB_Turn8", "ALB_Turn4-6"]
 
+blinking_diags = set()
 blinking_routes = set()
 # нормальное (плюсовое) положение стрелок
 default_switch_mode = {
@@ -1103,10 +1104,29 @@ def on_node_click(event):
         disable_all_except_selected()
         on_two_nodes_selected(first, second)
 
+def blink_diag(name, duration_ms=2000, interval_ms=200):
+        blinking_diags.add(name)
+        end_time = time.time() + duration_ms / 1000.0
+
+        def _step(state=True):
+            if time.time() >= end_time:
+                paint_diagonal(name, "black")
+                return
+
+            color = "cyan" if state else "black"
+            paint_diagonal(name, color)
+            root.after(interval_ms, _step, not state)
+        _step(True)
+
+global changingSwitches
+changingSwitches = False
 def on_switch_mode_selected(name,mode):
     text = canvas.itemcget(switch_text_ids[name], "text")
     global settingRoute
-
+    global changingSwitches
+    if changingSwitches:
+        showInfo("Ошибка", "Одна из стерок меняется!")
+        return
     ALB_Turn1banned = [("M8mid", "M8"), ("M8", "M8_mid")]
     ALB_Turn8banned = [("M6", "M6H2"), ("H2", "M6H2"),("M6H2", "M6") ,("M6H2", "H2")]
     ALB_Turn4_6banned = [("M2", "M2H1_mid"), ("M2H1_mid", "M2"), ("M6", "M6H2"), ("M6H2", "M6"), ("H2", "M6H2"), ("M6H2", "H2")]
@@ -1129,7 +1149,6 @@ def on_switch_mode_selected(name,mode):
                         showInfo("Ошибка", "Стрелка на готовом маршруте!")
                         return
             if name == "ALB_Turn4-6":
-                print(step["id"])
                 if step["type"] == "segment":
                     if step["id"] in ALB_Turn4_6banned:
                         showInfo("Ошибка", "Стрелка на готовом маршруте!")
@@ -1141,14 +1160,23 @@ def on_switch_mode_selected(name,mode):
     if settingRoute:
         showInfo("Ошибка", "Невозможно сменить стрелку")
         return
-    if mode == 0 and text != "+":
-        if name == "ALB_Turn2":
-            canvas.itemconfig(segment_ids[("H1", "M2H1_third")], width=6)
-        set_diagonal_mode(name, "left")
-    elif mode == 1 and text != "-":
-        set_diagonal_mode(name, "right")
-    else:
-        return
+    changingSwitches = True
+    blink_diag(name, duration_ms=2000, interval_ms=200)
+
+    def finalize():
+        global changingSwitches
+        if mode == 0 and text != "+":
+            if name == "ALB_Turn2":
+                canvas.itemconfig(segment_ids[("H1", "M2H1_third")], width=6)
+            set_diagonal_mode(name, "left")
+            changingSwitches = False
+        elif mode == 1 and text != "-":
+            set_diagonal_mode(name, "right")
+            changingSwitches = False
+        else:
+            changingSwitches = False
+            return
+    root.after(2100, finalize)
 
 
 def on_switch_click(event):
@@ -1256,6 +1284,8 @@ def comboboxDelete(ids):
 
 def snos():
     selected_item = combobox1.get()
+    if selected_item == "":
+        return
     num = int(selected_item)
     release_route(num)
 
