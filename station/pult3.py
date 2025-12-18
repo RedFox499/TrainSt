@@ -118,7 +118,9 @@ segment_groups = {
     ],
 
 }
-
+diag_parts = {
+    "ALB_Turn4-6": ["ALB_Turn4", "ALB_Turn6"]
+}
 active_routes = {}  # route_id -> {"start": a, "end": b, "segments": [...]}
 route_counter = 1   # уникальные номера маршрутов
 
@@ -160,8 +162,8 @@ route_to_arduino_cmd = {
 
 seg_occ_train = {
     ("M1", "pastM1"): 1,
-    ("M8", "M8mid"): 1,
-    ("M1", "M8mid"): 1,
+    ("M8mid", "M8"): 1,
+    ("M8mid", "M1"): 1,
     ("M8", "H1"): 1,
     ("M2", "CH"): 1,
     ("past2", "H2"): 1,
@@ -358,6 +360,7 @@ routes = {
     ("H3", "M10"): [
         {"type": "segment", "id": ("H3", "M10")},
         {"type": "diag", "name": "ALB_Turn1"},
+
     ],
     ("H1", "M2"): [
         {"type": "segment", "id": ("M2H1_third", "H1")},
@@ -368,6 +371,7 @@ routes = {
         {"type": "segment", "id": ("H3", "M10")},
         {"type": "diag", "name": "ALB_Turn1"},
         {"type": "segment", "id": ("M8", "M1")},
+        {"type": "segment", "id": ("M8mid", "M1")},
         {"type": "segment", "id": ("M1", "pastM1")},
     ],
     ("M10", "M1"): [
@@ -443,9 +447,9 @@ route_switch_modes = {
     ("M1", "H1"): {"ALB_Turn1": "left"},
     ("M2", "H2"): {"ALB_Turn4-6": "right", "ALB_Turn8":  "left", "ALB_Turn2": "left"},
     ("H1", "M8"): {},
-    ("CH", "4"): {"ALB_Turn4-6": "right", "ALB_Turn8": "right"},
+    ("CH", "4"): {"ALB_Turn2": "left","ALB_Turn4-6": "right", "ALB_Turn8": "right"},
     ("CH", "3"): {"ALB_Turn2": "right"},
-    ("CH", "2"): {"ALB_Turn4-6": "right", "ALB_Turn8": "left"},
+    ("CH", "2"): {"ALB_Turn2": "left", "ALB_Turn4-6": "right", "ALB_Turn8": "left"},
     ("CH", "1"): {"ALB_Turn4-6": "left", "ALB_Turn2": "left"},
     ("M2", "H4"): {"ALB_Turn2": "left", "ALB_Turn4-6": "right", "ALB_Turn8": "right"},
     ("H2", "M2"): {"ALB_Turn8": "left", "ALB_Turn4-6": "right", "ALB_Turn2": "left"},
@@ -739,6 +743,7 @@ AddDiagonal(965, 330, 890, 430, -22, -37, "ALB_Turn1")
 AddDiagonal(560, 130, 470, 230, -57, -20, "ALB_Turn8")
 AddDiagonal(420, 230, 350, 330, -30, -30, "ALB_Turn4-6")
 
+
 # начальное положение стрелок
 set_diagonal_mode("ALB_Turn1", "left")
 set_diagonal_mode("ALB_Turn2", "left")
@@ -781,10 +786,9 @@ def update_all_occupancy():
                 occupied_segments.discard(s)
                 occupied_segments.discard((s[1], s[0]))
     for (a, b), seg_id in segment_ids.items():
-
         seg = (a, b)
-
         block = segment_to_block.get(seg)
+
         if block:
             # если ЛЮБОЙ сегмент блока занят → весь блок красный
             if any(seg_occ_train.get(s, 1) == 0 for s in segment_groups[block]):
@@ -802,15 +806,14 @@ def update_all_occupancy():
         if (a, b) in occupied_segments or (b, a) in occupied_segments:
             paint_segment((a,b), "yellow")
             continue
-        paint_segment((a, b), "black")
 
+        paint_segment((a, b), "black")
 
     for diag_name, lines in diag_ids.items():
 
         if diag_occ_train.get(diag_name, 1) == 0:
             paint_diagonal(diag_name, "red")
             continue
-
         if diag_name in occupied_diagonals:
             paint_diagonal(diag_name, "yellow")
             continue
@@ -894,10 +897,11 @@ def on_leave(event):
     name = get_node_name_from_event(event)
     if name is None:
         return
-
     if name not in selected_nodes:
-        canvas.itemconfig(node_ids[name], fill="black")
-
+        if len(selected_nodes) == 1:
+            canvas.itemconfig(node_ids[name], fill="green")
+        else:
+            canvas.itemconfig(node_ids[name], fill="black")
 
 def switch_on_enter(event):
     name = get_switch_name_from_event(event)
@@ -1127,6 +1131,10 @@ def on_switch_mode_selected(name,mode):
     if changingSwitches:
         showInfo("Ошибка", "Одна из стерок меняется!")
         return
+    if diag_occ_train.get(name, 1) == 0:
+        showInfo("Ошибка", "Стрелка занята!")
+        return
+
     ALB_Turn1banned = [("M8mid", "M8"), ("M8", "M8_mid")]
     ALB_Turn8banned = [("M6", "M6H2"), ("H2", "M6H2"),("M6H2", "M6") ,("M6H2", "H2")]
     ALB_Turn4_6banned = [("M2", "M2H1_mid"), ("M2H1_mid", "M2"), ("M6", "M6H2"), ("M6H2", "M6"), ("H2", "M6H2"), ("M6H2", "H2")]
@@ -1288,10 +1296,12 @@ def snos():
         return
     num = int(selected_item)
     release_route(num)
+    combobox1.set('')
 
 def snosAll():
     for active in list(active_routes.keys()):
         release_route(active)
+    combobox1.set('')
 
 def check():
     print("Активные маршруты")
@@ -1344,7 +1354,7 @@ bannedNames = ["pastM1", "beforeM6", "past2", "1STR", "past4", "M6H2", "M2H1_mid
 for name, (x, y) in positions.items():
     if name in bannedNames:
         continue
-    node = canvas.create_text(x, y - 25, text=name, tags=(f"node_{name}", "node"))
+    node = canvas.create_text(x, y - 25, text=name, tags=(f"node_{name}", "node"), font=("Bahnschrift SemiBold", 12))
     node_ids[name] = node
 
 
@@ -1374,11 +1384,11 @@ def set_mode(mode):
 
     if btn_maneuver is not None and btn_train is not None:
         if mode == "maneuver":
-            btn_maneuver.config(bg="#4CAF50", fg="white")
-            btn_train.config(bg="#D32F2F", fg="white")
+            btn_maneuver.config(bg="#65a167", fg="white")
+            btn_train.config(bg="#bf4343", fg="white")
         else:
-            btn_train.config(bg="#4CAF50", fg="white")
-            btn_maneuver.config(bg="#D32F2F", fg="white")
+            btn_train.config(bg="#65a167", fg="white")
+            btn_maneuver.config(bg="#bf4343", fg="white")
 
     selected_nodes.clear()
     apply_mode_visuals()
@@ -1408,11 +1418,12 @@ button.place(x=860, y=18)
 
 buttons_y = CANVAS_H - 80
 
+
 btn_maneuver = tkinter.Button(
     root,
     text="МАНЕВРОВЫЕ",
-    font=("Arial", 14, "bold"),
-    bg="#4CAF50",
+    font=("Bahnschrift Bold", 15),
+    bg="#65a167",
     fg="white",
     width=15,
     height=2,
@@ -1421,8 +1432,8 @@ btn_maneuver = tkinter.Button(
 btn_train = tkinter.Button(
     root,
     text="ПОЕЗДНЫЕ",
-    font=("Arial", 14, "bold"),
-    bg="#D32F2F",
+    font=("Bahnschrift Bold", 15),
+    bg="#bf4343",
     fg="white",
     width=15,
     height=2,
@@ -1435,21 +1446,21 @@ offset = 140
 btn_maneuver.place(x=center_x - offset - 80, y=buttons_y)
 btn_train.place(x=center_x + offset - 80, y=buttons_y)
 
-def do():
-    if seg_occ_train[("M2", "M2H1_mid")] == 0:
-        seg_occ_train[("M2", "M2H1_mid")] = 1
+def do(button_id):
+    if button_id >= 0 and button_id < 13:
+        keys = list(seg_occ_train.keys())
+        seg = keys[button_id]
+        seg_occ_train[seg] = 1 if seg_occ_train[seg] == 0 else 0
     else:
-        seg_occ_train[("M2", "M2H1_mid")] = 0
-def do2():
-    if seg_occ_train[("M8", "H1")] == 0:
-        seg_occ_train[("M8", "H1")] = 1
-    else:
-        seg_occ_train[("M8", "H1")] = 0
+        keys = list(diag_occ_train.keys())
+        seg = keys[button_id-13]
+        diag_occ_train[seg] = 1 if diag_occ_train[seg] == 0 else 0
 
-button69 = tkinter.Button(root, text="prost", command=do)
-button69.place(x=250, y=18)
-button6969 = tkinter.Button(root, text="prost2", command=do2)
-button6969.place(x=300, y=18)
+
+for i in range(17):
+    button69 = tkinter.Button(root, text=f"{[i]}", command=lambda id=i: do(id))
+    button69.place(x=10, y=40 + i * 25)
+
 
 #########################################        ARDUINO: ПОИСК ПОРТА И ОПРОС      ##############################################
 def find_arduino_port():
