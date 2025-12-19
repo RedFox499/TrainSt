@@ -749,20 +749,33 @@ set_diagonal_mode("ALB_Turn1", "left")
 set_diagonal_mode("ALB_Turn2", "left")
 set_diagonal_mode("ALB_Turn8", "left")
 set_diagonal_mode("ALB_Turn4-6", "left")
-
-def check_if_route_finished(seg, rev):
+ 
+def check_if_route_finished(seg, rev, diag):
     for rid in list(active_routes.keys()):
         data = active_routes[rid]
         segs = data["segments"]
-        real_segs = [step["id"] for step in segs if step.get("type") == "segment"]
-        last_seg = real_segs[-1]
-        if seg == last_seg or rev == last_seg:
-            release_route(rid)
+        all_segs = []
+        for steps in segs:
+            if steps.get("type") == "diag":
+                all_segs.append(steps)
+            if steps.get("type") == "segment":
+                all_segs.append(steps)
+        last_all = all_segs[-1]
+        if last_all.get("type") == "segment":
+            if seg == last_all["id"] or rev == last_all["id"]:
+                release_route(rid)
+        if last_all.get("type") == "diag":
+            if last_all["name"] == diag:
+                release_route(rid)
         block = segment_to_block.get(seg)
+        print(block)
         if block:
             for s in segment_groups[block]:
-                if s == last_seg or rev == last_seg:
-                    release_route(rid)
+                if last_all.get("type") == "segment":
+                    if s == last_all["id"] or rev == last_all["id"]:
+                        release_route(rid)
+
+
 
 def set_arduino_status(connected: bool, text: str = ""):
     if connected:
@@ -777,7 +790,7 @@ def update_all_occupancy():
         if seg_occ_train.get(seg, 1) == 0:
             occupied_segments.discard(seg)
             occupied_segments.discard(rev)
-            check_if_route_finished(seg, rev)
+            check_if_route_finished(seg, rev, diag="")
             block = segment_to_block.get(seg)
             if block is None:
                 continue
@@ -785,6 +798,10 @@ def update_all_occupancy():
             for s in segs_in_block:
                 occupied_segments.discard(s)
                 occupied_segments.discard((s[1], s[0]))
+    for diag in diag_occ_train:
+        if diag_occ_train.get(diag, 1) == 0:
+            occupied_diagonals.discard(diag)
+            check_if_route_finished(seg="", rev="", diag=diag)
     for (a, b), seg_id in segment_ids.items():
         seg = (a, b)
         block = segment_to_block.get(seg)
@@ -1451,10 +1468,13 @@ def do(button_id):
         keys = list(seg_occ_train.keys())
         seg = keys[button_id]
         seg_occ_train[seg] = 1 if seg_occ_train[seg] == 0 else 0
+        print(seg_occ_train.get(seg, 1))
     else:
         keys = list(diag_occ_train.keys())
         seg = keys[button_id-13]
+
         diag_occ_train[seg] = 1 if diag_occ_train[seg] == 0 else 0
+        print(occupied_diagonals)
 
 
 for i in range(17):
