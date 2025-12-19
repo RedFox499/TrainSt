@@ -351,8 +351,15 @@ CH_595_PATTERNS = {
 
     "green": 0b11101111,
 
+
+
     # всё выключено (если понадобится)
     "off":  0b11111111,
+}
+
+MAN_595_PATTERNS = {
+    "off":            0b11111111,  # всё выключено
+    "H3_M10_white":   0b01111111,  # белый при маршруте H3–M10
 }
 
 # какие аспекты должны быть у светофоров при разных маршрутах CH
@@ -394,6 +401,45 @@ ROUTE_SIGNAL_ASPECTS = {
         "H4": "red",
     },
 }
+# УЧАСТКИ, КОТОРЫЕ «ЗАЩИЩАЕТ» ВХОДНОЙ СВЕТОФОР CH
+# Если на любом из этих участков есть поезд (детектор занятости = 0),
+# то CH должен гореть красным, независимо от маршрута.
+ROUTE_PROTECT_SEGMENTS_FOR_CH = {
+    None: [],
+    "1": [("M2", "CH")],  # маршрут CH→1: защищаем участок М2–CH
+    "2": [("M2", "CH")],  # CH→2
+    "3": [("M2", "CH")],  # CH→3
+    "4": [("M2", "CH")],  # CH→4
+}
+
+def is_route_occupied_for_CH(dest: str | None) -> bool:
+    """
+    Проверяет, есть ли поезд на защищаемых для данного направления участках.
+    dest = '1'/'2'/'3'/'4' или None.
+    Использует seg_occ_train: 0 = занято, 1 = свободно.
+    """
+
+    if dest is None:
+        return False
+
+    segs = ROUTE_PROTECT_SEGMENTS_FOR_CH.get(dest, [])
+    for a, b in segs:
+        # проверяем в обе стороны, на всякий случай
+        if seg_occ_train.get((a, b), 1) == 0:
+            return True
+        if seg_occ_train.get((b, a), 1) == 0:
+            return True
+
+    return False
+
+ch_route_passed = {
+    "1": False,
+    "2": False,
+    "3": False,
+    "4": False,
+}
+
+
 
 # ================== МАППИНГ АСПЕКТА -> ЛАМПЫ В GUI ==================
 def get_gui_lamps_for_aspect(name: str, aspect: str):
@@ -438,27 +484,63 @@ def get_gui_lamps_for_aspect(name: str, aspect: str):
     # "off" или любой неизвестный аспект -> всё погашено
     return lit, blink
 
+def get_current_ch_aspect() -> str:
+    """
+    Выдаёт текущий аспект для входного светофора CH
+    с учётом:
+      - выбранного маршрута (ROUTE_SIGNAL_ASPECTS)
+      - факта, что поезд уже вошёл на маршрут (ch_route_passed)
+      - занятости защищаемых участков (is_route_occupied_for_CH)
+    """
+    global ch_route_passed
+
+    dest = find_active_entry_route_from_CH()
+    route_cfg = ROUTE_SIGNAL_ASPECTS.get(dest, ROUTE_SIGNAL_ASPECTS[None])
+
+    # Если вообще нет активного поездного маршрута из CH → просто то, что в None
+    if dest is None:
+        return route_cfg.get("CH", "red")
+
+    # Если для этого направления мы следим за памятью
+    if dest in ch_route_passed:
+        # если сейчас на защищаемых участках есть поезд – запоминаем,
+        # что поезд прошёл под светофором
+        if is_route_occupied_for_CH(dest):
+            ch_route_passed[dest] = True
+
+        # Если поезд уже проходил под этим маршрутом – CH ТОЛЬКО КРАСНЫЙ
+        if ch_route_passed[dest]:
+            return "red"
+
+    # Иначе – обычная логика из таблицы маршрутов
+    return route_cfg.get("CH", "red")
+
+
 # ================== ВЫБОР БАЙТА ДЛЯ ARDUINO ==================
 def build_signal_byte_for_arduino_by_route() -> int:
     """
-    Возвращаем БАЙТ для 74HC595, который управляет входным светофором CH.
-    Аспект берём из ROUTE_SIGNAL_ASPECTS, а потом -> CH_595_PATTERNS.
+    Байt для 74HC595, который управляет входным светофором CH.
+    Аспект берём через get_current_ch_aspect() -> CH_595_PATTERNS.
     """
-    dest = find_active_entry_route_from_CH()
-
-    # берём таблицу для текущего направления, или None (нет маршрута)
-    route_cfg = ROUTE_SIGNAL_ASPECTS.get(dest, ROUTE_SIGNAL_ASPECTS[None])
-
-    # аспект именно для CH
-    aspect_ch = route_cfg.get("CH", "red")
-
-    # конвертируем аспект в байт для регистра
+    aspect_ch = get_current_ch_aspect()
     return CH_595_PATTERNS.get(aspect_ch, CH_595_PATTERNS["red"])
+
+def build_maneuver_signal_byte() -> int:
+    """
+    Байt для 2-го 74HC595 (маневровый светофор).
+    Пока правило одно:
+      – если активен маршрут H3–M10 (или M10–H3) -> белый
+      – иначе всё выключено
+    """
+    if is_maneuver_route_H3_M10_active():
+        return MAN_595_PATTERNS["H3_M10_white"]
+    else:
+        return MAN_595_PATTERNS["off"]
 
 # ================== ПЕРЕСЧЁТ СВЕТОФОРОВ (GUI + ARDUINO) ==================
 def recalc_signal_aspects():
     """
-    1) Ставим огни в GUI по ROUTE_SIGNAL_ASPECTS
+    1) Ставим огни в GUI по ROUTE_SIGNAL_ASPECTS + "память" для CH
     2) Отправляем байт в Arduino (входной светофор CH)
     """
     signal_aspects.clear()
@@ -466,16 +548,44 @@ def recalc_signal_aspects():
     dest = find_active_entry_route_from_CH()
     route_cfg = ROUTE_SIGNAL_ASPECTS.get(dest, ROUTE_SIGNAL_ASPECTS[None])
 
+    # аспект для CH считаем отдельно, с учётом ch_route_passed + занятости
+    ch_aspect = get_current_ch_aspect()
+
     # --- GUI: все TRAIN_SIGNALS по таблице ---
     for name in TRAIN_SIGNALS:
-        aspect = route_cfg.get(name, "red")
+        if name == "CH":
+            aspect = ch_aspect
+        else:
+            aspect = route_cfg.get(name, "red")
+
         lit, blink = get_gui_lamps_for_aspect(name, aspect)
         signal_aspects[name] = (lit, blink)
 
-    # --- Arduino: строим байт для CH и отправляем ---
-    pattern = build_signal_byte_for_arduino_by_route()
-    # второй байт пока не используем (пешеходные/доп. светофоры выключены)
-    send_signal_bytes(pattern, 0xFF)
+    # --- Arduino: строим байты для CH и маневровых светофоров ---
+    byte_ch  = build_signal_byte_for_arduino_by_route()
+    byte_man = build_maneuver_signal_byte()
+
+    send_signal_bytes(byte_ch, byte_man)
+
+def is_maneuver_route_H3_M10_active() -> bool:
+    """
+    Проверяем, есть ли активный МАНЕВРОВЫЙ маршрут H3–M10 или M10–H3.
+    """
+    for rid, data in active_routes.items():
+        a = data["start"]
+        b = data["end"]
+
+        # это вообще маневровый маршрут?
+        if (a, b) not in routes and (b, a) not in routes:
+            continue
+
+        # интересует только H3–M10
+        if (a == "H3" and b == "M10") or (a == "M10" and b == "H3"):
+            return True
+
+    return False
+
+
 
 
 def update_signals_visual():
@@ -833,7 +943,7 @@ def send_servo_for_switch(nameDiag: str, mode: str):
     elif nameDiag == "H42":
         cmd = 'B' if mode == "left" else 'b'
     elif nameDiag == "2T1":
-        cmd = 'C' if mode == "left" else 'c'
+        cmd = 'C' if mode == "left" else 'c'   # оба сервика внутри Arduino
     elif nameDiag == "M2H3":
         cmd = 'D' if mode == "left" else 'd'
 
@@ -1191,7 +1301,15 @@ def register_route(start, end):
             "end": end,
             "segments": train_routes.get((start, end)),
         }
+
+        # Если это поездной маршрут с участием CH – сбрасываем «память» для этого направления
+        if start == "CH" and end in ch_route_passed:
+            ch_route_passed[end] = False
+        if end == "CH" and start in ch_route_passed:
+            ch_route_passed[start] = False
+
         return rid
+
 
 
 def release_route(route_id):
