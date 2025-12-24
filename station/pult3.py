@@ -793,24 +793,6 @@ def AddSplitDiagonal(x1, y1, x2, y2,
     diag_ids[(namePart1)] = [l1, l2]
     diag_ids[(namePart2)] = [l3, l4]
 
-def color4():
-    print("Turn4 =", diag_ids["ALB_Turn4"])
-    print("Turn6 =", diag_ids["ALB_Turn6"])
-
-    for lid in diag_ids["ALB_Turn4"]:
-        print("coords Turn4", lid, canvas.coords(lid))
-
-    for lid in diag_ids["ALB_Turn6"]:
-        print("coords Turn6", lid, canvas.coords(lid))
-
-def color5():
-    paint_diagonal("ALB_Turn6", "red")
-
-
-button99 = tkinter.Button(root, text="Turn4", command=color4)
-button109 = tkinter.Button(root, text="Turn6", command=color5)
-button99.place(x=0,y=10)
-button109.place(x=40,y=10)
 #########################################       ЛИНИИ              ##############################################
 for a, b in segments:
     x1, y1 = positions[a]
@@ -831,8 +813,6 @@ set_diagonal_mode("ALB_Turn1", "left")
 set_diagonal_mode("ALB_Turn2", "left")
 set_diagonal_mode("ALB_Turn8", "left")
 set_diagonal_mode("ALB_Turn4-6", "left")
-
-
 
 
 def check_if_route_finished(seg, rev, diag):
@@ -1575,8 +1555,6 @@ def do(button_id):
         keys = list(diag_occ_train.keys())
         seg = keys[button_id-13]
         diag_occ_train[seg] = 1 if diag_occ_train[seg] == 0 else 0
-
-
 
 for i in range(18):
     button69 = tkinter.Button(root, text=f"{[i]}", command=lambda id=i: do(id))
