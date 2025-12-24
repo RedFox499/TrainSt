@@ -118,9 +118,17 @@ segment_groups = {
     ],
 
 }
-diag_parts = {
-    "ALB_Turn4-6": ["ALB_Turn4", "ALB_Turn6"]
+
+split_diag_ids = {}
+
+split_parts_map = {
+    "ALB_Turn4-6": {
+        "partA": "ALB_Turn6",
+        "partB": "ALB_Turn4"
+    }
 }
+
+
 active_routes = {}  # route_id -> {"start": a, "end": b, "segments": [...]}
 route_counter = 1   # уникальные номера маршрутов
 
@@ -179,7 +187,8 @@ diag_occ_train = {
     "ALB_Turn1": 1,
     "ALB_Turn2": 1,
     "ALB_Turn8": 1,
-    "ALB_Turn4-6": 1,
+    "ALB_Turn4": 1,
+    "ALB_Turn6": 1,
 }
 
 
@@ -208,8 +217,8 @@ diagonal_config = {
     },
 
     "ALB_Turn4-6": {
-        "left":  {"exists": True, "connected": -5, "disconnected": +5},
-        "right": {"exists": True, "connected": -5, "disconnected": +5},
+        "left":  {"exists": True, "connected": +5, "disconnected": 0},
+        "right": {"exists": True, "connected": +5, "disconnected": 0},
         "default": "both"
     }
 }
@@ -316,13 +325,15 @@ routes = {
     ("M2", "H2"): [
         {"type": "segment", "id": ("M2","M2H1_mid")},
         {"type": "segment", "id": ("M2H1_mid", "M2H1_third")},
-        {"type": "diag", "name": "ALB_Turn4-6"},
+        {"type": "diag", "name": "ALB_Turn4"},
+        {"type": "diag", "name": "ALB_Turn6"},
         {"type": "segment", "id": ("H2", "M6H2")},
     ],
     ("M2", "H4"): [
         {"type": "segment", "id": ("M2","M2H1_mid")},
         {"type": "segment", "id": ("M2H1_mid", "M2H1_third")},
-        {"type": "diag", "name": "ALB_Turn4-6"},
+        {"type": "diag", "name": "ALB_Turn4"},
+        {"type": "diag", "name": "ALB_Turn6"},
         {"type": "segment", "id": ("H2", "M6H2")},
         {"type": "diag", "name": "ALB_Turn8"},
 
@@ -333,7 +344,8 @@ routes = {
     ],
     ("H2", "M2"): [
         {"type": "segment", "id": ("H2", "M6H2")},
-        {"type": "diag", "name": "ALB_Turn4-6"},
+        {"type": "diag", "name": "ALB_Turn4"},
+        {"type": "diag", "name": "ALB_Turn6"},
         {"type": "segment", "id": ("M2H1_mid", "M2H1_third")},
         {"type": "segment", "id": ("M2","M2H1_mid")}
     ],
@@ -343,7 +355,8 @@ routes = {
     ],
     ("H4", "M2"): [
         {"type": "diag", "name": "ALB_Turn8"},
-        {"type": "diag", "name": "ALB_Turn4-6"},
+        {"type": "diag", "name": "ALB_Turn4"},
+        {"type": "diag", "name": "ALB_Turn6"},
         {"type": "segment", "id": ("M2H1_mid", "M2H1_third")},
         {"type": "segment", "id": ("M2", "M2H1_mid")},
     ],
@@ -402,7 +415,8 @@ train_routes = {
         {"type": "segment", "id": ("CH", "M2")},
         {"type": "segment", "id": ("M2H1_mid", "M2H1_third")},
         {"type": "segment", "id": ("M2", "M2H1_mid")},
-        {"type": "diag", "name": "ALB_Turn4-6"},
+        {"type": "diag", "name": "ALB_Turn4"},
+        {"type": "diag", "name": "ALB_Turn6"},
         {"type": "diag", "name": "ALB_Turn8"},
         {"type": "segment", "id": ("M8", "M1")},
         {"type": "segment", "id": ("past4", "H4")},
@@ -418,7 +432,8 @@ train_routes = {
         {"type": "segment", "id": ("CH", "M2")},
         {"type": "segment", "id": ("M2", "M2H1_mid")},
         {"type": "segment", "id": ("M2H1_mid", "M2H1_third")},
-        {"type": "diag", "name": "ALB_Turn4-6"},
+        {"type": "diag", "name": "ALB_Turn4"},
+        {"type": "diag", "name": "ALB_Turn6"},
         {"type": "segment", "id": ("H2", "M6H2")},
         {"type": "segment", "id": ("H2", "past2")},
     ],
@@ -526,9 +541,14 @@ def drawSignal(name, mount="bottom", pack_side="right", count=3, colors=None):
     signal_ids[name] = ids
 
 #########################################        ФУНКЦИИ МАРШРУТОВ                ##############################################
+
+
 def paint_diagonal(name, color):
-    for l in range(len(diag_ids[(name)])):
-        canvas.itemconfig(diag_ids[name][l], fill=color)
+    if name in split_diag_ids:
+        return
+    for line_id in diag_ids[name]:
+        canvas.itemconfig(line_id, fill=color)
+
 
 def paint_segment(key, color):
     seg_id = segment_ids.get(key)
@@ -569,22 +589,52 @@ def paint_route(start, end, color="yellow"):
 
 #########################################        ФУНКЦИИ ВКЛ/ОТКЛ СТРЕЛОК               ##############################################
 def setBranchRight(nameDiag, offset):
+    if nameDiag in split_diag_ids.keys():
+        x1, y1, x2, y2 = canvas.coords(split_diag_ids[nameDiag]['partA'][0])
+        canvas.coords(split_diag_ids[nameDiag]['partA'][0], x1, y1 - offset, x2, y2 - offset)
 
-    x1, y1, x2, y2 = canvas.coords(diag_ids[nameDiag][0])
-    canvas.coords(diag_ids[nameDiag][0], x1, y1 + offset, x2, y2 + offset)
-    x1, y1, x2, y2 = canvas.coords(diag_ids[nameDiag][2])
-    canvas.coords(diag_ids[nameDiag][2], x1, y1 + offset, x2, y2)
+        x1, y1, x2, y2 = canvas.coords(split_diag_ids[nameDiag]['partA'][1])
+        canvas.coords(split_diag_ids[nameDiag]['partA'][1], x1, y1 - offset, x2, y2)
+
+        x1, y1, x2, y2 = canvas.coords(split_diag_ids[nameDiag]['partB'][0])
+        canvas.coords(split_diag_ids[nameDiag]['partB'][0], x1, y1, x2, y2 + offset + 1)
+
+        x1, y1, x2, y2 = canvas.coords(split_diag_ids[nameDiag]['partB'][1])
+        canvas.coords(split_diag_ids[nameDiag]['partB'][1], x1, y1 + offset + 1, x2, y2 + offset + 1)
+    else:
+        x1, y1, x2, y2 = canvas.coords(diag_ids[nameDiag][0])
+        canvas.coords(diag_ids[nameDiag][0], x1, y1 + offset, x2, y2 + offset)
+        x1, y1, x2, y2 = canvas.coords(diag_ids[nameDiag][2])
+        canvas.coords(diag_ids[nameDiag][2], x1, y1 + offset, x2, y2)
 
 def setBranchLeft(nameDiag, offset):
-    x1, y1, x2, y2 = canvas.coords(diag_ids[nameDiag][1])
-    canvas.coords(diag_ids[nameDiag][1], x1, y1 + offset, x2, y2 + offset)
-    x1, y1, x2, y2 = canvas.coords(diag_ids[nameDiag][2])
-    canvas.coords(diag_ids[nameDiag][2], x1, y1, x2, y2 + offset)
+    if nameDiag in split_diag_ids.keys():
+        x1, y1, x2, y2 = canvas.coords(split_diag_ids[nameDiag]['partA'][0])  #1
+        canvas.coords(split_diag_ids[nameDiag]['partA'][0], x1, y1 + offset, x2, y2 + offset)
+
+        x1, y1, x2, y2 = canvas.coords(split_diag_ids[nameDiag]['partA'][1])   #3
+        canvas.coords(split_diag_ids[nameDiag]['partA'][1], x1, y1 + offset, x2, y2)
+
+        x1, y1, x2, y2 = canvas.coords(split_diag_ids[nameDiag]['partB'][0])  #2
+        canvas.coords(split_diag_ids[nameDiag]['partB'][0], x1, y1, x2, y2- offset-1)
+
+        x1, y1, x2, y2 = canvas.coords(split_diag_ids[nameDiag]['partB'][1])  #4
+        canvas.coords(split_diag_ids[nameDiag]['partB'][1], x1, y1 - offset-1, x2, y2 - offset-1)
+    else:
+        x1, y1, x2, y2 = canvas.coords(diag_ids[nameDiag][1])
+        canvas.coords(diag_ids[nameDiag][1], x1, y1 + offset, x2, y2 + offset)
+        x1, y1, x2, y2 = canvas.coords(diag_ids[nameDiag][2])
+        canvas.coords(diag_ids[nameDiag][2], x1, y1, x2, y2 + offset)
 
 
 def branchWidth(namediag, width):
-    for lines in range(len(diag_ids[(namediag)])):
-        canvas.itemconfig(diag_ids[namediag][lines], width=width)
+    if namediag in split_diag_ids.keys():
+        for part, lines in split_diag_ids[namediag].items():
+            for line_id in lines:
+                canvas.itemconfig(line_id, width=width)
+    else:
+        for lines in range(len(diag_ids[(namediag)])):
+            canvas.itemconfig(diag_ids[namediag][lines], width=width)
 
 def apply_diagonal_mode(nameDiag, mode):
     cfg = diagonal_config.get(nameDiag)
@@ -604,8 +654,7 @@ def apply_diagonal_mode(nameDiag, mode):
             branchWidth(nameDiag, 2)
             if nameDiag == "ALB_Turn2":
                 canvas.itemconfig(segment_ids[("M2H1_mid", "M2H1_third")], width=2)
-                canvas.itemconfig(segment_ids[("H1", "M2H1_third")], width=2)
-
+                #canvas.itemconfig(segment_ids[("H1", "M2H1_third")], width=2)
 
     right_cfg = cfg["right"]
     if right_cfg["exists"]:
@@ -729,6 +778,39 @@ def AddDiagonal(x1, y1, x2, y2, offsetleft, offsetright, nameDiag):
     l3 = canvas.create_line(x1, y1, x2, y2, width=3, fill="black")
     diag_ids[(nameDiag)] = [l1, l2, l3]
 
+
+def AddSplitDiagonal(x1, y1, x2, y2,
+                     x3, y3,offset_left,
+                     offset_right, nameDiag, namePart1, namePart2):
+    l2 = canvas.create_line(x1, y1, x2, y2, width=3, fill="black")
+    l3 = canvas.create_line(x2, y2, x3, y3, width=3, fill="black")
+    l1 = canvas.create_line(x1, y1, x1 - offset_left, y1, width=3, fill="black")
+    l4 = canvas.create_line(x3, y3, x3 + offset_right, y3, width=3, fill="black")
+    split_diag_ids[nameDiag] = {
+        'partA': [l1, l2],
+        'partB': [l3, l4]
+    }
+    diag_ids[(namePart1)] = [l1, l2]
+    diag_ids[(namePart2)] = [l3, l4]
+
+def color4():
+    print("Turn4 =", diag_ids["ALB_Turn4"])
+    print("Turn6 =", diag_ids["ALB_Turn6"])
+
+    for lid in diag_ids["ALB_Turn4"]:
+        print("coords Turn4", lid, canvas.coords(lid))
+
+    for lid in diag_ids["ALB_Turn6"]:
+        print("coords Turn6", lid, canvas.coords(lid))
+
+def color5():
+    paint_diagonal("ALB_Turn6", "red")
+
+
+button99 = tkinter.Button(root, text="Turn4", command=color4)
+button109 = tkinter.Button(root, text="Turn6", command=color5)
+button99.place(x=0,y=10)
+button109.place(x=40,y=10)
 #########################################       ЛИНИИ              ##############################################
 for a, b in segments:
     x1, y1 = positions[a]
@@ -741,7 +823,7 @@ for a, b in segments:
 AddDiagonal(260, 330, 350, 430, 20, 38, "ALB_Turn2")
 AddDiagonal(965, 330, 890, 430, -22, -37, "ALB_Turn1")
 AddDiagonal(560, 130, 470, 230, -57, -20, "ALB_Turn8")
-AddDiagonal(420, 230, 350, 330, -30, -30, "ALB_Turn4-6")
+AddSplitDiagonal(430, 230, 390, 280,350, 330, -30, -30, "ALB_Turn4-6", "ALB_Turn4", "ALB_Turn6")
 
 
 # начальное положение стрелок
@@ -749,7 +831,10 @@ set_diagonal_mode("ALB_Turn1", "left")
 set_diagonal_mode("ALB_Turn2", "left")
 set_diagonal_mode("ALB_Turn8", "left")
 set_diagonal_mode("ALB_Turn4-6", "left")
- 
+
+
+
+
 def check_if_route_finished(seg, rev, diag):
     for rid in list(active_routes.keys()):
         data = active_routes[rid]
@@ -768,7 +853,6 @@ def check_if_route_finished(seg, rev, diag):
             if last_all["name"] == diag:
                 release_route(rid)
         block = segment_to_block.get(seg)
-        print(block)
         if block:
             for s in segment_groups[block]:
                 if last_all.get("type") == "segment":
@@ -782,6 +866,12 @@ def set_arduino_status(connected: bool, text: str = ""):
         arduino_status_label.config(text=f"Arduino: {text}", bg="green", fg="black")
     else:
         arduino_status_label.config(text="Arduino: not connected", bg="red", fg="white")
+
+part_to_split = {}
+
+for split_name in split_parts_map:
+    for part, logic_name in split_parts_map[split_name].items():
+        part_to_split[logic_name] = (split_name, part)
 
 
 def update_all_occupancy():
@@ -826,8 +916,8 @@ def update_all_occupancy():
 
         paint_segment((a, b), "black")
 
-    for diag_name, lines in diag_ids.items():
 
+    for diag_name, lines in diag_ids.items():
         if diag_occ_train.get(diag_name, 1) == 0:
             paint_diagonal(diag_name, "red")
             continue
@@ -836,6 +926,7 @@ def update_all_occupancy():
             continue
         # 3) свободна -> чёрная
         paint_diagonal(diag_name, "black")
+
     root.after(100, update_all_occupancy)
 
 #########################################        ПОДСВЕТКА МАРШРУТОВ               ##############################################
@@ -908,7 +999,7 @@ def on_enter(event):
         return
 
     if name not in selected_nodes:
-        canvas.itemconfig(node_ids[name], fill="cyan")
+        canvas.itemconfig(node_ids[name], fill="#e01dcd")
 
 def on_leave(event):
     name = get_node_name_from_event(event)
@@ -1131,11 +1222,25 @@ def blink_diag(name, duration_ms=2000, interval_ms=200):
 
         def _step(state=True):
             if time.time() >= end_time:
-                paint_diagonal(name, "black")
+                if name in split_diag_ids:
+                    for split_name in split_diag_ids.keys():
+                        for part_name, lines in split_diag_ids[split_name].items():
+                            logic_name = split_parts_map[split_name][part_name]
+                            if logic_name in diag_ids:
+                                   paint_diagonal(logic_name, "black")
+                else:
+                    paint_diagonal(name, "black")
                 return
 
             color = "cyan" if state else "black"
-            paint_diagonal(name, color)
+            if name in split_diag_ids:
+                for split_name in split_diag_ids.keys():
+                    for part_name, lines in split_diag_ids[split_name].items():
+                        logic_name = split_parts_map[split_name][part_name]
+                        if logic_name in diag_ids:
+                            paint_diagonal(logic_name, color)
+            else:
+                paint_diagonal(name, color)
             root.after(interval_ms, _step, not state)
         _step(True)
 
@@ -1152,10 +1257,12 @@ def on_switch_mode_selected(name,mode):
         showInfo("Ошибка", "Стрелка занята!")
         return
 
+    textALB4_6 = canvas.itemcget(switch_text_ids["ALB_Turn4-6"], "text")
     ALB_Turn1banned = [("M8mid", "M8"), ("M8", "M8_mid")]
     ALB_Turn8banned = [("M6", "M6H2"), ("H2", "M6H2"),("M6H2", "M6") ,("M6H2", "H2")]
     ALB_Turn4_6banned = [("M2", "M2H1_mid"), ("M2H1_mid", "M2"), ("M6", "M6H2"), ("M6H2", "M6"), ("H2", "M6H2"), ("M6H2", "H2")]
     ALB_Turn2banned = [("M2", "M2H1_mid"), ("M2H1_mid", "M2")]
+
     for num in active_routes:
         for step in active_routes[num]["segments"]:
             if name == 'ALB_Turn1':
@@ -1191,7 +1298,7 @@ def on_switch_mode_selected(name,mode):
     def finalize():
         global changingSwitches
         if mode == 0 and text != "+":
-            if name == "ALB_Turn2":
+            if name == "ALB_Turn2" and textALB4_6 == "+":
                 canvas.itemconfig(segment_ids[("H1", "M2H1_third")], width=6)
             set_diagonal_mode(name, "left")
             changingSwitches = False
@@ -1374,8 +1481,6 @@ for name, (x, y) in positions.items():
     node = canvas.create_text(x, y - 25, text=name, tags=(f"node_{name}", "node"), font=("Bahnschrift SemiBold", 12))
     node_ids[name] = node
 
-
-
 #########################################        РИСУЕМ ВСЕ СВЕТОФОРЫ            ##############################################
 for name, cfg in signals_config.items():
     drawSignal(
@@ -1419,7 +1524,6 @@ canvas.tag_bind("switch", "<Button-1>", on_switch_click)
 canvas.tag_bind("switch", "<Enter>", switch_on_enter)
 canvas.tag_bind("switch", "<Leave>", switch_on_leave)
 
-
 # метка статуса Arduino
 arduino_status_label = tkinter.Label(root, text="Arduino: проверка...", fg="orange")
 arduino_status_label.place(x=360, y=20)
@@ -1434,7 +1538,6 @@ button = tkinter.Button(root, text="Проверка", command=check)
 button.place(x=860, y=18)
 
 buttons_y = CANVAS_H - 80
-
 
 btn_maneuver = tkinter.Button(
     root,
@@ -1468,16 +1571,14 @@ def do(button_id):
         keys = list(seg_occ_train.keys())
         seg = keys[button_id]
         seg_occ_train[seg] = 1 if seg_occ_train[seg] == 0 else 0
-        print(seg_occ_train.get(seg, 1))
     else:
         keys = list(diag_occ_train.keys())
         seg = keys[button_id-13]
-
         diag_occ_train[seg] = 1 if diag_occ_train[seg] == 0 else 0
-        print(occupied_diagonals)
 
 
-for i in range(17):
+
+for i in range(18):
     button69 = tkinter.Button(root, text=f"{[i]}", command=lambda id=i: do(id))
     button69.place(x=10, y=40 + i * 25)
 
@@ -1533,7 +1634,6 @@ def bytes_to_bits(data: bytes, bits_needed: int) -> list[int]:
 def apply_bits_to_segments(bits: list[int]):
     """
     bits[i] относится к SEGMENT_ORDER[i].
-
     1 в бите = кнопка НАЖАТА -> сегмент ЗАНЯТ (0)
     0 в бите = кнопка ОТПУЩЕНА -> сегмент СВОБОДЕН (1)
     """
@@ -1578,7 +1678,6 @@ def poll_arduino():
                 val = data[0]
                 bits = bytes_to_bits(data, bits_needed=len(SEGMENT_ORDER))
                 apply_bits_to_segments(bits)
-
 
     root.after(20, poll_arduino)
 
