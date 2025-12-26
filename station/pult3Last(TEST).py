@@ -12,10 +12,10 @@ from typing import Dict, List, Sequence
 
 root = tk.Tk()
 root.title("Станция")
-canvas = tk.Canvas(root, width=1150, height=600, bg="white")
+canvas = tk.Canvas(root, width=1250, height=600, bg="white")
 canvas.pack()
 
-CANVAS_W = 1150
+CANVAS_W = 1200
 CANVAS_H = 600
 
 def showInfo(title, msg):
@@ -61,6 +61,13 @@ positions = {
     "M2H1_mid": (260, 330),
     "M2H1_third": (340, 330),
 
+
+    "ALB_Sect0": (80, 500),
+    "ALB_Sect1": (325, 500),
+    "ALB_Sect2": (175,500),
+    "ALB_Sect1-2":(250,500),
+    "ALB_Sect1-2_2":(250,500)
+
 }
 
 segments = [
@@ -81,6 +88,9 @@ segments = [
     ("M10", "H3"),
     ("past4", "H4"),
     ("M6", "beforeM6"),
+    ("ALB_Sect2", "ALB_Sect0"),
+    ("ALB_Sect1", "ALB_Sect1-2"),
+    ("ALB_Sect1-2", "ALB_Sect2"),
 ]
 
 SEGMENT_ORDER = [
@@ -222,6 +232,7 @@ diagonal_config = {
 
 #########################################        КОНФИГ СВЕТОФОРОВ               ##############################################
 signals_config = {
+
     "CH": {
         "mount": "bottom",
         "pack_side": "right",
@@ -284,6 +295,26 @@ signals_config = {
         "count": 2,
         "colors": ["white", "red"],
     },
+    "ALB_Sect1-2": {
+        "mount": "top",
+        "pack_side": "left",
+        "count": 3,
+        "colors": ["yellow", "white", "red"],
+    },
+    "ALB_Sect1-2_2": {
+        "mount": "bottom",
+        "pack_side": "right",
+        "count": 3,
+        "colors": ["yellow", "white", "red"],
+    },
+    "ALB_Sect2": {
+        "mount": "top",
+        "pack_side": "left",
+        "count": 5,
+        "colors": ["yellow", "green", "red", "black", "white"],
+
+    }
+
 }
 
 # ===================== СВЕТОФОРЫ: логика байтов/аспектов =====================
@@ -419,6 +450,9 @@ signals_state = {
     "M8":  {"aspect": "red",   "blink": False},
     "M10": {"aspect": "red",   "blink": False},
     "M1":  {"aspect": "red",   "blink": False},
+    "ALB_Sect1-2": {"aspect": "red", "blink": False},
+    "ALB_Sect1-2_2": {"aspect": "red", "blink": False},
+    "ALB_Sect2": {"aspect": "red", "blink": False},
 }
 
 # 4) ТЕСТ (можно оставить, можно закомментить)
@@ -1843,7 +1877,9 @@ drawDeadEnd("past4", "right", 0)
 drawDeadEnd("beforeM6", "left", 0)
 
 #########################################        СТАНЦИИ(КРУГИ/ТЕКСТ)             ##############################################
-bannedNames = ["pastM1", "beforeM6", "past2", "1STR", "past4", "M6H2", "M2H1_mid", "M8mid", "M2H1_third"]
+bannedNames = ["pastM1", "beforeM6", "past2", "1STR", "past4", "M6H2", "M2H1_mid",
+               "M8mid", "M2H1_third", "ALB_Sect1-2", "ALB_Sect1", "ALB_Sect2",
+               "ALB_Sect0", "ALB_Sect1-2_2"]
 for name, (x, y) in positions.items():
     if name in bannedNames:
         continue
@@ -1947,7 +1983,7 @@ def do(button_id):
 
 for i in range(18):
     button69 = tkinter.Button(root, text=f"{[i]}", command=lambda id=i: do(id))
-    button69.place(x=10, y=40 + i * 25)
+    button69.place(x=1220, y=40 + i * 25)
 
 
 #########################################        ARDUINO: ПОИСК ПОРТА И ОПРОС      ##############################################
