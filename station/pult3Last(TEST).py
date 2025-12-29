@@ -299,13 +299,13 @@ signals_config = {
         "mount": "top",
         "pack_side": "left",
         "count": 3,
-        "colors": ["yellow", "white", "red"],
+        "colors": ["yellow", "green", "red"],
     },
     "ALB_Sect1-2_2": {
         "mount": "bottom",
         "pack_side": "right",
         "count": 3,
-        "colors": ["yellow", "white", "red"],
+        "colors": ["yellow", "green", "red"],
     },
     "ALB_Sect2": {
         "mount": "top",
@@ -438,21 +438,103 @@ signal_defs = build_signal_defs(signals_config)
 
 # 3) ТЕКУЩЕЕ СОСТОЯНИЕ СИГНАЛОВ (что показывать)
 signals_state = {
-    "CH":  {"aspect": "red",   "blink": False},
-    "M2":  {"aspect": "blue",  "blink": False},
 
-    "H1":  {"aspect": "red",   "blink": False},
-    "H2":  {"aspect": "red",   "blink": False},
-    "H3":  {"aspect": "red",   "blink": False},
-    "H4":  {"aspect": "red",   "blink": False},
+    "CH": {
+        "lamps": {
+            "yellow": {"on": False, "blink": False},
+            "green": {"on": False, "blink": False},
+            "red": {"on": True, "blink": False},
+            "yellow": {"on": False, "blink": False},
+            "white": {"on": False, "blink": False},
+        }
+    },
+    "M2": {
+            "lamps": {
+                "blue": {"on": True, "blink": False},
+                "white": {"on": False, "blink": False},
+            }
+    },
+    "H1": {
+            "lamps": {
+                "yellow": {"on": False, "blink": False},
+                "green": {"on": False, "blink": False},
+                "red": {"on": True, "blink": False},
+                "white": {"on": False, "blink": False},
+            }
+    },
+    "H2": {
+        "lamps": {
+            "yellow": {"on": False, "blink": False},
+            "green": {"on": False, "blink": False},
+            "red": {"on": True, "blink": False},
+            "white": {"on": False, "blink": False},
+        }
+    },
+    "H3": {
+        "lamps": {
+            "yellow": {"on": False, "blink": False},
+            "green": {"on": False, "blink": False},
+            "red": {"on": True, "blink": False},
+            "white": {"on": False, "blink": False},
+        }
+    },
+     "H4": {
+            "lamps": {
+                "yellow": {"on": False, "blink": False},
+                "green": {"on": False, "blink": False},
+                "red": {"on": True, "blink": False},
+                "white": {"on": False, "blink": False},
+            }
+    },
 
-    "M6":  {"aspect": "red",   "blink": False},
-    "M8":  {"aspect": "red",   "blink": False},
-    "M10": {"aspect": "red",   "blink": False},
-    "M1":  {"aspect": "red",   "blink": False},
-    "ALB_Sect1-2": {"aspect": "red", "blink": False},
-    "ALB_Sect1-2_2": {"aspect": "red", "blink": False},
-    "ALB_Sect2": {"aspect": "red", "blink": False},
+    "M6": {
+        "lamps": {
+            "red": {"on": True, "blink": False},
+            "white": {"on": False, "blink": False},
+        }
+    },
+    "M8": {
+        "lamps": {
+            "red": {"on": True, "blink": False},
+            "white": {"on": False, "blink": False},
+        }
+    },
+    "M10": {
+        "lamps": {
+            "red": {"on": True, "blink": False},
+            "white": {"on": False, "blink": False},
+        }
+    },
+    "M1": {
+        "lamps": {
+            "red": {"on": True, "blink": False},
+            "white": {"on": False, "blink": False},
+        }
+    },
+    "ALB_Sect1-2": {
+        "lamps": {
+            "red": {"on": False, "blink": False},
+            "green": {"on": False, "blink": False},
+            "yellow": {"on": False, "blink": False},
+        }
+    },
+    "ALB_Sect1-2_2": {
+        "lamps": {
+            "red": {"on": False, "blink": False},
+            "green": {"on": False, "blink": False},
+            "yellow": {"on": False, "blink": False},
+        }
+    },
+    "ALB_Sect2": {
+        "lamps": {
+            "yellow": {"on": False, "blink": False},
+            "green": {"on": False, "blink": False},
+            "red": {"on": False, "blink": False},
+            "black": {"on": False, "blink": False},
+            "white": {"on": False, "blink": False},
+        }
+    },
+
 }
 
 # 4) ТЕСТ (можно оставить, можно закомментить)
@@ -490,6 +572,7 @@ def gui_lamps_for_aspect(sig_name: str, aspect: str) -> tuple[set[int], set[int]
       lit   = какие лампы должны светиться (индексы)
       blink = какие лампы должны мигать (индексы)
     """
+
     lit: set[int] = set()
     blink: set[int] = set()
 
@@ -526,6 +609,38 @@ def gui_lamps_for_aspect(sig_name: str, aspect: str) -> tuple[set[int], set[int]
 
     return lit, blink
 
+def gui_lamps_from_state(sig_name: str) -> tuple[set[int], set[int]]:
+    lit: set[int] = set()
+    blink: set[int] = set()
+
+    st = signals_state.get(sig_name)
+    if not st:
+        return lit, blink
+
+    lamps = st.get("lamps", {})
+
+    # индексы физических ламп и их цвета
+    lamp_indices = {
+        color: _indices_for_color(sig_name, color)
+        for color in lamps.keys()
+    }
+
+    for color, cfg in lamps.items():
+        idxs = lamp_indices.get(color, [])
+        if not idxs:
+            continue
+
+        # если включена — все лампы этого цвета зажигаем
+        if cfg.get("on", False):
+            for i in idxs:
+                lit.add(i)
+
+                # если мигает — добавляем в blink
+                if cfg.get("blink", False):
+                    blink.add(i)
+
+    return lit, blink
+
 
 def debug_print_frame(regs: list[int]) -> None:
     # Печать “какой байт на какой сигнал” в порядке цепочки signals_config
@@ -538,12 +653,33 @@ def debug_print_frame(regs: list[int]) -> None:
 # Ключ: (start_node, end_node) как в routes/train_routes (или в active_routes["start"/"end"])
 ROUTE_SIGNAL_MAP: dict[tuple[str, str], dict[str, dict[str, object]]] = {
     ("M2", "H3"): {
-        "M2": {"aspect": "white", "blink": False},
-        "H3": {"aspect": "red",   "blink": False},
+         "M2": {
+            "lamps": {
+                "white": {"on": True, "blink": False},
+
+            }
+        },
+        "H3": {
+            "lamps": {
+                "yellow": {"on": True, "blink": False},
+                "red":    {"on": False, "blink": False},
+                "green": {"on": True, "blink": False},
+            }
+        },
     },
     ("M2", "M10"): {
-        "M2":  {"aspect": "blue", "blink": False},
-        "M10": {"aspect": "white", "blink": False},
+        "M2": {
+            "lamps":
+                {"blue": {"on": True, "blink": False},
+            },
+        },
+
+        "M10": {
+            "lamps": {
+                "white": {"on": True, "blink": False},
+
+            }
+        },
     },
     ("M2", "H1"):{
         "M2": {"aspect": "white", "blink": False},
@@ -553,6 +689,7 @@ ROUTE_SIGNAL_MAP: dict[tuple[str, str], dict[str, dict[str, object]]] = {
 }
 
 
+
 def recalc_signals_from_active_routes() -> None:
     """
     1) Сначала всё закрываем в STOP (red/blue/off — что доступно данному светофору)
@@ -560,6 +697,7 @@ def recalc_signals_from_active_routes() -> None:
        (если маршрут найден в обратную сторону — тоже применим)
     """
     # 1) базово всё закрыть
+    """
     for name in signals_config.keys():
         # если у тебя есть signal_defs/stop_aspect_for_signal — используем их
         try:
@@ -568,12 +706,26 @@ def recalc_signals_from_active_routes() -> None:
             # запасной вариант без signal_defs
             cols = signals_config[name]["colors"]
             if "red" in cols:
-                signals_state[name]["aspect"] = "red"
+                signals_state[name]["lamps"]["red"]["on"] = True
             elif "blue" in cols:
-                signals_state[name]["aspect"] = "blue"
+                signals_state[name]["lamps"]["blue"]["on"] = True
             else:
                 signals_state[name]["aspect"] = "off"
         signals_state[name]["blink"] = False
+    """
+    # включаем красный по умолчанию
+    for name in signals_state.keys():
+        for lamp in signals_state[name]["lamps"].values():
+            lamp["on"] = False
+            lamp["blink"] = False
+        if "red" in signals_state[name]["lamps"]:
+            signals_state[name]["lamps"]["red"]["on"] = True
+        elif "blue" in signals_state[name]["lamps"]:
+            signals_state[name]["lamps"]["blue"]["on"] = True
+        else:
+            for colors in signals_state[name]["lamps"]:
+                signals_state[name]["lamps"][colors]["on"] = False
+
 
     # 2) применить активные маршруты
     for rid, data in active_routes.items():
@@ -590,10 +742,17 @@ def recalc_signals_from_active_routes() -> None:
         if not cfg:
             continue
 
-        for sig, st in cfg.items():
-            if sig in signals_state:
-                signals_state[sig]["aspect"] = st.get("aspect", "off")
-                signals_state[sig]["blink"] = bool(st.get("blink", False))
+        for name in cfg:
+            if name in signals_state:
+                for lamp in signals_state[name]["lamps"].values():
+                    lamp["on"] = False
+                    lamp["blink"] = False
+            for color, lamp_cfg in cfg[name]["lamps"].items():
+                if color not in signals_state[name]["lamps"]:
+                    continue
+
+                signals_state[name]["lamps"][color]["on"] = lamp_cfg.get("on", False)
+                signals_state[name]["lamps"][color]["blink"] = lamp_cfg.get("blink", False)
 
 
 def update_signals_visual_v2() -> None:
@@ -608,7 +767,7 @@ def update_signals_visual_v2() -> None:
         if DEBUG_SIGNALS_FRAME:
             debug_print_frame(regs)
     except Exception:
-        # если build_frame/signal_defs ещё не подключены — просто молча рисуем GUI
+        # если build_frame/signal_defs ещё не подключены - рисуем GUI
         pass
 
     # 3) покрасить все светофоры
@@ -619,12 +778,14 @@ def update_signals_visual_v2() -> None:
         ids = signal_ids[name]
         cfg_colors = signals_config[name]["colors"]
 
+
         st = signals_state.get(name, {"aspect": "off", "blink": False})
         aspect = st.get("aspect", "off")
         blink_all = bool(st.get("blink", False))
 
-        lit, blink = gui_lamps_for_aspect(name, aspect)
+        lit, blink = gui_lamps_from_state(name)
 
+        
         for idx, oid in enumerate(ids):
             is_lit = idx in lit
             is_blink = (idx in blink) or (blink_all and is_lit)
@@ -639,18 +800,11 @@ def update_signals_visual_v2() -> None:
                 fill = SIGNAL_OFF_COLOR
 
             canvas.itemconfig(oid, fill=fill)
-
+        
     signal_blink_phase = not signal_blink_phase
+
     root.after(500, update_signals_visual_v2)
 
-
-# --- Мини-тест, чтобы руками проверить, что GUI ожил (переключает M2 blue <-> white)
-def test_toggle_m2() -> None:
-    cur = signals_state["M2"]["aspect"]
-    signals_state["M2"]["aspect"] = "white" if cur != "white" else "blue"
-
-
-tkinter.Button(root, text="TEST M2", command=test_toggle_m2).place(x=20, y=20)
 
 
 #########################################        МАРШРУТЫ                ##############################################
@@ -834,6 +988,8 @@ route_switch_modes = {
     ("H2", "M2"): {"ALB_Turn8": "left", "ALB_Turn4-6": "right", "ALB_Turn2": "left"},
 }
 
+
+
 def format_routes(routes_dict):
     if not routes_dict:
         return "Маршруты не заданы."
@@ -861,6 +1017,14 @@ def show_train_routes():
     set_mode("train")
     msg = "Поездные маршруты:\n\n" + format_routes(train_routes)
     showInfo("ПОЕЗДНЫЕ", msg)
+
+def make_signal_state(name, colors):
+    signals_state[name] = {
+        "lamps": {
+            color: {"on": False, "blink": False}
+            for color in colors
+        }
+    }
 
 #########################################       ОТРИСОВКА СВЕТОФОРОВ                ##############################################
 def drawSignal(name, mount="bottom", pack_side="right", count=3, colors=None):
@@ -900,7 +1064,10 @@ def drawSignal(name, mount="bottom", pack_side="right", count=3, colors=None):
         )
         ids.append(oid)
 
+    make_signal_state(name, colors)
     signal_ids[name] = ids
+
+
 
 #########################################        ФУНКЦИИ МАРШРУТОВ                ##############################################
 
