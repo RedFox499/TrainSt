@@ -713,8 +713,11 @@ def recalc_signals_from_active_routes() -> None:
                 signals_state[name]["aspect"] = "off"
         signals_state[name]["blink"] = False
     """
+    AdditionalSignals = ["ALB_Sect1-2", "ALB_Sect1-2_2", "ALB_Sect2"]
     # включаем красный по умолчанию
     for name in signals_state.keys():
+        if name in AdditionalSignals:
+            continue
         for lamp in signals_state[name]["lamps"].values():
             lamp["on"] = False
             lamp["blink"] = False
@@ -2100,8 +2103,9 @@ canvas.tag_bind("switch", "<Leave>", switch_on_leave)
 arduino_status_label = tkinter.Label(root, text="Arduino: проверка...", fg="orange")
 arduino_status_label.place(x=360, y=20)
 n = tkinter.StringVar()
-combobox1 = ttk.Combobox(root, width = 25, textvariable = n, )
+combobox1 = ttk.Combobox(root, width = 25, textvariable = n, state='readonly')
 combobox1.place(x=510,y=20)
+
 button = tkinter.Button(root, text="Снести", command=snos)
 button.place(x=700, y=18)
 buttonAll = tkinter.Button(root, text="Убрать всё", command=snosAll)
