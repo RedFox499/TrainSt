@@ -61,18 +61,22 @@ SEGMENT_ORDER = [
 ]
 segment_groups = {
     "block_M2_H1": [
-        ("M2","M2H1_mid"),
-        ("M2H1_mid", "M2H1_third"),
-        ("M2H1_third","H1")
+        {"type": "segment", "id": ("M2","M2H1_mid")},
+        {"type": "segment", "id": ("M2H1_mid", "M2H1_third")},
+        {"type": "segment", "id": ("M2H1_third","H1")},
+
     ],
-    "block_M6_H2": [
-        ("H2", "M6H2"),
-        ("M6", "M6H2"),
+    "block_M6_H2_Turns": [
+        {"type": "segment", "id": ("H2", "M6H2")},
+        {"type": "segment", "id": ("M6H2", "M6")},
+        {"type": "diag", "name": "ALB_Turn4"},
+        {"type": "diag", "name": "ALB_Turn8"},
     ],
     "block_M8_M1":[
-        ("M8mid", "M8"),
-        ("M8mid", "M1"),
+        {"type": "segment", "id": ("M8mid", "M8")},
+        {"type": "segment", "id": ("M8mid", "M1")},
     ],
+
 }
 split_parts_map = {
     "ALB_Turn4-6": {
@@ -142,39 +146,51 @@ signals_config_simple = {
     "CH": {
         "mount": "bottom",
         "pack_side": "right",
-        "count": 5,
-        "colors": ["white", "yellow", "red", "green", "yellow1"],
+        "count": 2,
+        "colors": ["red", "white", "yellow"],
+        "position_map": {
+            "red": [0],
+            "white": [0],
+            "green": [0],
+            "yellow1": [0, 1],
+            "yellow2": [0, 1],
+        }
     },
     "M2": {
         "mount": "bottom",
         "pack_side": "right",
         "count": 1,
         "colors": ["grey", "white"],
+        "single": True,
     },
 
     "H1": {
         "mount": "top",
         "pack_side": "left",
-        "count": 2,
-        "colors": ["white", "red", "green", "yellow"],
+        "count": 1,
+        "colors": ["grey", "white"],
+        "single": True,
     },
     "H2": {
         "mount": "top",
         "pack_side": "left",
-        "count": 2,
-        "colors": ["white", "red", "green", "yellow"],
+        "count": 1,
+        "colors": ["grey", "white"],
+        "single": True
     },
     "H3": {
         "mount": "top",
         "pack_side": "left",
-        "count": 2,
-        "colors": ["white", "red", "green", "yellow"],
+        "count": 1,
+        "colors": ["grey", "white"],
+        "single": True
     },
     "H4": {
         "mount": "top",
         "pack_side": "left",
-        "count": 2,
+        "count": 1,
         "colors": ["grey", "white"],
+        "single": True
     },
 
     "M6": {
@@ -182,26 +198,51 @@ signals_config_simple = {
         "pack_side": "right",
         "count": 1,
         "colors": ["grey", "white"],
+        "single": True
     },
     "M8": {
         "mount": "bottom",
         "pack_side": "right",
         "count": 1,
         "colors": ["grey", "white"],
+        "single": True
     },
     "M10": {
         "mount": "bottom",
         "pack_side": "right",
         "count": 1,
         "colors": ["grey", "white"],
+        "single": True
     },
     "M1": {
         "mount": "top",
         "pack_side": "left",
-        "count": 2,
-        "colors": ["grey", "grey"],
+        "count": 1,
+        "colors": ["grey", "white"],
+        "single": True
     },
+    "ALB_Sect1-2": {
+        "mount": "top",
+        "pack_side": "left",
+        "count": 1,
+        "colors": ["grey", "white"],
+    },
+    "ALB_Sect1-2_2": {
+        "mount": "bottom",
+        "pack_side": "right",
+        "count": 1,
+        "colors": ["grey", "white"],
+    },
+    "ALB_Sect2": {
+        "mount": "top",
+        "pack_side": "left",
+        "count": 2,
+        "colors": ["red", "white"],
+    }
 }
+
+
+
 
 signals_config = {
     "CH": {
@@ -215,74 +256,84 @@ signals_config = {
         "pack_side": "right",
         "count": 2,
         "colors": ["blue", "white"],
+        "type": "maneuver"
     },
-
     "H1": {
         "mount": "top",
         "pack_side": "left",
         "count": 4,
         "colors": ["white", "red", "green", "yellow"],
+        "type": "train"
     },
     "H2": {
         "mount": "top",
         "pack_side": "left",
         "count": 4,
         "colors": ["white", "red", "green", "yellow"],
+        "type": "train"
     },
     "H3": {
         "mount": "top",
         "pack_side": "left",
         "count": 4,
         "colors": ["white", "red", "green", "yellow"],
+        "type": "train"
     },
     "H4": {
         "mount": "top",
         "pack_side": "left",
         "count": 4,
         "colors": ["white", "red", "green", "yellow"],
+        "type": "train"
     },
-
     "M6": {
         "mount": "bottom",
         "pack_side": "right",
         "count": 2,
         "colors": ["red", "white"],
+        "type": "maneuver"
     },
     "M8": {
         "mount": "bottom",
         "pack_side": "right",
         "count": 2,
         "colors": ["red", "white"],
+        "type": "maneuver"
     },
     "M10": {
         "mount": "bottom",
         "pack_side": "right",
         "count": 2,
         "colors": ["red", "white"],
+        "type": "maneuver"
     },
     "M1": {
         "mount": "top",
         "pack_side": "left",
         "count": 2,
         "colors": ["white", "red"],
+        "type": "maneuver"
     },
     "ALB_Sect1-2": {
         "mount": "top",
         "pack_side": "left",
         "count": 3,
         "colors": ["yellow", "green", "red"],
+        "type": "none"
     },
     "ALB_Sect1-2_2": {
         "mount": "bottom",
         "pack_side": "right",
         "count": 3,
         "colors": ["yellow", "green", "red"],
+        "type": "none"
     },
     "ALB_Sect2": {
         "mount": "top",
         "pack_side": "left",
         "count": 5,
         "colors": ["yellow", "green", "red", "black", "white"],
+        "type": "none"
     }
 }
 ROUTE_SIGNAL_MAP: dict[tuple[str, str], dict[str, dict[str, object]]] = {
