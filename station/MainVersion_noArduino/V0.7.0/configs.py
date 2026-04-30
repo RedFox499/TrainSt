@@ -16,10 +16,10 @@ positions = {
     "4": (760, 130),
     "H4": (620, 130),
     "past4": (970, 130),
-    "CH": (80, 330),
+    "CH": (70, 330),
     "past2": (970, 230),
     "pastM1": (1090, 330),
-    "beforeM6": (260, 230),
+    "beforeM6": (230, 230),
     "M2H1_mid": (260, 330),
     "M2H1_third": (340, 330),
     "ALB_Sect0": (80, 500),
@@ -29,14 +29,14 @@ positions = {
     "ALB_Sect1-2_2":(250,500)
 }
 segments = [
+    ("M1", "M8mid"),
     ("pastM1", "M1"),
     ("M8mid", "M8"),
-    ("M8mid", "M1"),
     ("M8", "H1"),
-    ("M2", "CH"),
     ("past2", "H2"),
     ("H2", "M6H2"),
-    ("M6", "M6H2"),
+    ("M6H2", "M6"),
+    ("CH", "M2"),
     ("M2", "M2H1_mid"),
     ("M2H1_mid", "M2H1_third"),
     ("H1", "M2H1_third"),
@@ -50,20 +50,27 @@ segments = [
 
 
 SEGMENT_ORDER = [
-    ("M1", "pastM1"),  # бит 0
-    ("M8mid", "M1"),   # бит 1
-    ("M8", "H1"),      # бит 2
-    ("M2", "M2H1_mid"), # бит 3
-    ("M2", "CH"),      # бит 4
-    ("past2", "H2"),   # бит 5
-    ("H2", "M6H2"),    # бит 6
-    ("past4", "H4"),
+    # Твои 6 реальных сегментов (названия строго как в ключах кортежей)
+    ("M1", "pastM1"),
+    ("M8mid", "M1"),
+    ("M8", "H1"),
+    ("M2", "M2H1_mid"),
+    ("M2", "CH"),
+    ("past2", "H2"),
+
+    # И 18 пустых заглушек, чтобы цикл в Python не упал
+    "EMPTY", "EMPTY", "EMPTY", "EMPTY", "EMPTY", "EMPTY",
+    "EMPTY", "EMPTY", "EMPTY", "EMPTY", "EMPTY", "EMPTY",
+    "EMPTY", "EMPTY", "EMPTY", "EMPTY", "EMPTY", "EMPTY"
 ]
+
 segment_groups = {
     "block_M2_H1": [
         {"type": "segment", "id": ("M2","M2H1_mid")},
         {"type": "segment", "id": ("M2H1_mid", "M2H1_third")},
         {"type": "segment", "id": ("M2H1_third","H1")},
+        {"type": "diag", "name": "ALB_Turn6"},
+        {"type": "diag", "name": "ALB_Turn2"},
 
     ],
     "block_M6_H2_Turns": [
@@ -75,6 +82,7 @@ segment_groups = {
     "block_M8_M1":[
         {"type": "segment", "id": ("M8mid", "M8")},
         {"type": "segment", "id": ("M8mid", "M1")},
+        {"type": "diag", "name": "ALB_Turn1"},
     ],
 
 }

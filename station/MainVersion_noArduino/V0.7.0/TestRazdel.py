@@ -13,16 +13,28 @@ from tkinter import messagebox
 
 root = tk.Tk()
 root.title("Станция")
-canvas = tk.Canvas(root, width=1250, height=600, bg="#7AA49A")
 
+#canvas = tk.Canvas(root, width=1250, height=600, bg="#7AA49A")
+
+scheme_frame = tk.Frame(root, bg="gray")
+scheme_frame.pack(fill="both", expand=True)
+
+canvas = tk.Canvas(
+    scheme_frame,
+    width=1920,
+    height=1080,
+    bg="#7AA49A"
+)
+canvas.pack(fill="both", expand=True)
 
 def quit_function():
     #response = tkinter.messagebox.askyesno('Exit', 'Are you sure you want to exit?')
     #if response:
         exit()
 
-CANVAS_W = 1240
-CANVAS_H = 600
+CANVAS_W = 1920
+CANVAS_H = 1080
+
 root.resizable(False, False)
 
 class SignalManager():
@@ -391,6 +403,7 @@ class SignalManager():
 
     def update_maneuver_signal_logic(self, name):
         rid = SignalManage.active_signal_routes.get(name)
+
 
         if rid is None:
             self.set_signal_red(name)
@@ -1556,13 +1569,13 @@ class interface_manager:
         self.signalNodes = []
         button = tkinter.Button(root, text="Отменить маршрут", command=self.snos, relief="flat", bg="#D50063", fg="white",
                                 font=("Bahnschrift", 10), )
-        button.place(x=720, y=18)
+        button.place(x=1120, y=25)
         buttonAll = tkinter.Button(root, text="Убрать всё", command=self.snosAll, relief="flat", bg="#D50063", fg="white",
                                    font=("Bahnschrift", 10))
-        buttonAll.place(x=850, y=18)
+        buttonAll.place(x=1250, y=25)
         button = tkinter.Button(root, text="Проверка", command=self.check, relief="flat", bg="#D50063", fg="white",
                                 font=("Bahnschrift", 10))
-        button.place(x=940, y=18)
+        button.place(x=1340, y=25)
         canvas.tag_bind("node", "<Button-1>", self.on_node_click)
         canvas.tag_bind("node", "<Enter>", self.on_enter)
         canvas.tag_bind("node", "<Leave>", self.on_leave)
@@ -1576,7 +1589,7 @@ class interface_manager:
             font=("Bahnschrift", 15),
             bg="#3996D5",
             fg="white",
-            width=15,
+            width=20,
             height=2,
             relief="flat",
             command=self.show_maneuver_routes
@@ -1588,12 +1601,12 @@ class interface_manager:
             bg="grey",
             fg="white",
             relief="flat",
-            width=15,
+            width=20,
             height=2,
             command=self.show_train_routes
         )
-        self.btn_maneuver.place(x=center_x + offset - 70, y=buttons_y)
-        self.btn_train.place(x=center_x - offset - 60, y=buttons_y)
+        self.btn_maneuver.place(x=center_x + offset - 100, y=buttons_y)
+        self.btn_train.place(x=center_x - offset - 170, y=buttons_y)
 
         bannedNames = ["pastM1", "beforeM6", "past2", "1STR", "past4", "M6H2", "M2H1_mid",
                        "M8mid", "M2H1_third", "ALB_Sect1-2", "ALB_Sect1", "ALB_Sect2",
@@ -1795,7 +1808,8 @@ class interface_manager:
         combobox1.set('')
 
     def check(self):
-        print(route_manager.segments_active_counter)
+        print(canvas.coords(switch_indicator_ids.get('ALB_Turn1')))
+        #print(canvas.coords(switch_indicator_ids)
         #print("Активные маршруты")
         #print(self.route_manager.active_routes)
         #print("------------------")
@@ -1812,8 +1826,8 @@ class interface_manager:
         if self.route_manager.check_route_conflict(a, b):
             #self.showInfo("Ошибка построения", "Маршрут конфликтует с уже установленными!")
             print("Маршрут конфликтует с уже установленными!")
-            self.reset_node_selection()
-            return
+            #self.reset_node_selection()
+            #return
         if switch_manager.is_settingRoute():
             self.reset_node_selection()
             return
@@ -1963,7 +1977,7 @@ class interface_manager:
             return
         if name not in self.selected_nodes:
             if len(self.selected_nodes) == 1:
-                canvas.itemconfig(self.node_ids[name], fill="green")
+                canvas.itemconfig(self.node_ids[name], fill="#4BFFA7")
             else:
                 canvas.itemconfig(self.node_ids[name], fill=self.line_color_main)
 
@@ -2111,26 +2125,27 @@ def update_switch_indicator(name):
     canvas.itemconfig(rect, fill=color)
     canvas.itemconfig(labelSwitch, text=text)
 
+
 def create_switch_table():
     w = int(canvas["width"])
     h = int(canvas["height"])
 
     dy = 25
     total_height = dy * len(switch_list)
-    y_start = h - total_height - 20
+    y_start = h - total_height - 520
 
-    x_text = w - 220
-    x_rect = w - 60
+    x_text = w - 980
+    x_rect = w - 980
 
     for i, name in enumerate(switch_list, start=1):
         y = y_start + (i - 1) * dy
         switch = canvas.create_text(x_text, y, text=f"{i}. {name}", anchor="w", font=("Bahnschrift SemiBold", 13), tags=(f"switch_{name}", "switch"), fill="white" )
         switch_ids[name] = switch
-        label = canvas.create_text(x_rect-30, y+1, text="0", font=("Bahnschrift SemiBold", 14), fill="white")
+        label = canvas.create_text(x_rect+90, y, text="0", font=("Bahnschrift SemiBold", 14), fill="white",  tags=(f"switch_{name}", "switch"))
 
         rect = canvas.create_rectangle(
-            x_rect - 8, y - 8, x_rect + 8, y + 8,
-            outline="black", fill="grey"
+            x_rect + 110, y - 9, x_rect + 130, y + 9,
+            outline="black", fill="grey",  tags=(f"switch_{name}", "switch")
         )
         switch_text_ids[name] = label
         switch_indicator_ids[name] = rect
@@ -2207,7 +2222,15 @@ def AddSplitDiagonal(x1, y1, x2, y2,
 for a, b in segments:
     x1, y1 = positions[a]
     x2, y2 = positions[b]
-    seg = canvas.create_line(x1 - 5, y1, x2 + 5, y2, width=6, fill=interface_manager.line_color_main)
+    a_and_b = (a,b)
+    BlockSegments = [("M1","M8mid")]
+    BlockSeg2 = [("CH", "M2")]
+    if a_and_b in BlockSegments:
+        seg = canvas.create_line(x1, y1, x2-5, y2, width=6, fill=interface_manager.line_color_main)
+    elif a_and_b in BlockSeg2:
+        seg = canvas.create_line(x1 -1, y1, x2 -13, y2, width=6, fill=interface_manager.line_color_main)
+    else:
+        seg = canvas.create_line(x1 - 5, y1, x2 + 5, y2, width=6, fill=interface_manager.line_color_main)
     segment_ids[(a, b)] = seg
     segment_ids[(b, a)] = seg
 
@@ -2327,22 +2350,24 @@ def set_arduino_status(connected: bool, text: str = ""):
         arduino_status_label.config(text="Arduino: not connected", bg="red", fg="white")
 
 def poll_arduino():
-    global ser
-    if ser is not None and ser.is_open:
-        try:
-            data = ser.read(1)  # один байт = 8 кнопок
-        except SerialException as e:
-            print(f"Ошибка чтения из Arduino: {e}")
-            ser = None
-            set_arduino_status(False)
-            root.after(2000, init_arduino)
-        else:
-            if data:
-                val = data[0]
-                bits = bytes_to_bits(data, bits_needed=len(SEGMENT_ORDER))
-                apply_bits_to_segments(bits)
+    global arduino  # Должно совпадать с именем в init_arduino()
 
-    root.after(20, poll_arduino)
+    if arduino is not None and arduino.is_open:
+        try:
+            while arduino.in_waiting > 0:
+                # Читаем строку целиком
+                line = arduino.readline().decode('utf-8', errors='ignore').strip()
+
+                if line:
+                    # Выводим в консоль для контроля (ты это уже видишь)
+                    print(f"ПОЛУЧЕНО: {line}")
+                    # Скармливаем строку парсеру
+                    parse_arduino_string(line, seg_occ_train)
+        except Exception as e:
+            print(f"Ошибка чтения порта: {e}")
+
+    # Запуск следующей итерации опроса
+    root.after(100, poll_arduino)
 
 def find_arduino_port():
     ports = list_ports.comports()
@@ -2372,15 +2397,15 @@ arduino_status_label = tkinter.Label(root, text="Arduino: проверка...", 
 arduino_status_label.place(x=300, y=16)
 
 n = tkinter.StringVar()
-combobox1 = ttk.Combobox(root, width = 25, textvariable = n, state='readonly', font=("Bahnschrift bold", 9))
+combobox1 = ttk.Combobox(root, width = 25, height=25, textvariable = n, state='readonly', font=("Bahnschrift bold", 9))
 combobox1.place(x=510,y=20)
 
 # button = tkinter.Button(root, text="Проверка occupied", command=checkOccupied, relief="flat", bg="#D50063", fg="white", font=("Bahnschrift", 10))
 # button.place(x=880, y=40)
 
 button_visual_change = tkinter.Button(root, text="Упрощённый: ", command=signal_visual_change, relief="flat", bg="#D50063", fg="white", font=("Bahnschrift", 10))
-button_visual_change.place(x=1050, y=18)
-buttons_y = CANVAS_H - 80
+button_visual_change.place(x=1450, y=25)
+buttons_y = CANVAS_H - 350
 
 center_x = CANVAS_W // 2
 offset = 140
@@ -2416,9 +2441,10 @@ for i, key in enumerate(all_keys):
         root,
         text=str(key),
         command=lambda id=i: do(id),
-        relief="flat"
+        relief="flat", font=("Bahnschrift light", 12),
     )
-    button69.place(x=1150, y=50 + i * 22)
+    button69.place(x=1700, y=120 + i * 35)
+
 
 init_arduino()
 poll_arduino()
@@ -2438,6 +2464,7 @@ occupancy_manager.update_all_occupancy()
 switch_manager.initialize_switches()
 route_manager.check_visual_mode()
 root.protocol('WM_DELETE_WINDOW', quit_function)
+canvas.scale("all", 0, 0, 1.5, 1.5)
 canvas.pack()
 
 root.mainloop()
