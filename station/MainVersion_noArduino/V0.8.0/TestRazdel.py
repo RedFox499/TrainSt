@@ -16,6 +16,29 @@ root.title("Станция")
 
 #canvas = tk.Canvas(root, width=1250, height=600, bg="#7AA49A")
 
+menubar = tk.Menu(root)
+
+settings_menu = tk.Menu(menubar, tearoff=0)
+settings_menu.add_command(label="Настройки")
+
+
+is_fullscreen = False
+root.attributes("-fullscreen", is_fullscreen)
+
+def toggle_fullscreen(event=None):
+    global is_fullscreen
+    is_fullscreen = not is_fullscreen
+    root.attributes("-fullscreen", is_fullscreen)
+
+def minimize_window(event=None):
+    root.attributes("-fullscreen", False)
+    root.iconify()
+
+
+root.bind("<Escape>", minimize_window)
+root.bind("<F11>", toggle_fullscreen)
+
+
 scheme_frame = tk.Frame(root, bg="gray")
 scheme_frame.pack(fill="both", expand=True)
 
@@ -427,12 +450,15 @@ class SignalManager():
             self.set_signal_red(name)
             return
 
+
+        """
         if route.get("started", False):
             self.set_signal_red(name)
             return
+        """
+
 
         if self.is_segment_occupied(first_seg):
-            route["started"] = True
             self.set_signal_red(name)
             return
 
@@ -1050,15 +1076,25 @@ class RouteManager:
 
     def check_if_route_finished(self, seg, rev, diag):
         for rid in list(self.active_routes.keys()):
-             data = self.active_routes[rid]
-             last_segment = data["segments"][-1]
-             block = segment_to_block.get(seg)
-             if seg == last_segment["id"] or rev == last_segment["id"]:
-                self.release_route(rid)
-             elif block:
-                 for s in segment_groups[block]:
-                     if s == last_segment["id"]:
-                         self.release_route(rid)
+            data = self.active_routes[rid]
+            last_segment = data["segments"][-1]
+            print(last_segment)
+            print(seg, diag)
+            if last_segment["type"] == "segment":
+                block = segment_to_block.get(seg)
+                if seg == last_segment["id"] or rev == last_segment["id"]:
+                    self.release_route(rid)
+                elif block:
+                    for s in segment_groups[block]:
+                        if s == last_segment["id"]:
+                            self.release_route(rid)
+
+            elif last_segment["type"] == "diag":
+                if diag == last_segment["name"]:
+                    self.release_route(rid)
+
+
+
 
     part_to_split = {}
 
@@ -1365,6 +1401,33 @@ class RouteManager:
                         return True
             return False
 
+    def collect_maneuver_signals_for_route(self, route_steps, route_info):
+        result = []
+        route_dir = routes_dir.get(route_info)
+
+
+        for step in route_steps:
+            if step.get("type") != "segment":
+                continue
+
+
+            a, b = step["id"]
+
+            for node in (a, b):
+                if node not in signals_config:
+                    continue
+
+                if signals_config[node].get("type") != "maneuver":
+                    continue
+
+                if signals_config[node].get("pack_side") != route_dir:
+                    continue
+
+                if node not in result:
+                    result.append(node)
+
+        return result
+
     def get_route_counter(self):
         return self.route_counter
 
@@ -1389,9 +1452,11 @@ class RouteManager:
                 "start": start,
                 "end": end,
                 "segments": routes.get((start, end)),
-                "started": False
+                "signals": self.collect_maneuver_signals_for_route(routes.get((start, end)), (start,end))
+
             }
-            SignalManage.active_signal_routes[start] = rid
+            for sig in self.active_routes[rid]["signals"]:
+                SignalManage.active_signal_routes[sig] = rid
             return rid
         if self.get_currnet_mode() == "train":
             for step in train_routes.get((start, end)):
@@ -1561,6 +1626,7 @@ class interface_manager:
         self.MAX_SELECTED = 2
         self.switch_manager = None
         self.route_manager = None
+        self.signal_manager = None
         self.drawDeadEnd("pastM1", "right", 0)
         self.drawDeadEnd("past2", "right", 0)
         self.drawDeadEnd("past4", "right", 0)
@@ -1808,10 +1874,10 @@ class interface_manager:
         combobox1.set('')
 
     def check(self):
-        print(canvas.coords(switch_indicator_ids.get('ALB_Turn1')))
-        #print(canvas.coords(switch_indicator_ids)
         #print("Активные маршруты")
-        #print(self.route_manager.active_routes)
+        print(self.route_manager.active_routes)
+        print("="*20)
+        print(self.signal_manager.active_signal_routes)
         #print("------------------")
         #print("список маршрутов с счётчиком:")
         #print(self.route_manager.segments_active_counter)
@@ -1959,9 +2025,10 @@ class interface_manager:
                 state = "disabled"
             canvas.itemconfig(item_id, fill=color, state=state)
 
-    def set_dependencies(self, route_manager, switch_manager):
+    def set_dependencies(self, route_manager, switch_manager, signal_manager):
         self.switch_manager = switch_manager
         self.route_manager = route_manager
+        self.signal_manager = signal_manager
 
     def on_enter(self, event):
         name = self.get_node_name_from_event(event)
@@ -2039,8 +2106,6 @@ occupied_diagonals = set()
 
 switch_ids = {}
 segment_ids = {}
-segment_to_block = {}
-segment_to_block_type = {}
 split_diag_ids = {}
 switch_text_ids = {}
 switch_indicator_ids = {}
@@ -2235,10 +2300,10 @@ for a, b in segments:
     segment_ids[(b, a)] = seg
 
 
-AddDiagonal(260, 330, 350, 430, 20, 38, "ALB_Turn2")
-AddDiagonal(965, 330, 890, 430, -22, -37, "ALB_Turn1")
-AddDiagonal(560, 130, 470, 230, -57, -20, "ALB_Turn8")
-AddSplitDiagonal(430, 230, 390, 280,350, 330, -30, -30, "ALB_Turn4-6", "ALB_Turn4", "ALB_Turn6")
+AddDiagonal(260, 328, 350, 430, 20, 38, "ALB_Turn2")
+AddDiagonal(965, 328, 890, 430, -22, -37, "ALB_Turn1")
+AddDiagonal(560, 130, 470, 231.5, -57, -20, "ALB_Turn8")
+AddSplitDiagonal(430, 228, 390, 280,350, 331.5, -30, -30, "ALB_Turn4-6", "ALB_Turn4", "ALB_Turn6")
 
 def get_switch_name_from_event(event):
     items = canvas.find_withtag("current")
@@ -2458,7 +2523,7 @@ switch_manager = SwitchManager()
 interface_manager = interface_manager()
 switch_manager.set_dependencies(route_manager, interface_manager)
 route_manager.set_dependencies(interface_manager, switch_manager)
-interface_manager.set_dependencies(route_manager, switch_manager)
+interface_manager.set_dependencies(route_manager, switch_manager, SignalManage)
 occupancy_manager.set_dependencies(interface_manager, route_manager, SignalManage)
 occupancy_manager.update_all_occupancy()
 switch_manager.initialize_switches()

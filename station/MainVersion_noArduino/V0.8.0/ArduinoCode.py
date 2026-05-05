@@ -1,7 +1,9 @@
-from configs import SEGMENT_ORDER
+from configs import SEGMENT_ORDER, segment_groups, segment_to_block
 
 
-def parse_arduino_string(line, seg_occ_dict):
+
+
+def parse_arduino_string(line, seg_occ_dict, diag_occ_dict):
     if "Data: " not in line:
         return
 
@@ -23,6 +25,18 @@ def parse_arduino_string(line, seg_occ_dict):
         is_occupied = (char == '0')
 
         if is_occupied:
+
             print(f"Сработал бит №{idx} для сегмента {seg}")
 
-        seg_occ_dict[seg] = 0 if is_occupied else 1
+
+        block = segment_to_block.get(seg)
+        if block:
+            for s in segment_groups[block]:
+                if s['type'] == "segment":
+                    seg_occ_dict[s['id']] = 0 if is_occupied else 1
+                elif s["type"] == "diag":
+                    diag_occ_dict[s['name']] = 0 if is_occupied else 1
+        else:
+            seg_occ_dict[seg] = 0 if is_occupied else 1
+
+        #seg_occ_dict[seg] = 0 if is_occupied else 1

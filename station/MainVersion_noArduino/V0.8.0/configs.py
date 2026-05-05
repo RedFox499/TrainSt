@@ -49,20 +49,26 @@ segments = [
 ]
 
 
+
 SEGMENT_ORDER = [
     # Твои 6 реальных сегментов (названия строго как в ключах кортежей)
-    ("M1", "pastM1"),
-    ("M8mid", "M1"),
     ("M8", "H1"),
-    ("M2", "M2H1_mid"),
-    ("M2", "CH"),
+    ("M8mid", "M1"),
+    ("M10", "H3"),
+    ("M1", "pastM1"),
     ("past2", "H2"),
+    ("past4", "H4"),
+
 
     # И 18 пустых заглушек, чтобы цикл в Python не упал
     "EMPTY", "EMPTY", "EMPTY", "EMPTY", "EMPTY", "EMPTY",
     "EMPTY", "EMPTY", "EMPTY", "EMPTY", "EMPTY", "EMPTY",
     "EMPTY", "EMPTY", "EMPTY", "EMPTY", "EMPTY", "EMPTY"
 ]
+
+segment_to_block = {}
+segment_to_block_type = {}
+
 
 segment_groups = {
     "block_M2_H1": [
@@ -86,6 +92,7 @@ segment_groups = {
     ],
 
 }
+
 split_parts_map = {
     "ALB_Turn4-6": {
         "partA": "ALB_Turn6",
@@ -427,8 +434,6 @@ ROUTE_SIGNAL_MAP: dict[tuple[str, str], dict[str, dict[str, object]]] = {
         "M6": {"lamps": {"white": {"on": True, "blink": False} }, },
     },
 
-
-
     ("CH", "1"): {
         "CH": {"lamps": {"yellow1": {"on": True, "blink": False}, } },
         "M2": {"lamps": {"white": {"on": True, "blink": False}, }, },
@@ -446,6 +451,48 @@ ROUTE_SIGNAL_MAP: dict[tuple[str, str], dict[str, dict[str, object]]] = {
         "M2": {"lamps": {"white": {"on": True, "blink": False}, }, },
     },
 
+}
+
+routes_dir = {
+    ("M2", "H3"): "right",
+    ("M2", "H1"): "right",
+    ("M2", "M8"): "right",
+    ("M2", "M1"): "right",
+    ("M2", "M10"): "right",
+    ("M2", "H2"): "right",
+    ("M2", "H4"): "right",
+    ("M2", "1"): "right",
+    ("M2", "2"): "right",
+    ("M2", "4"): "right",
+    ("H2", "M6"): "left",
+    ("H2", "M2"): "left",
+    ("H4", "M6"): "left",
+    ("H4", "M2"): "left",
+    ("M6", "H4"): "right",
+    ("M6", "H2"): "right",
+    ("M6", "4"): "right",
+    # ("H3", "M10"): [
+    #     {"type": "segment", "id": ("H3", "M10")},
+    #     {"type": "diag", "name": "ALB_Turn1"},
+    #
+    # ],
+    ("H1", "M2"): "left",
+    #
+    # ("H3", "M1"): [
+    #     {"type": "segment", "id": ("H3", "M10")},
+    #     {"type": "diag", "name": "ALB_Turn1"},
+    #     {"type": "segment", "id": ("M8", "M1")},
+    #     {"type": "segment", "id": ("M8mid", "M1")},
+    #     {"type": "segment", "id": ("M1", "pastM1")},
+    # ],
+    ("M10", "M1"): "right",
+    ("M1", "M2"): "left",
+    ("M1", "M8"): "left",
+    ("M1", "H3"): "left",
+    ("M8", "M1"): "right",
+    ("M1", "H1"): "left",
+    ("M1", "M10"): "left",
+    ("H3", "M2"): "left",
 }
 routes = {
     # МАНЕВРОВЫЕ
