@@ -78,7 +78,7 @@ class SignalManager():
         "grey": "grey",
     }
     signals_state = {
-        "CH": {
+        "Ч": {
             "lamps": {
                 "yellow": {"on": False, "blink": False},
                 "green": {"on": False, "blink": False},
@@ -188,7 +188,7 @@ class SignalManager():
 
     }
     signals_state_simple = {
-        "CH": {
+        "Ч": {
             "lamps": {
                 "red": {"on": False, "blink": False},
                 "white": {"on": False, "blink": False},
@@ -367,7 +367,7 @@ class SignalManager():
                 for color, lamp_cfg in cfg[name]["lamps"].items():
                     self.set_signal(name, color, lamp_cfg["on"])
                     for colors in self.get_lamp_colors(name):
-                        if colors == "white" and name == "CH":
+                        if colors == "white" and name == "Ч":
                             continue
                         if colors in list(cfg[name]['lamps'].keys()):
                             continue
@@ -427,7 +427,6 @@ class SignalManager():
     def update_maneuver_signal_logic(self, name):
         rid = SignalManage.active_signal_routes.get(name)
 
-
         if rid is None:
             self.set_signal_red(name)
             return
@@ -450,14 +449,6 @@ class SignalManager():
             self.set_signal_red(name)
             return
 
-
-        """
-        if route.get("started", False):
-            self.set_signal_red(name)
-            return
-        """
-
-
         if self.is_segment_occupied(first_seg):
             self.set_signal_red(name)
             return
@@ -470,7 +461,7 @@ class SignalManager():
 
 
     def sync_sinple_CH_with_debug(self):
-        name = "CH"
+        name = "Ч"
         if self.get_lamp_state(name, "white"):
             self.set_simple_signal_aspect(name, "INVITE")
         elif self.get_lamp_state(name, 'red'):
@@ -484,7 +475,7 @@ class SignalManager():
 
     def sync_simple_and_debug(self):
         for name in signals_config.keys():
-            if name == "CH":
+            if name == "Ч":
                 continue
             if name == 'ALB_Sect1-2':
                 self.set_signal_simple(name, 'grey',True)
@@ -589,7 +580,7 @@ class SignalManager():
                 if self.is_signal_used_by_other_routes(name, rid):
                     continue
                 for lamp_name, lamp in self.signals_state[name]["lamps"].items():
-                    if lamp_name == "white" and name == "CH":
+                    if lamp_name == "white" and name == "Ч":
                         continue
                     self.set_signal(name, lamp_name, onStatus=False)
                     lamp["blink"] = False
@@ -602,7 +593,7 @@ class SignalManager():
                         self.set_signal(name, colors, onStatus=False)
 
     def check_Sect1_2_2(self):
-        if self.get_lamp_state("CH", "green"):
+        if self.get_lamp_state("Ч", "green"):
             for colors in self.get_lamp_colors("ALB_Sect1-2_2"):
                 if colors == "green":
                     self.set_signal("ALB_Sect1-2_2", "green", True )
@@ -743,7 +734,7 @@ class SignalManager():
 
     def on_CH_click(self, event):
         name = interface_manager.get_node_name_from_event(event)
-        if name == "CH":
+        if name == "Ч":
             menu = tk.Menu(root, tearoff=0)
             menu.add_command(
                 label="Пригласительный",
@@ -1013,7 +1004,7 @@ class RouteManager:
         ("M8mid", "M8"): 0,
         ("M8mid", "M1"): 0,
         ("M8", "H1"): 0,
-        ("M2", "CH"): 0,
+        ("M2", "Ч"): 0,
         ("past2", "H2"): 0,
         ("H2", "M6H2"): 0,
         ("M6", "M6H2"): 0,
@@ -1401,7 +1392,7 @@ class RouteManager:
                         return True
             return False
 
-    def collect_maneuver_signals_for_route(self, route_steps, route_info):
+    def collect_maneuver_signals_for_route(self, route_steps, route_info, end_point):
         result = []
         route_dir = routes_dir.get(route_info)
 
@@ -1415,6 +1406,9 @@ class RouteManager:
 
             for node in (a, b):
                 if node not in signals_config:
+                    continue
+
+                if node == end_point:
                     continue
 
                 if signals_config[node].get("type") != "maneuver":
@@ -1452,7 +1446,7 @@ class RouteManager:
                 "start": start,
                 "end": end,
                 "segments": routes.get((start, end)),
-                "signals": self.collect_maneuver_signals_for_route(routes.get((start, end)), (start,end))
+                "signals": self.collect_maneuver_signals_for_route(routes.get((start, end)), (start,end), end)
 
             }
             for sig in self.active_routes[rid]["signals"]:
@@ -2020,7 +2014,7 @@ class interface_manager:
         for name, item_id in self.node_ids.items():
             color = "white"
             state = "normal"
-            if self.route_manager.get_currnet_mode() == "maneuver" and name == "CH":
+            if self.route_manager.get_currnet_mode() == "maneuver" and name == "Ч":
                 color = "grey"
                 state = "disabled"
             canvas.itemconfig(item_id, fill=color, state=state)
@@ -2121,7 +2115,7 @@ seg_occ_train = {
     ("M8mid", "M8"): 1,
     ("M8mid", "M1"): 1,
     ("M8", "H1"): 1,
-    ("M2", "CH"): 1,
+    ("M2", "Ч"): 1,
     ("past2", "H2"): 1,
     ("M2", "M2H1_mid"): 1,
     ("M2H1_third","H1") : 1,
@@ -2289,7 +2283,7 @@ for a, b in segments:
     x2, y2 = positions[b]
     a_and_b = (a,b)
     BlockSegments = [("M1","M8mid")]
-    BlockSeg2 = [("CH", "M2")]
+    BlockSeg2 = [("Ч", "M2")]
     if a_and_b in BlockSegments:
         seg = canvas.create_line(x1, y1, x2-5, y2, width=6, fill=interface_manager.line_color_main)
     elif a_and_b in BlockSeg2:

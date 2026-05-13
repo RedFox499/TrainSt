@@ -16,7 +16,7 @@ positions = {
     "4": (760, 130),
     "H4": (620, 130),
     "past4": (970, 130),
-    "CH": (70, 330),
+    "Ч": (70, 330),
     "past2": (970, 230),
     "pastM1": (1090, 330),
     "beforeM6": (230, 230),
@@ -36,7 +36,7 @@ segments = [
     ("past2", "H2"),
     ("H2", "M6H2"),
     ("M6H2", "M6"),
-    ("CH", "M2"),
+    ("Ч", "M2"),
     ("M2", "M2H1_mid"),
     ("M2H1_mid", "M2H1_third"),
     ("H1", "M2H1_third"),
@@ -158,7 +158,7 @@ diagonal_config = {
 }
 
 signals_config_simple = {
-    "CH": {
+    "Ч": {
         "mount": "bottom",
         "pack_side": "right",
         "count": 2,
@@ -260,7 +260,7 @@ signals_config_simple = {
 
 
 signals_config = {
-    "CH": {
+    "Ч": {
         "mount": "bottom",
         "pack_side": "right",
         "count": 5,
@@ -434,20 +434,20 @@ ROUTE_SIGNAL_MAP: dict[tuple[str, str], dict[str, dict[str, object]]] = {
         "M6": {"lamps": {"white": {"on": True, "blink": False} }, },
     },
 
-    ("CH", "1"): {
-        "CH": {"lamps": {"yellow1": {"on": True, "blink": False}, } },
+    ("Ч", "1"): {
+        "Ч": {"lamps": {"yellow1": {"on": True, "blink": False}, } },
         "M2": {"lamps": {"white": {"on": True, "blink": False}, }, },
     },
-    ("CH", "2"): {
-        "CH": {"lamps": {"yellow": {"on": True, "blink": False}, "yellow1": {"on": True, "blink": False}, } },
+    ("Ч", "2"): {
+        "Ч": {"lamps": {"yellow": {"on": True, "blink": False}, "yellow1": {"on": True, "blink": False}, } },
         "M2": {"lamps": {"white": {"on": True, "blink": False}, }, },
     },
-    ("CH", "3"): {
-        "CH": {"lamps": {"yellow": {"on": True, "blink": False}, "yellow1": {"on": True, "blink": False}, }   },
+    ("Ч", "3"): {
+        "Ч": {"lamps": {"yellow": {"on": True, "blink": False}, "yellow1": {"on": True, "blink": False}, }   },
         "M2": {"lamps": {"white": {"on": True, "blink": False}, }, },
     },
-    ("CH", "4"): {
-        "CH": {"lamps": {"yellow": {"on": True, "blink": False}, "yellow1": {"on": True, "blink": False}, }},
+    ("Ч", "4"): {
+        "Ч": {"lamps": {"yellow": {"on": True, "blink": False}, "yellow1": {"on": True, "blink": False}, }},
         "M2": {"lamps": {"white": {"on": True, "blink": False}, }, },
     },
 
@@ -600,7 +600,6 @@ routes = {
     ("M6", "4"): [
         {"type": "segment", "id": ("M6H2", "M6")},
         {"type": "diag", "name": "ALB_Turn8"},
-        {"type": "segment", "id": ("M8", "M1")},
         {"type": "segment", "id": ("past4", "H4")},
     ],
     # ("H3", "M10"): [
@@ -668,8 +667,8 @@ routes = {
 }
 
 train_routes = {
-    ("CH", "4"): [
-        {"type": "segment", "id": ("CH", "M2")},
+    ("Ч", "4"): [
+        {"type": "segment", "id": ("Ч", "M2")},
         {"type": "segment", "id": ("M2H1_mid", "M2H1_third")},
         {"type": "segment", "id": ("M2", "M2H1_mid")},
         {"type": "diag", "name": "ALB_Turn4"},
@@ -677,15 +676,15 @@ train_routes = {
         {"type": "diag", "name": "ALB_Turn8"},
         {"type": "segment", "id": ("past4", "H4")},
     ],
-    ("CH", "3"): [
-        {"type": "segment", "id": ("CH", "M2")},
+    ("Ч", "3"): [
+        {"type": "segment", "id": ("Ч", "M2")},
         {"type": "segment", "id": ("M2", "M2H1_mid")},
         {"type": "segment", "id": ("M2H1_mid", "M2H1_third")},
         {"type": "diag", "name": "ALB_Turn2"},
         {"type": "segment", "id": ("H3", "M10")},
     ],
-    ("CH", "2"): [
-        {"type": "segment", "id": ("CH", "M2")},
+    ("Ч", "2"): [
+        {"type": "segment", "id": ("Ч", "M2")},
         {"type": "segment", "id": ("M2", "M2H1_mid")},
         {"type": "segment", "id": ("M2H1_mid", "M2H1_third")},
         {"type": "diag", "name": "ALB_Turn4"},
@@ -693,8 +692,8 @@ train_routes = {
         {"type": "segment", "id": ("H2", "M6H2")},
         {"type": "segment", "id": ("H2", "past2")},
     ],
-    ("CH", "1"): [
-        {"type": "segment", "id": ("CH", "M2")},
+    ("Ч", "1"): [
+        {"type": "segment", "id": ("Ч", "M2")},
         {"type": "segment", "id": ("M2", "M2H1_mid")},
         {"type": "segment", "id": ("M2H1_mid", "M2H1_third")},
         {"type": "segment", "id": ("H1", "M2H1_third")},
@@ -720,10 +719,10 @@ route_switch_modes = {
     ("M1", "H1"): {"ALB_Turn1": "left"},
     ("M2", "H2"): {"ALB_Turn4-6": "right", "ALB_Turn8":  "left", "ALB_Turn2": "left"},
     ("H1", "M8"): {},
-    ("CH", "4"): {"ALB_Turn2": "left","ALB_Turn4-6": "right", "ALB_Turn8": "right"},
-    ("CH", "3"): {"ALB_Turn2": "right"},
-    ("CH", "2"): {"ALB_Turn2": "left", "ALB_Turn4-6": "right", "ALB_Turn8": "left"},
-    ("CH", "1"): {"ALB_Turn4-6": "left", "ALB_Turn2": "left"},
+    ("Ч", "4"): {"ALB_Turn2": "left","ALB_Turn4-6": "right", "ALB_Turn8": "right"},
+    ("Ч", "3"): {"ALB_Turn2": "right"},
+    ("Ч", "2"): {"ALB_Turn2": "left", "ALB_Turn4-6": "right", "ALB_Turn8": "left"},
+    ("Ч", "1"): {"ALB_Turn4-6": "left", "ALB_Turn2": "left"},
     ("M2", "H4"): {"ALB_Turn2": "left", "ALB_Turn4-6": "right", "ALB_Turn8": "right"},
     ("H2", "M2"): {"ALB_Turn8": "left", "ALB_Turn4-6": "right", "ALB_Turn2": "left"},
     ("M6", "4"): {"ALB_Turn4-6": "left", "ALB_Turn8": "right"}
@@ -732,35 +731,35 @@ route_switch_modes = {
 #Arduino Configs
 ROUTE_SIGNAL_ASPECTS = {
     None: {
-        "CH": "red",
+        "Ч": "red",
         "H1": "red",
         "H2": "red",
         "H3": "red",
         "H4": "red",
     },
-    "1": {   # CH → 1 (главный путь)
-        "CH": "one_yellow",
+    "1": {   # Ч → 1 (главный путь)
+        "Ч": "one_yellow",
         "H1": "red",
         "H2": "red",
         "H3": "red",
         "H4": "red",
     },
-    "2": {   # CH → 2 (боковой)
-        "CH": "two_yellow",
+    "2": {   # Ч → 2 (боковой)
+        "Ч": "two_yellow",
         "H1": "red",
         "H2": "red",
         "H3": "red",
         "H4": "red",
     },
     "3": {   # CH → 3
-        "CH": "two_yellow",
+        "Ч": "two_yellow",
         "H1": "red",
         "H2": "red",
         "H3": "red",
         "H4": "red",
     },
     "4": {   # CH → 4
-        "CH": "two_yellow",
+        "Ч": "two_yellow",
         "H1": "red",
         "H2": "red",
         "H3": "red",
@@ -770,8 +769,8 @@ ROUTE_SIGNAL_ASPECTS = {
 # УЧАСТКИ, КОТОРЫЕ «ЗАЩИЩАЕТ» ВХОДНОЙ СВЕТОФОР CH
 ROUTE_PROTECT_SEGMENTS_FOR_CH = {
     None: [],
-    "1": [("M2", "CH")],
-    "2": [("M2", "CH")],
-    "3": [("M2", "CH")],
-    "4": [("M2", "CH")],
+    "1": [("M2", "Ч")],
+    "2": [("M2", "Ч")],
+    "3": [("M2", "Ч")],
+    "4": [("M2", "Ч")],
 }
