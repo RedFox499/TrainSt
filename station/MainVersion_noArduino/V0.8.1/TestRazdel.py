@@ -592,32 +592,31 @@ class SignalManager():
                     for colors in self.get_lamp_colors(name):
                         self.set_signal(name, colors, onStatus=False)
 
+
+
+
     def check_Sect1_2_2(self):
-        if self.get_lamp_state("Ч", "green"):
+        if seg_occ_train[("M2", "Ч")] == 0:
             for colors in self.get_lamp_colors("ALB_Sect1-2_2"):
-                if colors == "green":
-                    self.set_signal("ALB_Sect1-2_2", "green", True )
-                else:
+                if colors != "red":
                     self.set_signal("ALB_Sect1-2_2", colors, False)
-            for colors in self.get_lamp_colors_simple("ALB_Sect1-2_2"):
-                if colors == "white":
-                    self.set_signal_simple("ALB_Sect1-2_2", "white", True)
-                else:
-                    self.set_signal_simple("ALB_Sect1-2_2", colors, False)
-        else:
+            self.set_signal("ALB_Sect1-2_2", "red", True)
+
+        elif self.get_lamp_state("Ч", "yellow1") and not self.get_lamp_state("Ч", "yellow"):
             for colors in self.get_lamp_colors("ALB_Sect1-2_2"):
-                if colors == "yellow":
-                    self.set_signal("ALB_Sect1-2_2", "yellow", True)
-                else:
+                if colors != "green":
                     self.set_signal("ALB_Sect1-2_2", colors, False)
-            for colors in self.get_lamp_colors_simple("ALB_Sect1-2_2"):
-                if colors == "grey":
-                    self.set_signal_simple("ALB_Sect1-2_2", "grey", True)
-                else:
-                    self.set_signal_simple("ALB_Sect1-2_2", colors, False)
+            self.set_signal("ALB_Sect1-2_2", "green", True)
+
+        elif self.get_lamp_state("Ч", "yellow") and self.get_lamp_state("Ч", "yellow1") or self.get_lamp_state("Ч", "red"):
+            for colors in self.get_lamp_colors("ALB_Sect1-2_2"):
+                if colors != "yellow":
+                    self.set_signal("ALB_Sect1-2_2", colors, False)
+            self.set_signal("ALB_Sect1-2_2", "yellow", True)
+
 
     def update_all_signals(self):
-        self.calculate_dynamic_signals()
+        #self.calculate_dynamic_signals()
 
         if SignalManage.get_simple_state():
             self.sync_simple_and_debug()
@@ -657,7 +656,11 @@ class SignalManager():
                     else:
                         self.canvas.itemconfig(lamp_id, fill=SIGNAL_OFF_COLOR)
         self.check_Sect1_2_2()
-
+        import ArduinoCode
+        # Собираем кадр из 5 байт
+        frame = ArduinoCode.build_hw_frame(self.signals_state, self.signal_blink_phase)
+        # Отправляем в Ардуино (именно эта функция делает PRINT в терминал)
+        ArduinoCode.send_lights_to_arduino(frame)
 
 
     def _indices_for_color(self, sig_name: str, color: str) -> list[int]:
@@ -1494,7 +1497,7 @@ class RouteManager:
                 self.diag_active_counter[step["name"]] -= 1
         # recalc_signals_to_red(route_id)
         #SignalManage.recalc_signals_to_red(route_id)
-        #SignalManage.return_to_red_after_finishing(route_id)
+        SignalManage.return_to_red_after_finishing(route_id)
         start_signal = data.get("start")
         if SignalManage.active_signal_routes.get(start_signal) == route_id:
             del SignalManage.active_signal_routes[start_signal]
@@ -1868,10 +1871,12 @@ class interface_manager:
         combobox1.set('')
 
     def check(self):
+        for colors in SignalManage.get_lamp_colors("ALB_Sect1-2_2"):
+            print(SignalManage.get_lamp_state("ALB_Sect1-2_2", colors))
         #print("Активные маршруты")
-        print(self.route_manager.active_routes)
-        print("="*20)
-        print(self.signal_manager.active_signal_routes)
+        #print(self.route_manager.active_routes)
+        #print("="*20)
+        #print(self.signal_manager.active_signal_routes)
         #print("------------------")
         #print("список маршрутов с счётчиком:")
         #print(self.route_manager.segments_active_counter)
@@ -1941,7 +1946,7 @@ class interface_manager:
             current_values = list(combobox1["values"])
             current_values.append(rid)
             combobox1["values"] = tuple(current_values)
-            #SignalManage.set_signals_to_route(rid)
+            SignalManage.set_signals_to_route(rid)
             #SignalManage.recalc_signals_from_active_routes((a, b))
 
         root.after(2100, finalize)
@@ -2391,6 +2396,9 @@ def init_arduino():
 
         arduino = serial.Serial(arduino_port, 9600, timeout=1)
         time.sleep(2)
+
+        import ArduinoCode
+        ArduinoCode.ser = arduino
 
         print(f"Arduino подключен к {arduino_port}")
         if arduino_status_label is not None:
