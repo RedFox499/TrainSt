@@ -53,7 +53,7 @@ segments = [
 SEGMENT_ORDER = [
     # Твои 6 реальных сегментов (названия строго как в ключах кортежей)
     ("M6", "beforeM6"),
-    ("M2", "CH"),
+    ("M2", "Ч"),
     ("M10", "H3"),
     ("M8", "H1"),
     ("M10", "H3"),
@@ -281,28 +281,28 @@ signals_config = {
         "mount": "top",
         "pack_side": "left",
         "count": 4,
-        "colors": ["yellow", "red", "green", "yellow1"],
+        "colors": ["white", "red", "green", "yellow"],
         "type": "train"
     },
     "H2": {
         "mount": "top",
         "pack_side": "left",
         "count": 4,
-        "colors": ["yellow", "red", "green", "yellow1"],
+        "colors": ["white", "red", "green", "yellow"],
         "type": "train"
     },
     "H3": {
         "mount": "top",
         "pack_side": "left",
         "count": 4,
-        "colors": ["yellow", "red", "green", "yellow1"],
+        "colors": ["white", "red", "green", "yellow"],
         "type": "train"
     },
     "H4": {
         "mount": "top",
         "pack_side": "left",
         "count": 4,
-        "colors": ["yellow", "red", "green", "yellow1"],
+        "colors": ["white", "red", "green", "yellow"],
         "type": "train"
     },
     "M6": {

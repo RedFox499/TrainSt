@@ -359,14 +359,25 @@ class SignalManager():
         self.signal_id_map[name] = dict(zip(list(config_colors.keys()), ids))
 
     def enable_two_yellow_train(self, name):
-        self.set_signal(name, "yellow1", True)
-        self.set_signal(name, "yellow", True)
-        for colors in self.get_lamp_colors(name):
-            if colors == "yellow" or colors == "yellow1":
-                continue
-            if colors == "white" and name == "Ч":
-                continue
-            self.set_signal(name, colors, False)
+        if name == "Ч":
+            self.set_signal(name, "yellow1", True)
+            self.set_signal(name, "yellow", True)
+            for colors in self.get_lamp_colors(name):
+                if colors == "yellow" or colors == "yellow1":
+                    continue
+                if colors == "white" and name == "Ч":
+                    continue
+                self.set_signal(name, colors, False)
+        else:
+            #self.set_signal(name, "white", True)
+            self.set_signal(name, "yellow", True)
+            for colors in self.get_lamp_colors(name):
+                if colors == "yellow": #or colors == "white":
+                    continue
+                if colors == "white" and name == "Ч":
+                    continue
+                self.set_signal(name, colors, False)
+
 
     def enable_red_train(self,name):
         self.set_signal(name, "red", True)
@@ -1161,8 +1172,6 @@ class RouteManager:
                     self.release_route(rid)
 
 
-
-
     part_to_split = {}
 
     for split_name in split_parts_map:
@@ -1675,6 +1684,9 @@ class SwitchManager:
 
         diagonal_modes[nameDiag] = mode
         update_switch_indicator(nameDiag)
+        # --- СВЯЗЬ С РЕАЛЬНЫМ ЖЕЛЕЗОМ СТРЕЛОК ---
+        import ArduinoCode
+        ArduinoCode.send_switch_command_to_hardware(nameDiag, mode)
 
 
     def set_dependencies(self, route_manager, interface_manager ):
