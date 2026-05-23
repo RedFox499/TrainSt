@@ -17,11 +17,11 @@ ser = None  # Ожидается объект serial.Serial из основно�
 # ---------------------------------------------------------------------
 HW_MAP_40: Dict[Tuple[str, str], Tuple[int, int]] = {
     # Первый байт (reg5)
-    ("Ч", "yellow"): (0, 0),  # Верхний
-    ("Ч", "green"): (0, 1),
-    ("Ч", "red"): (0, 2),
-    ("Ч", "yellow1"): (0, 3),  # Нижний
-    ("Ч", "white"): (0, 4),
+    ("CH", "yellow"): (0, 0),  # Верхний
+    ("CH", "green"): (0, 1),
+    ("CH", "red"): (0, 2),
+    ("CH", "yellow1"): (0, 3),  # Нижний
+    ("CH", "white"): (0, 4),
     ("M2", "white"): (0, 5),
     ("M2", "blue"): (0, 6),
     ("H1", "yellow"): (0, 7),
@@ -52,26 +52,60 @@ HW_MAP_40: Dict[Tuple[str, str], Tuple[int, int]] = {
     ("H4", "green"): (3, 4),
     ("H4", "red"): (3, 5),
     ("H4", "white"): (3, 6),
-    ("ALB_Sect1-2_2", "red"): (3, 7),
+    ("ALB_Sect2", "red"): (3, 7),
 
 
     # Пятый байт (reg1)
-    ("ALB_Sect1-2_2", "yellow"): (4, 0),
-    ("ALB_Sect1-2_2", "green"): (4, 1),
+    ("ALB_Sect2", "yellow"): (4, 0),
+    ("ALB_Sect2", "green"): (4, 1),
     ("M6", "red"): (4, 2),
     ("M6", "white"): (4, 3),
 }
+
+# ---------------------------------------------------------------------
+# ПРИЕМ ДАННЫХ ОТ ARDUINO (Переключение стрелок)
+# ---------------------------------------------------------------------
+# Карта соответствия имен в GUI и каналов сервоприводов (0-8) на плате PCA9685
+# Убедись, что индексы соответствуют твоей раскладке!
+SWITCH_HW_MAP = {
+    "ALB_Turn1": 1,  # Стрелка 1
+    "ALB_Turn2": 2,  # Стрелка 2
+    "ALB_Turn8": 8,  # Стрелка 8
+    "ALB_Turn4-6": 4,  # Стрелка 4 (совмещенная 4-6)
+}
+
+
+def send_switch_command_to_hardware(switch_name: str, mode: str):
+    global ser
+    if ser is None or not ser.is_open:
+        return
+
+    if switch_name in SWITCH_HW_MAP:
+        servo_id = SWITCH_HW_MAP[switch_name]
+        pos_val = 1 if mode == "left" else 2
+
+        try:
+            # Если это спаренная стрелка, шлем команды для 4 и для 6 каналов
+            if switch_name == "ALB_Turn4-6":
+                command_str = f"W 4 {pos_val}\nW 6 {pos_val}\n"
+            else:
+                command_str = f"W {servo_id} {pos_val}\n"
+
+            ser.write(command_str.encode('ascii'))
+            print(f"[HW_SWITCH] Отправлено на макет для: {switch_name} -> {mode}")
+        except Exception as e:
+            print(f"[HW_SWITCH] Ошибка отправки: {e}")
+
 
 
 # ---------------------------------------------------------------------
 # ПРИЕМ ДАННЫХ ОТ ARDUINO (Датчики занятости)
 # ---------------------------------------------------------------------
 def parse_arduino_string(line, seg_occ_dict, diag_occ_dict):
-    if "Data: " not in line:
-        return
+
 
     raw_bin = line.replace("Data: ", "").strip()
-    bin_str = raw_bin.zfill(24)[::-1]
+    bin_str = raw_bin.zfill(9)[::-1]
 
     for idx, char in enumerate(bin_str):
         if idx >= len(SEGMENT_ORDER):
@@ -128,7 +162,7 @@ def send_lights_to_arduino(frame: List[int]):
         packet = bytearray([ord('L')]) + bytearray(frame)
         ser.write(packet)
         # Отладочный вывод для контроля
-       # print(f"DEBUG [{time.strftime('%H:%M:%S')}]: {' '.join(f'{b:08b}' for b in frame)}")
+        #print(f"DEBUG [{time.strftime('%H:%M:%S')}]: {' '.join(f'{b:08b}' for b in frame)}")
     except Exception as e:
         print(f"[AC] Serial Error: {e}")
 

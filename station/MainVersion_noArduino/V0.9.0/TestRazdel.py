@@ -46,7 +46,7 @@ canvas = tk.Canvas(
     scheme_frame,
     width=1920,
     height=1080,
-    bg="#7AA49A"
+    bg="#8ebfb9"
 )
 canvas.pack(fill="both", expand=True)
 
@@ -68,6 +68,7 @@ class SignalManager():
         "WHITE_GREEN": ["grey", "green"],
         "GREEN_SECOND": ["green", "yellow"],
         "INVITE": ["white", "red"],
+        "DISABLED": ["black", "black"]
     }
     CH_CURRENT_ASPECT = ""
     COLOR_MAP = {
@@ -76,6 +77,7 @@ class SignalManager():
         "yellow": "yellow",
         "white": "white",
         "grey": "grey",
+        "black": "black",
     }
     signals_state = {
         "Ч": {
@@ -356,6 +358,74 @@ class SignalManager():
         config_colors = self.get_lamp_colors(name)
         self.signal_id_map[name] = dict(zip(list(config_colors.keys()), ids))
 
+    def enable_two_yellow_train(self, name):
+        self.set_signal(name, "yellow1", True)
+        self.set_signal(name, "yellow", True)
+        for colors in self.get_lamp_colors(name):
+            if colors == "yellow" or colors == "yellow1":
+                continue
+            if colors == "white" and name == "Ч":
+                continue
+            self.set_signal(name, colors, False)
+
+    def enable_red_train(self,name):
+        self.set_signal(name, "red", True)
+        for colors in self.get_lamp_colors(name):
+            if colors == "red":
+                continue
+            if colors == "white" and name == "Ч":
+                continue
+            self.set_signal(name, colors, False)
+
+    def enable_green_train(self,name):
+        self.set_signal(name, "green", True)
+        for colors in self.get_lamp_colors(name):
+            if colors == "green":
+                continue
+            if colors == "white" and name == "Ч":
+                continue
+            self.set_signal(name, colors, False)
+
+    def calculate_train_signal(self, name):
+        if name == "H4":
+            if get_switch_state_num("ALB_Turn8") == "-":
+                print(name)
+                self.enable_two_yellow_train(name)
+            if seg_occ_train[("M6H2", "M6")] == 0:
+                self.enable_red_train(name)
+        if name == "H2":
+            if get_switch_state_num("ALB_Turn4-6") == "-":
+                self.enable_two_yellow_train(name)
+                print(name)
+            if seg_occ_train[("M6H2", "M6")] == 0:
+                self.enable_red_train(name)
+                print(name)
+            if get_switch_state_num("ALB_Turn4-6") == "+":
+                self.enable_green_train(name)
+                print(name)
+        if name == "H1":
+            if seg_occ_train[("M2H1_mid", "M2H1_third")] == 0:
+                self.enable_red_train(name)
+                print(name)
+            if get_switch_state_num("ALB_Turn4-6") == "+" and get_switch_state_num("ALB_Turn2") == "+":
+                self.enable_green_train(name)
+                print(name)
+        if name == "H3":
+            if get_switch_state_num("ALB_Turn2") == "-":
+                self.enable_two_yellow_train(name)
+                print(name)
+            if seg_occ_train[("M2", "M2H1_mid")] == 0:
+                self.enable_red_train(name)
+
+    def calculate_enter_signal(self, name):
+        if get_switch_state_num("ALB_Turn2") == "-":
+            self.enable_two_yellow_train(name)
+        if get_switch_state_num("ALB_Turn2") == "+" and get_switch_state_num("ALB_Turn4-6") == "-":
+            self.enable_two_yellow_train(name)
+        if get_switch_state_num("ALB_Turn2") == "+" and get_switch_state_num("ALB_Turn4-6") == "+":
+            self.enable_green_train(name)
+
+
     def set_signals_to_route(self, rid):
         if rid != None:
             data = route_manager.get_active_routes(rid)
@@ -364,15 +434,20 @@ class SignalManager():
             key = (a, b)
             cfg = ROUTE_SIGNAL_MAP.get(key)
             for name in cfg:
-                for color, lamp_cfg in cfg[name]["lamps"].items():
-                    self.set_signal(name, color, lamp_cfg["on"])
-                    for colors in self.get_lamp_colors(name):
-                        if colors == "white" and name == "Ч":
-                            continue
-                        if colors in list(cfg[name]['lamps'].keys()):
-                            continue
-                        else:
-                            self.set_signal(name, colors, False)
+                if name[0] == "H":
+                    self.calculate_train_signal(name)
+                elif name == "Ч":
+                    self.calculate_enter_signal(name)
+                else:
+                    for color, lamp_cfg in cfg[name]["lamps"].items():
+                        self.set_signal(name, color, lamp_cfg["on"])
+                        for colors in self.get_lamp_colors(name):
+                            if colors == "white" and name == "Ч":
+                                continue
+                            if colors in list(cfg[name]['lamps'].keys()):
+                                continue
+                            else:
+                                self.set_signal(name, colors, False)
 
     def clear_signal(self, name):
         if name not in self.signals_state:
@@ -468,6 +543,8 @@ class SignalManager():
             self.set_simple_signal_aspect(name, "RED")
         elif self.get_lamp_state(name, 'yellow') and self.get_lamp_state(name, 'yellow1'):
            self.set_simple_signal_aspect(name, "DOUBLE_YELLOW")
+        elif self.get_lamp_state(name, "green"):
+            self.set_simple_signal_aspect(name, "WHITE_GREEN")
 
 
     def get_ch_current_apect(self):
@@ -478,12 +555,10 @@ class SignalManager():
             if name == "Ч":
                 continue
             if name == 'ALB_Sect1-2':
-                self.set_signal_simple(name, 'grey',True)
+                #self.set_signal_simple(name, 'grey',True)
                 continue
             elif name == 'ALB_Sect2':
-                self.set_signal_simple(name, 'red',True)
-                continue
-            elif name == 'ALB_Sect1-2_2':
+                self.set_simple_signal_aspect(name, "DISABLED")
                 continue
             config_count = signals_config_simple[name]["count"]
             if self.if_color_in_lamp(name, 'red'):
@@ -514,7 +589,6 @@ class SignalManager():
                             self.set_signal_simple(name, colors, True)
                         else:
                             self.set_signal_simple(name, colors, False)
-            #print(name)
 
     def set_simple_signal_aspect(self, name, aspect):
 
@@ -1072,8 +1146,7 @@ class RouteManager:
         for rid in list(self.active_routes.keys()):
             data = self.active_routes[rid]
             last_segment = data["segments"][-1]
-            print(last_segment)
-            print(seg, diag)
+
             if last_segment["type"] == "segment":
                 block = segment_to_block.get(seg)
                 if seg == last_segment["id"] or rev == last_segment["id"]:
@@ -1482,19 +1555,20 @@ class RouteManager:
         for step in data["segments"]:
             if step["type"] == "segment":
                 a, b = step["id"]
+
                 if any(seg == (a, b) and rid == route_id for seg, rid in occupied_segments):
                     interface_manager.paint_segment((a, b), interface_manager.line_color_main)
                 if self.if_seg_in_counter_list((a, b)):
-                    self.segments_active_counter[(a, b)] -= 1
+                    self.minus_from_counter_segment((a, b))
                 elif self.if_seg_in_counter_list((b, a)):
-                    self.segments_active_counter[(b, a)] -= 1
+                    self.minus_from_counter_segment((b, a))
                 occupied_segments.discard(((a, b), route_id))
                 occupied_segments.discard(((b, a), route_id))
             elif step["type"] == "diag":
                 if any(diag == step["name"] and rid == route_id for diag, rid in occupied_diagonals):
                     interface_manager.paint_diagonal(step["name"], interface_manager.line_color_main)
                 occupied_diagonals.discard((step["name"], route_id))
-                self.diag_active_counter[step["name"]] -= 1
+                self.minus_from_counter_diag(step["name"])
         # recalc_signals_to_red(route_id)
         #SignalManage.recalc_signals_to_red(route_id)
         SignalManage.return_to_red_after_finishing(route_id)
@@ -1871,15 +1945,14 @@ class interface_manager:
         combobox1.set('')
 
     def check(self):
-        for colors in SignalManage.get_lamp_colors("ALB_Sect1-2_2"):
-            print(SignalManage.get_lamp_state("ALB_Sect1-2_2", colors))
-        #print("Активные маршруты")
+
+       # print("Активные маршруты")
         #print(self.route_manager.active_routes)
         #print("="*20)
         #print(self.signal_manager.active_signal_routes)
         #print("------------------")
         #print("список маршрутов с счётчиком:")
-        #print(self.route_manager.segments_active_counter)
+        print(self.route_manager.segments_active_counter)
 
     def visualSwitch(self, key):
         list = [("M2", "H1"), ("M2", "M8"), ("M2", "M1"), ("H1", "M2"), ("M1", "M2")]
@@ -1891,8 +1964,8 @@ class interface_manager:
         if self.route_manager.check_route_conflict(a, b):
             #self.showInfo("Ошибка построения", "Маршрут конфликтует с уже установленными!")
             print("Маршрут конфликтует с уже установленными!")
-            #self.reset_node_selection()
-            #return
+            self.reset_node_selection()
+            return
         if switch_manager.is_settingRoute():
             self.reset_node_selection()
             return
@@ -2130,6 +2203,7 @@ seg_occ_train = {
     ("M10", "H3"): 1,
     ("past4", "H4"): 1,
     ("M6", "beforeM6"): 1,
+    ("ALB_Sect1", "ALB_Sect1-2"): 1,
 }
 diag_occ_train = {
     "ALB_Turn1": 1,
@@ -2382,6 +2456,7 @@ def init_arduino():
     global arduino, arduino_status_label
 
     try:
+        # 1. Сначала ищем порт
         ports = list(serial.tools.list_ports.comports())
         arduino_port = None
 
@@ -2390,17 +2465,20 @@ def init_arduino():
                 arduino_port = p.device
                 break
 
+        # 2. Если не нашли автоматически, берем дефолтный
         if arduino_port is None:
+            arduino_port = "COM5"  # У тебя в терминале был COM5
 
-            arduino_port = "COM3"
-
+        # 3. Открываем соединение ОДИН раз
         arduino = serial.Serial(arduino_port, 9600, timeout=1)
-        time.sleep(2)
+        time.sleep(2)  # Ждем инициализацию
 
+        # 4. ПЕРЕДАЕМ ПОРТ В МОДУЛЬ СВЕТОФОРОВ
         import ArduinoCode
         ArduinoCode.ser = arduino
 
-        print(f"Arduino подключен к {arduino_port}")
+        print(f"Arduino подключен к {arduino_port} и передан в ArduinoCode")
+
         if arduino_status_label is not None:
             arduino_status_label.config(text=f"Arduino: {arduino_port}", fg="green")
 
@@ -2426,10 +2504,10 @@ def poll_arduino():
                 line = arduino.readline().decode('utf-8', errors='ignore').strip()
 
                 if line:
-                    # Выводим в консоль для контроля (ты это уже видишь)
+                    # Выводим в консоль для конА=троля (ты это уже видишь)
                     print(f"ПОЛУЧЕНО: {line}")
                     # Скармливаем строку парсеру
-                    parse_arduino_string(line, seg_occ_train)
+                    parse_arduino_string(line, seg_occ_train, diag_occ_train)
         except Exception as e:
             print(f"Ошибка чтения порта: {e}")
 
@@ -2448,6 +2526,7 @@ def find_arduino_port():
         return ports[0].device
     print("COM-порты не найдены вообще.")
     return None
+
 
 def signal_visual_change():
     if not SignalManage.get_simple_state():

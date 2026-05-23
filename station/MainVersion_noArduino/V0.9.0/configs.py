@@ -52,16 +52,19 @@ segments = [
 
 SEGMENT_ORDER = [
     # Твои 6 реальных сегментов (названия строго как в ключах кортежей)
-    ("M8", "H1"),
-    ("M8mid", "M1"),
+    ("M6", "beforeM6"),
+    ("M2", "CH"),
     ("M10", "H3"),
-    ("M1", "pastM1"),
-    ("past2", "H2"),
-    ("past4", "H4"),
+    ("M8", "H1"),
+    ("M10", "H3"),
+    ("M8mid", "M8"),
+    ("M2", "M2H1_mid"),
+    ("ALB_Sect1", "ALB_Sect1-2"),
+    ("M6H2", "M6"),
 
 
     # И 18 пустых заглушек, чтобы цикл в Python не упал
-    "EMPTY", "EMPTY", "EMPTY", "EMPTY", "EMPTY", "EMPTY",
+    "EMPTY", "EMPTY", "EMPTY", "EMPTY",
     "EMPTY", "EMPTY", "EMPTY", "EMPTY", "EMPTY", "EMPTY",
     "EMPTY", "EMPTY", "EMPTY", "EMPTY", "EMPTY", "EMPTY"
 ]
@@ -110,7 +113,7 @@ default_switch_mode = {
 segment_to_signal = {
     ('M8', 'M8mid'): "M8",
     ('M1', 'M8mid'): "M8",
-
+    ("M2", "Ч"): "Ч",
     ("M2", "M2H1_mid"): "H1",
     ("M2H1_mid", "M2H1_third"): "H1",
     ("M2H1_third", "H1"): "H1",
@@ -124,6 +127,7 @@ segment_to_signal = {
     ("M2H1_third", "H1"): "M2",
     ("H2", "M6H2"): "H2",
     ("M6", "M6H2"): "M6",
+
 }
 
 diag_to_signal = {
@@ -277,28 +281,28 @@ signals_config = {
         "mount": "top",
         "pack_side": "left",
         "count": 4,
-        "colors": ["white", "red", "green", "yellow"],
+        "colors": ["yellow", "red", "green", "yellow1"],
         "type": "train"
     },
     "H2": {
         "mount": "top",
         "pack_side": "left",
         "count": 4,
-        "colors": ["white", "red", "green", "yellow"],
+        "colors": ["yellow", "red", "green", "yellow1"],
         "type": "train"
     },
     "H3": {
         "mount": "top",
         "pack_side": "left",
         "count": 4,
-        "colors": ["white", "red", "green", "yellow"],
+        "colors": ["yellow", "red", "green", "yellow1"],
         "type": "train"
     },
     "H4": {
         "mount": "top",
         "pack_side": "left",
         "count": 4,
-        "colors": ["white", "red", "green", "yellow"],
+        "colors": ["yellow", "red", "green", "yellow1"],
         "type": "train"
     },
     "M6": {
@@ -389,6 +393,9 @@ ROUTE_SIGNAL_MAP: dict[tuple[str, str], dict[str, dict[str, object]]] = {
     ("M2", "H4"): {
         "M2": {"lamps": {"white": {"on": True, "blink": False}, }},
     },
+    ("H4", "M2"): {
+        "H4": {"lamps": { "green": {"on": False, "blink": False}, "yellow": {"on": True, "blink": False}, }, },
+    },
     ("M2", "2"): {
         "M2": {"lamps": {"white": {"on": True, "blink": False}, }},
     },
@@ -436,20 +443,36 @@ ROUTE_SIGNAL_MAP: dict[tuple[str, str], dict[str, dict[str, object]]] = {
 
     ("Ч", "1"): {
         "Ч": {"lamps": {"yellow1": {"on": True, "blink": False}, } },
-        "M2": {"lamps": {"white": {"on": True, "blink": False}, }, },
+        #"M2": {"lamps": {"white": {"on": True, "blink": False}, }, },
     },
     ("Ч", "2"): {
         "Ч": {"lamps": {"yellow": {"on": True, "blink": False}, "yellow1": {"on": True, "blink": False}, } },
-        "M2": {"lamps": {"white": {"on": True, "blink": False}, }, },
+       # "M2": {"lamps": {"white": {"on": True, "blink": False}, }, },
     },
     ("Ч", "3"): {
         "Ч": {"lamps": {"yellow": {"on": True, "blink": False}, "yellow1": {"on": True, "blink": False}, }   },
-        "M2": {"lamps": {"white": {"on": True, "blink": False}, }, },
+        #"M2": {"lamps": {"white": {"on": True, "blink": False}, }, },
     },
     ("Ч", "4"): {
         "Ч": {"lamps": {"yellow": {"on": True, "blink": False}, "yellow1": {"on": True, "blink": False}, }},
-        "M2": {"lamps": {"white": {"on": True, "blink": False}, }, },
+       # "M2": {"lamps": {"white": {"on": True, "blink": False}, }, },
     },
+    ("Ч", "M1"):{
+        "Ч": {"lamps": {"green": {"on": True, "blink": False}, "yellow": {"on": True, "blink": False}, }, },
+    },
+    ("H3", "Ч"):{
+        "H3": {"lamps": {"green": {"on": True, "blink": False}, "yellow": {"on": True, "blink": False}, }, },
+    },
+    ("H1", "Ч"): {
+        "H1": {"lamps": {"green": {"on": True, "blink": False}, "yellow": {"on": True, "blink": False}, }, },
+    },
+    ("H2", "Ч"): {
+        "H2": {"lamps": {"green": {"on": True, "blink": False}, "yellow": {"on": True, "blink": False}, }, },
+    },
+    ("H4", "Ч"): {
+        "H4": {"lamps": {"green": {"on": True, "blink": False}, "yellow": {"on": True, "blink": False}, }, },
+    },
+
 
 }
 
@@ -699,6 +722,49 @@ train_routes = {
         {"type": "segment", "id": ("H1", "M2H1_third")},
         {"type": "segment", "id": ("H1", "M8")},
     ],
+    ("Ч", "M1"): [
+        {"type": "segment", "id": ("Ч", "M2")},
+        {"type": "segment", "id": ("M2", "M2H1_mid")},
+        {"type": "segment", "id": ("M2H1_mid", "M2H1_third")},
+        {"type": "segment", "id": ("H1", "M2H1_third")},
+        {"type": "segment", "id": ("H1", "M8")},
+        {"type": "segment", "id": ("M8mid", "M8")},
+        {"type": "segment", "id": ("M8mid", "M1")},
+        {"type": "segment", "id": ("M1", "pastM1")},
+    ],
+    ("H3", "Ч"): [
+        {"type": "diag", "name": "ALB_Turn2"},
+        {"type": "segment", "id": ("M2", "M2H1_mid")},
+        {"type": "segment", "id": ("Ч", "M2")},
+    ],
+    ("H1", "Ч"): [
+        {"type": "segment", "id": ("H1", "M2H1_third")},
+        {"type": "segment", "id": ("M2H1_mid", "M2H1_third")},
+        {"type": "segment", "id": ("M2", "M2H1_mid")},
+        {"type": "segment", "id": ("Ч", "M2")},
+    ],
+    ("H2", "Ч"): [
+        {"type": "segment", "id": ("H2", "M6H2")},
+        {"type": "segment", "id": ("M6H2", "M6")},
+        {"type": "diag", "name": "ALB_Turn4"},
+        {"type": "diag", "name": "ALB_Turn6"},
+        {"type": "segment", "id": ("M2H1_mid", "M2H1_third")},
+        {"type": "segment", "id": ("M2", "M2H1_mid")},
+        {"type": "segment", "id": ("Ч", "M2")},
+    ],
+    ("H4", "Ч"): [
+        {"type": "diag", "name": "ALB_Turn8"},
+        {"type": "segment", "id": ("H2", "M6H2")},
+        {"type": "segment", "id": ("M6H2", "M6")},
+        {"type": "diag", "name": "ALB_Turn4"},
+        {"type": "diag", "name": "ALB_Turn6"},
+        {"type": "segment", "id": ("M2H1_mid", "M2H1_third")},
+        {"type": "segment", "id": ("M2", "M2H1_mid")},
+        {"type": "segment", "id": ("Ч", "M2")},
+    ],
+
+
+
 }
 route_switch_modes = {
     ("H2", "M6"): {"ALB_Turn8":  "left","ALB_Turn4-6":  "left"},
@@ -723,9 +789,15 @@ route_switch_modes = {
     ("Ч", "3"): {"ALB_Turn2": "right"},
     ("Ч", "2"): {"ALB_Turn2": "left", "ALB_Turn4-6": "right", "ALB_Turn8": "left"},
     ("Ч", "1"): {"ALB_Turn4-6": "left", "ALB_Turn2": "left"},
+    ("Ч", "M1"): {"ALB_Turn4-6": "left", "ALB_Turn2": "left", "ALB_Turn1": "left"},
     ("M2", "H4"): {"ALB_Turn2": "left", "ALB_Turn4-6": "right", "ALB_Turn8": "right"},
     ("H2", "M2"): {"ALB_Turn8": "left", "ALB_Turn4-6": "right", "ALB_Turn2": "left"},
-    ("M6", "4"): {"ALB_Turn4-6": "left", "ALB_Turn8": "right"}
+    ("M6", "4"): {"ALB_Turn4-6": "left", "ALB_Turn8": "right"},
+    ("H3", "Ч"): {"ALB_Turn2": "right"},
+    ("H1", "Ч"): {"ALB_Turn2": "left", "ALB_Turn4-6": "left"},
+    ("H2", "Ч"): {"ALB_Turn4-6": "right", "ALB_Turn2": "left",},
+    ("H4", "Ч"): {"ALB_Turn4-6": "right", "ALB_Turn2": "left", "ALB_Turn8": "right"},
+
 }
 
 #Arduino Configs
