@@ -102,10 +102,17 @@ def send_switch_command_to_hardware(switch_name: str, mode: str):
 # ПРИЕМ ДАННЫХ ОТ ARDUINO (Датчики занятости)
 # ---------------------------------------------------------------------
 def parse_arduino_string(line, seg_occ_dict, diag_occ_dict):
-
-
+    # Очищаем строку от префикса "Data: "
     raw_bin = line.replace("Data: ", "").strip()
-    bin_str = raw_bin.zfill(9)[::-1]
+
+    # Если Юнка прислала полные 24 бита, откусываем только последние 9 для датчиков
+    if len(raw_bin) == 24:
+        bin_str = raw_bin[-9:]
+    else:
+        bin_str = raw_bin.zfill(9)  # Если пришло ровно 9 бит от Нано
+
+    # === ВЕРНУЛИ КАК БЫЛО: РАЗВОРАЧИВАЕМ СТРОКУ ЗАДОМ НАПЕРЁД ===
+    bin_str = bin_str[::-1]
 
     for idx, char in enumerate(bin_str):
         if idx >= len(SEGMENT_ORDER):
