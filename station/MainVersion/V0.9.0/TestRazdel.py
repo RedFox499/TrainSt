@@ -53,7 +53,7 @@ canvas.pack(fill="both", expand=True)
 def quit_function():
     #response = tkinter.messagebox.askyesno('Exit', 'Are you sure you want to exit?')
     #if response:
-        exit()
+        root.destroy()
 
 CANVAS_W = 1920
 CANVAS_H = 1080
@@ -2506,20 +2506,34 @@ def set_arduino_status(connected: bool, text: str = ""):
     else:
         arduino_status_label.config(text="Arduino: not connected", bg="red", fg="white")
 
+
 def poll_arduino():
-    global arduino  # Должно совпадать с именем в init_arduino()
+    global arduino
 
     if arduino is not None and arduino.is_open:
         try:
             while arduino.in_waiting > 0:
-                # Читаем строку целиком
+                # Читаем строку из порта
                 line = arduino.readline().decode('utf-8', errors='ignore').strip()
 
                 if line:
-                    # Выводим в консоль для конА=троля (ты это уже видишь)
+                    # Чистим от префикса, чтобы проверить чистые биты
+                    clean_line = line.replace("Data: ", "").strip()
+
+                    # === ХИРУРГИЧЕСКИЙ ФИЛЬТР ОТ МУСОРА И СКЛЕЕК ===
+                    # Нано шлёт 9 символов. Если Юнка добивает до 24, то длина clean_line будет 24.
+                    # Если длина кривая (прилетела каша 'j', 'Lw' или огрызок '11111') — ИГНОРИРУЕМ!
+                    if len(clean_line) != 9 and len(clean_line) != 24:
+                        continue  # Просто выкидываем этот пакет и идём дальше
+
+                    # Если в строке проскочили буквы из-за склейки команд — тоже в утиль!
+                    if not clean_line.isdigit():
+                        continue
+
+                    # Если пакет идеальный — выводим в консоль и парсим
                     print(f"ПОЛУЧЕНО: {line}")
-                    # Скармливаем строку парсеру
                     parse_arduino_string(line, seg_occ_train, diag_occ_train)
+
         except Exception as e:
             print(f"Ошибка чтения порта: {e}")
 
