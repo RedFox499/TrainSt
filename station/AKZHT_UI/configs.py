@@ -22,10 +22,20 @@ positions = {
     "1": (1100, Y_P1),
 
     "Ч2M5mid": (410, Y_P2),
+    "Ч2M5third": (460, Y_P2),
+
+    "beforeM7": (500, Y_P3),
+
+    "Ч1M1first": (520, Y_P1),
+    "Ч1M1second": (570, Y_P1),
 
     "Ч1M1mid": (650, Y_P1),
     "Ч3M7mid": (400, Y_P3),
     "M5M3mid": (730, Y_P2),
+    "M5M3third": (770, Y_P2),
+    "beforeM5": (480, Y_P2),
+
+    "beforeM1": (740, Y_P1),
 
     "Ч3beforeM7": (320, Y_P3),
 
@@ -33,20 +43,36 @@ positions = {
 }
 segments = [
     ("Ч3beforeM7", "Ч3"),
-    ("Ч3beforeM7", "Ч3M7mid"),
-    ("Ч3M7mid", "M7"),
 
-    ("Ч1", "Ч1M1mid"),
-    ("Ч1M1mid", "M1"),
+    ("Ч3beforeM7", "Ч3M7mid"),
+
+    ("beforeM7", "Ч3M7mid"),
+    ("beforeM7", "M7"),
+
+    ("Ч1M1first", "Ч1"),
+    ("Ч1M1second", "Ч1M1first"),
+
+    ("Ч1M1second", "Ч1M1mid"),
+
+    ("beforeM1", "Ч1M1mid"),
+    ("beforeM1", "M1"),
+
     ("M1", "H"),
     ("H", "1"),
 
-
     ("Ч2M5mid", "Ч2"),
-    ("Ч2M5mid", "M5"),
+    ("Ч2M5mid", "Ч2M5third"),
+
+    ("beforeM5", "Ч2M5third"),
+    ("beforeM5", "M5"),
+
+
     ("M5", "M5M3mid"),
 
-    ("M5M3mid", "M3"),
+
+
+    ("M5M3mid", "M5M3third"),
+    ("M3", "M5M3third"),
 
     ("M7", "pastM7"),
 
@@ -80,19 +106,55 @@ segment_to_block_type = {}
 segment_groups = {
     "block_CH3M7": [
         {"type": "segment", "id": ("Ч3beforeM7", "Ч3")},
-        {"type": "segment", "id":  ("Ч3beforeM7", "Ч3M7mid")}
+        {"type": "segment", "id":  ("Ч3beforeM7", "Ч3M7mid")},
+        {"type": "segment", "id": ("beforeM7", "Ч3M7mid")},
+        {"type": "segment", "id": ("beforeM7", "M7")},
+    ],
+    "block_CH1M1MID": [
+        {"type": "segment", "id": ("Ч1M1first", "Ч1")},
+        {"type": "segment", "id": ("Ч1M1second", "Ч1M1first")},
+        {"type": "segment", "id": ("Ч1M1second", "Ч1M1mid")},
 
     ],
+    "block_C1M1MID_beforeM1": [
+        {"type": "segment", "id":("beforeM1", "Ч1M1mid")},
+        {"type": "segment", "id": ("beforeM1", "M1")},
+    ],
+    "block_CH2M5": [
+        {"type": "segment", "id": ("Ч2M5mid", "Ч2")},
+        {"type": "segment", "id": ("Ч2M5mid", "Ч2M5third")},
+        {"type": "segment", "id":("beforeM5", "Ч2M5third")},
+        {"type": "segment", "id":("beforeM5", "M5")},
+    ],
+    "block_M5M3mid": [
+        {"type": "segment", "id":("M5M3mid", "M5M3third")},
+        {"type": "segment", "id": ("M3", "M5M3third")},
+    ],
+
+
+
 
 }
 
 split_parts_map = {
-    "ALB_Turn4-6": {
-        "partA": "ALB_Turn6",
-        "partB": "ALB_Turn4"
-    }
+    "ALB_Turn5-7": {
+        "partA": "ALB_Turn5",
+        "partB": "ALB_Turn7"
+    },
+    "ALB_Turn13-15": {
+        "partA": "ALB_Turn13",
+        "partB": "ALB_Turn15"
+    },
+    "ALB_Turn9-11": {
+        "partA": "ALB_Turn9",
+        "partB": "ALB_Turn11"
+    },
+    "ALB_Turn1-3": {
+        "partA": "ALB_Turn1",
+        "partB": "ALB_Turn3"
+    },
 }
-switch_list = ["ALB_Turn19", "ALB_Turn17", "ALB_Turn5-7", "ALB_Turn13-15", "ALB_Turn9-11"]
+switch_list = ["ALB_Turn19", "ALB_Turn17", "ALB_Turn5-7", "ALB_Turn13-15", "ALB_Turn9-11", "ALB_Turn1-3"]
 
 default_switch_mode = {
     "ALB_Turn19": "left",
@@ -100,6 +162,7 @@ default_switch_mode = {
     "ALB_Turn5-7": "left",
     "ALB_Turn13-15": "left",
     "ALB_Turn9-11": "left",
+    "ALB_Turn1-3": "left",
 }
 segment_to_signal = {
     ('M8', 'M8mid'): "M8",
@@ -126,12 +189,13 @@ diag_to_signal = {
     "ALB_Turn8": "H4",
     "ALB_Turn2": "H3",
 
+
 }
 diagonal_config = {
 
     "ALB_Turn19": {
         "left":  {"exists": True, "connected": 0,  "disconnected": 0 },
-        "right": {"exists": True, "connected": -8, "disconnected": +8},
+        "right": {"exists": True, "connected": -5, "disconnected": +5},
         "default": "both"
     },
 
@@ -153,6 +217,11 @@ diagonal_config = {
         "default": "both"
     },
     "ALB_Turn9-11": {
+        "left": {"exists": True, "connected": 5, "disconnected": 0},
+        "right": {"exists": True, "connected": 5, "disconnected": 0},
+        "default": "both"
+    },
+    "ALB_Turn1-3": {
         "left": {"exists": True, "connected": 5, "disconnected": 0},
         "right": {"exists": True, "connected": 5, "disconnected": 0},
         "default": "both"
