@@ -80,173 +80,140 @@ class SignalManager():
         "black": "black",
     }
     signals_state = {
-        "Ч": {
+        "Ч1": {
             "lamps": {
-                "yellow": {"on": False, "blink": False},
-                "green": {"on": False, "blink": False},
-                "red": {"on": True, "blink": False},
-                "yellow1": {"on": False, "blink": False},
                 "white": {"on": False, "blink": False},
+                "red": {"on": False, "blink": False},
+                "green": {"on": True, "blink": False},
+                "yellow": {"on": False, "blink": False},
             },
             "manual": False,
         },
-        "M2": {
+        "Ч2": {
+            "lamps": {
+                "white": {"on": False, "blink": False},
+                "red": {"on": False, "blink": False},
+                "green": {"on": True, "blink": False},
+                "yellow": {"on": False, "blink": False},
+            },
+            "manual": False,
+        },
+        "Ч3": {
+            "lamps": {
+                "white": {"on": False, "blink": False},
+                "red": {"on": False, "blink": False},
+                "green": {"on": True, "blink": False},
+                "yellow": {"on": False, "blink": False},
+            },
+            "manual": False,
+        },
+        "Ч4": {
+            "lamps": {
+                "white": {"on": False, "blink": False},
+                "red": {"on": False, "blink": False},
+                "green": {"on": True, "blink": False},
+                "yellow": {"on": False, "blink": False},
+            },
+            "manual": False,
+        },
+        "Ч5": {
+            "lamps": {
+                "white": {"on": False, "blink": False},
+                "red": {"on": False, "blink": False},
+                "green": {"on": True, "blink": False},
+                "yellow": {"on": False, "blink": False},
+            },
+            "manual": False,
+        },
+        "M7": {
             "lamps": {
                 "blue": {"on": True, "blink": False},
                 "white": {"on": False, "blink": False},
             },
             "manual": False,
         },
-        "H1": {
-            "lamps": {
-                "yellow": {"on": False, "blink": False},
-                "green": {"on": False, "blink": False},
-                "red": {"on": True, "blink": False},
-                "white": {"on": False, "blink": False},
-            },
-            "manual": False,
-        },
-        "H2": {
-            "lamps": {
-                "yellow": {"on": False, "blink": False},
-                "green": {"on": False, "blink": False},
-                "red": {"on": True, "blink": False},
-                "white": {"on": False, "blink": False},
-            },
-            "manual": False,
-        },
-        "H3": {
-            "lamps": {
-                "yellow": {"on": False, "blink": False},
-                "green": {"on": False, "blink": False},
-                "red": {"on": True, "blink": False},
-                "white": {"on": False, "blink": False},
-            },
-            "manual": False,
-        },
-        "H4": {
-            "lamps": {
-                "yellow": {"on": False, "blink": False},
-                "green": {"on": False, "blink": False},
-                "red": {"on": True, "blink": False},
-                "white": {"on": False, "blink": False},
-            },
-            "manual": False,
-        },
-        "M6": {
-            "lamps": {
-                "red": {"on": True, "blink": False},
-                "white": {"on": False, "blink": False},
-            },
-            "manual": False,
-        },
-        "M8": {
-            "lamps": {
-                "red": {"on": True, "blink": False},
-                "white": {"on": False, "blink": False},
-            },
-            "manual": False,
-        },
-        "M10": {
-            "lamps": {
-                "red": {"on": True, "blink": False},
-                "white": {"on": False, "blink": False},
-            },
-            "manual": False,
-        },
         "M1": {
             "lamps": {
-                "red": {"on": True, "blink": False},
+                "blue": {"on": True, "blink": False},
                 "white": {"on": False, "blink": False},
             },
             "manual": False,
         },
-        "ALB_Sect1-2": {
+        "M5": {
             "lamps": {
-                "red": {"on": False, "blink": False},
-                "green": {"on": False, "blink": False},
-                "yellow": {"on": False, "blink": False},
-            },
-            "manual": False,
-        },
-        "ALB_Sect1-2_2": {
-            "lamps": {
-                "red": {"on": False, "blink": False},
-                "green": {"on": False, "blink": False},
-                "yellow": {"on": False, "blink": False},
-            },
-            "manual": False,
-        },
-        "ALB_Sect2": {
-            "lamps": {
-                "yellow": {"on": False, "blink": False},
-                "green": {"on": False, "blink": False},
-                "red": {"on": False, "blink": False},
-                "black": {"on": False, "blink": False},
+                "blue": {"on": True, "blink": False},
                 "white": {"on": False, "blink": False},
+            },
+            "manual": False,
+        },
+        "M3": {
+            "lamps": {
+                "blue": {"on": True, "blink": False},
+                "white": {"on": False, "blink": False},
+            },
+            "manual": False,
+        },
+        "1": {
+            "lamps": {
+                "yellow": {"on": True, "blink": False},
+                "green": {"on": False, "blink": False},
+                "red": {"on": False, "blink": False},
             },
             "manual": False,
         },
 
     }
     signals_state_simple = {
-        "Ч": {
+        "Ч1": {
             "lamps": {
                 "red": {"on": False, "blink": False},
                 "white": {"on": False, "blink": False},
             },
             "manual": False,
         },
-        "M2": {
+        "Ч2": {
+            "lamps": {
+                "red": {"on": False, "blink": False},
+                "white": {"on": False, "blink": False},
+            },
+            "manual": False,
+        },
+        "Ч3": {
+            "lamps": {
+                "red": {"on": False, "blink": False},
+                "white": {"on": False, "blink": False},
+            },
+            "manual": False,
+        },
+        "Ч4": {
+            "lamps": {
+                "red": {"on": False, "blink": False},
+                "white": {"on": False, "blink": False},
+            },
+            "manual": False,
+        },
+        "Ч5": {
+            "lamps": {
+                "red": {"on": False, "blink": False},
+                "white": {"on": False, "blink": False},
+            },
+            "manual": False,
+        },
+        "Н": {
+            "lamps": {
+                "red": {"on": False, "blink": False},
+                "white": {"on": False, "blink": False},
+            },
+            "manual": False,
+        },
+        "M7": {
             "lamps": {
                 "grey": {"on": True, "blink": False},
                 "white": {"on": False, "blink": False},
             },
             "manual": False,
         },
-        "H1": {
-            "lamps": {
-                "grey": {"on": True, "blink": False},
-                "white": {"on": False, "blink": False},
-            },
-            "manual": False,
-        },
-        "H2": {
-            "lamps": {
-                "grey": {"on": True, "blink": False},
-                "white": {"on": False, "blink": False},
-            },
-            "manual": False,
-        },
-        "H3": {
-            "lamps": {
-                "grey": {"on": True, "blink": False},
-                "white": {"on": False, "blink": False},
-            },
-            "manual": False,
-        },
-        "H4": {
-            "lamps": {
-                "grey": {"on": True, "blink": False},
-                "white": {"on": False, "blink": False},
-            },
-            "manual": False,
-        },
-        "M6": {
-            "lamps": {
-                "grey": {"on": True, "blink": False},
-                "white": {"on": False, "blink": False},
-            },
-            "manual": False,
-        },
-        "M8": {
-            "lamps": {
-                "grey": {"on": True, "blink": False},
-                "white": {"on": False, "blink": False},
-            },
-            "manual": False,
-        },
-        "M10": {
+        "M5": {
             "lamps": {
                 "grey": {"on": True, "blink": False},
                 "white": {"on": False, "blink": False},
@@ -260,23 +227,16 @@ class SignalManager():
             },
             "manual": False,
         },
-        "ALB_Sect1-2": {
+        "M3": {
             "lamps": {
                 "grey": {"on": True, "blink": False},
                 "white": {"on": False, "blink": False},
             },
             "manual": False,
         },
-        "ALB_Sect1-2_2": {
+        "1": {
             "lamps": {
                 "grey": {"on": True, "blink": False},
-                "white": {"on": False, "blink": False},
-            },
-            "manual": False,
-        },
-        "ALB_Sect2": {
-            "lamps": {
-                "red": {"on": False, "blink": False},
                 "white": {"on": False, "blink": False},
             },
             "manual": False,
@@ -359,7 +319,8 @@ class SignalManager():
         self.signal_id_map[name] = dict(zip(list(config_colors.keys()), ids))
 
     def enable_two_yellow_train(self, name):
-        if name == "Ч":
+        names = ["Ч1", "Ч2", "Ч3", "Ч4", "Ч5", "Н"]
+        if name in names :
             self.set_signal(name, "yellow1", True)
             self.set_signal(name, "yellow", True)
             for colors in self.get_lamp_colors(name):
@@ -554,18 +515,19 @@ class SignalManager():
         self.set_signal_white(name)
 
 
-    def sync_sinple_CH_with_debug(self):
-        name = "Ч"
-        if self.get_lamp_state(name, "white"):
-            self.set_simple_signal_aspect(name, "INVITE")
-        elif self.get_lamp_state(name, 'red'):
-            self.set_simple_signal_aspect(name, "RED")
-        elif self.get_lamp_state(name, 'yellow') and self.get_lamp_state(name, 'yellow1'):
-           self.set_simple_signal_aspect(name, "DOUBLE_YELLOW")
-        elif self.get_lamp_state(name, "green"):
-            self.set_simple_signal_aspect(name, "WHITE_GREEN")
-        elif self.get_lamp_state(name, "yellow") and not self.get_lamp_state(name, "yellow1"):
-            self.set_simple_signal_aspect(name, "WHITE_YELLOW")
+    def sync_sinple_CH_with_debug(self, name):
+        names = ["Ч1", "Ч2", "Ч3", "Ч4", "Ч5", "H"]
+        if name in names:
+            if self.get_lamp_state(name, "white"):
+                self.set_simple_signal_aspect(name, "INVITE")
+            elif self.get_lamp_state(name, 'red'):
+                self.set_simple_signal_aspect(name, "RED")
+            elif self.get_lamp_state(name, 'yellow') and self.get_lamp_state(name, 'yellow1'):
+               self.set_simple_signal_aspect(name, "DOUBLE_YELLOW")
+            elif self.get_lamp_state(name, "green"):
+                self.set_simple_signal_aspect(name, "WHITE_GREEN")
+            elif self.get_lamp_state(name, "yellow") and not self.get_lamp_state(name, "yellow1"):
+                self.set_simple_signal_aspect(name, "WHITE_YELLOW")
 
 
     def get_ch_current_apect(self):
@@ -573,14 +535,10 @@ class SignalManager():
 
     def sync_simple_and_debug(self):
         for name in signals_config.keys():
-            if name == "Ч":
+            names = ["Ч1", "Ч2", "Ч3", "Ч4", "Ч5", "Н"]
+            if name in names:
                 continue
-            if name == 'ALB_Sect1-2':
-                #self.set_signal_simple(name, 'grey',True)
-                continue
-            elif name == 'ALB_Sect2':
-                self.set_simple_signal_aspect(name, "DISABLED")
-                continue
+
             config_count = signals_config_simple[name]["count"]
             if self.if_color_in_lamp(name, 'red'):
                 if self.get_lamp_state(name, 'red'):
@@ -690,24 +648,7 @@ class SignalManager():
 
 
 
-    def check_Sect1_2_2(self):
-        if seg_occ_train[("M2", "Ч")] == 0:
-            for colors in self.get_lamp_colors("ALB_Sect1-2_2"):
-                if colors != "red":
-                    self.set_signal("ALB_Sect1-2_2", colors, False)
-            self.set_signal("ALB_Sect1-2_2", "red", True)
 
-        elif self.get_lamp_state("Ч", "yellow1") and not self.get_lamp_state("Ч", "yellow"):
-            for colors in self.get_lamp_colors("ALB_Sect1-2_2"):
-                if colors != "green":
-                    self.set_signal("ALB_Sect1-2_2", colors, False)
-            self.set_signal("ALB_Sect1-2_2", "green", True)
-
-        elif self.get_lamp_state("Ч", "yellow") and self.get_lamp_state("Ч", "yellow1") or self.get_lamp_state("Ч", "red"):
-            for colors in self.get_lamp_colors("ALB_Sect1-2_2"):
-                if colors != "yellow":
-                    self.set_signal("ALB_Sect1-2_2", colors, False)
-            self.set_signal("ALB_Sect1-2_2", "yellow", True)
 
 
     def update_all_signals(self):
@@ -719,7 +660,7 @@ class SignalManager():
         self.update_signals()
 
 
-        #root.after(350, self.update_all_signals)
+        root.after(350, self.update_all_signals)
 
 
     def update_signals(self):
@@ -733,7 +674,7 @@ class SignalManager():
             if SignalManage.get_simple_state():
                 config_count = signals_config_simple[name]["count"]
                 if config_count == 2:
-                    self.sync_sinple_CH_with_debug()
+                    self.sync_sinple_CH_with_debug(name)
                 elif config_count == 1:
                     mapping = self.signal_id_map_simple[name]
                     lamp_id = list(mapping.values())[0]
@@ -750,7 +691,7 @@ class SignalManager():
                         self.canvas.itemconfig(lamp_id, fill=color)
                     else:
                         self.canvas.itemconfig(lamp_id, fill=SIGNAL_OFF_COLOR)
-        self.check_Sect1_2_2()
+
        # import ArduinoCode
         # Собираем кадр из 5 байт
        # frame = ArduinoCode.build_hw_frame(self.signals_state, self.signal_blink_phase)
@@ -765,10 +706,10 @@ class SignalManager():
     def invite_signal_on_off(self, signalName):
         if self.get_lamp_state(signalName, 'white'):
             self.set_signal(signalName, 'white', onStatus=False)
-            self.sync_sinple_CH_with_debug()
+            self.sync_sinple_CH_with_debug(signalName)
         elif not self.get_lamp_state(signalName, 'white'):
             self.set_signal(signalName, 'white', onStatus=True)
-            self.sync_sinple_CH_with_debug()
+            self.sync_sinple_CH_with_debug(signalName)
 
     def set_all_to_red(self):
         color = 'red'
@@ -832,7 +773,9 @@ class SignalManager():
 
     def on_CH_click(self, event):
         name = interface_manager.get_node_name_from_event(event)
-        if name == "Ч":
+        print(name)
+        names = ["Ч1", "Ч2", "Ч3", "Ч4", "Ч5", "H"]
+        if name in names:
             menu = tk.Menu(root, tearoff=0)
             menu.add_command(
                 label="Пригласительный",
@@ -905,10 +848,10 @@ class SignalManager():
 
     def initialize_signals(self):
         self.drawAllSignals()
-        #self.drawAllSignals_Simple()
+        self.drawAllSignals_Simple()
         self.checkMode_on_start()
-        #self.set_all_to_red()
-       # self.update_all_signals()
+        self.set_all_to_red()
+        self.update_all_signals()
 
 
 
@@ -1117,6 +1060,8 @@ class RouteManager:
         ("M5M3mid", "M5M3third"): 0,
         ("M3", "M5M3third"): 0,
         ("M7", "pastM7"): 0,
+        ("M3", "M3MID6"): 0,
+        ("M3MID6", "6"): 0,
     }
     diag_active_counter = {
          "ALB_Turn19": 0,
@@ -1736,7 +1681,7 @@ class interface_manager:
         self.btn_maneuver.place(x=center_x + offset - 100, y=buttons_y)
         self.btn_maneuver.place_forget()
 
-        bannedNames = []#["pastM7", "Ч1M1mid", "M5M3mid", "Ч2M5mid", "Ч3beforeM7"]
+        bannedNames = []#["pastM7", "Ч1M1mid", "M5M3mid", "Ч2M5mid", "Ч3beforeM7", "Ч3M7mid", "beforeM7", "Ч1M1second", "beforeM1", "M5M3third", "beforeM5", "Ч2M5third", "Ч1M1first", "M3MID6"]
 
         for name, (x, y) in positions.items():
             if name in bannedNames:
@@ -1857,13 +1802,19 @@ class interface_manager:
             if mode in ("left", "both"):
                 self.setBranchLeft(nameDiag, left_cfg["connected"])
                 self.branchWidth(nameDiag, 6)
-
+                if nameDiag == "ALB_Turn13-15":
+                    canvas.itemconfig(segment_ids[("beforeM7", "M7")], width=6)
             else:
                 self.setBranchLeft(nameDiag, left_cfg["disconnected"])
                 self.branchWidth(nameDiag, 2)
+                if nameDiag == "ALB_Turn19":
+                    canvas.itemconfig(segment_ids[("Ч2M5mid", "Ч2M5third")], width=2)
+                if nameDiag == "ALB_Turn17":
+                    canvas.itemconfig(segment_ids[("Ч3beforeM7", "Ч3M7mid")], width=2)
+                if nameDiag == "ALB_Turn13-15":
+                    canvas.itemconfig(segment_ids[("beforeM7", "M7")], width=2)
 
 
-        print(nameDiag)
         right_cfg = cfg["right"]
         if right_cfg["exists"]:
             if mode in ("right", "both"):
