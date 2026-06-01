@@ -68,7 +68,8 @@ class SignalManager():
         "WHITE_GREEN": ["grey", "green"],
         "GREEN_SECOND": ["green", "yellow"],
         "INVITE": ["white", "red"],
-        "DISABLED": ["black", "black"]
+        "DISABLED": ["black", "black"],
+
     }
     CH_CURRENT_ASPECT = ""
     COLOR_MAP = {
@@ -516,7 +517,17 @@ class SignalManager():
 
 
     def sync_sinple_CH_with_debug(self, name):
-        names = ["Ч1", "Ч2", "Ч3", "Ч4", "Ч5", "H"]
+        names2 = ["Ч1", "Ч2", "Ч3", "Ч4", "Ч5"]
+        names = ["H"]
+        if name in names2:
+            if self.get_lamp_state(name, "white"):
+                self.set_simple_signal_aspect(name, "INVITE")
+            elif self.get_lamp_state(name, 'red'):
+                self.set_simple_signal_aspect(name, "RED")
+            elif self.get_lamp_state(name, 'yellow'):
+               self.set_simple_signal_aspect(name, "WHITE_YELLOW")
+            elif self.get_lamp_state(name, "green"):
+                self.set_simple_signal_aspect(name, "WHITE_GREEN")
         if name in names:
             if self.get_lamp_state(name, "white"):
                 self.set_simple_signal_aspect(name, "INVITE")
@@ -1064,20 +1075,20 @@ class RouteManager:
         ("M3MID6", "6"): 0,
     }
     diag_active_counter = {
-         "ALB_Turn19": 0,
-        "ALB_Turn17": 0,
+         "AKZHT_Turn19": 0,
+        "AKZHT_Turn17": 0,
 
-        "ALB_Turn5": 0,
-        "ALB_Turn7": 0,
+        "AKZHT_Turn5": 0,
+        "AKZHT_Turn7": 0,
 
-        "ALB_Turn1": 0,
-        "ALB_Turn3": 0,
+        "AKZHT_Turn1": 0,
+        "AKZHT_Turn3": 0,
 
-        "ALB_Turn9": 0,
-        "ALB_Turn11": 0,
+        "AKZHT_Turn9": 0,
+        "AKZHT_Turn11": 0,
 
-        "ALB_Turn13": 0,
-        "ALB_Turn15": 0,
+        "AKZHT_Turn13": 0,
+        "AKZHT_Turn15": 0,
     }
 
     def __init__(self):
@@ -1535,12 +1546,12 @@ class SwitchManager:
 
 
     def initialize_switches(self):
-        self.set_diagonal_mode("ALB_Turn19", "left")
-        self.set_diagonal_mode("ALB_Turn17", "left")
-        self.set_diagonal_mode("ALB_Turn5-7", "left")
-        self.set_diagonal_mode("ALB_Turn13-15", "left")
-        self.set_diagonal_mode("ALB_Turn9-11", "left")
-        self.set_diagonal_mode("ALB_Turn1-3", "left")
+        self.set_diagonal_mode("AKZHT_Turn19", "left")
+        self.set_diagonal_mode("AKZHT_Turn17", "left")
+        self.set_diagonal_mode("AKZHT_Turn5-7", "left")
+        self.set_diagonal_mode("AKZHT_Turn13-15", "left")
+        self.set_diagonal_mode("AKZHT_Turn9-11", "left")
+        self.set_diagonal_mode("AKZHT_Turn1-3", "left")
 
     def on_switch_mode_selected(self, name, mode):
         text = canvas.itemcget(switch_text_ids[name], "text")
@@ -1681,7 +1692,7 @@ class interface_manager:
         self.btn_maneuver.place(x=center_x + offset - 100, y=buttons_y)
         self.btn_maneuver.place_forget()
 
-        bannedNames = []#["pastM7", "Ч1M1mid", "M5M3mid", "Ч2M5mid", "Ч3beforeM7", "Ч3M7mid", "beforeM7", "Ч1M1second", "beforeM1", "M5M3third", "beforeM5", "Ч2M5third", "Ч1M1first", "M3MID6"]
+        bannedNames = ["pastM7", "Ч1M1mid", "M5M3mid", "Ч2M5mid", "Ч3beforeM7", "Ч3M7mid", "beforeM7", "Ч1M1second", "beforeM1", "M5M3third", "beforeM5", "Ч2M5third", "Ч1M1first", "M3MID6"]
 
         for name, (x, y) in positions.items():
             if name in bannedNames:
@@ -1802,16 +1813,16 @@ class interface_manager:
             if mode in ("left", "both"):
                 self.setBranchLeft(nameDiag, left_cfg["connected"])
                 self.branchWidth(nameDiag, 6)
-                if nameDiag == "ALB_Turn13-15":
+                if nameDiag == "AKZHT_Turn13-15":
                     canvas.itemconfig(segment_ids[("beforeM7", "M7")], width=6)
             else:
                 self.setBranchLeft(nameDiag, left_cfg["disconnected"])
                 self.branchWidth(nameDiag, 2)
-                if nameDiag == "ALB_Turn19":
+                if nameDiag == "AKZHT_Turn19":
                     canvas.itemconfig(segment_ids[("Ч2M5mid", "Ч2M5third")], width=2)
-                if nameDiag == "ALB_Turn17":
+                if nameDiag == "AKZHT_Turn17":
                     canvas.itemconfig(segment_ids[("Ч3beforeM7", "Ч3M7mid")], width=2)
-                if nameDiag == "ALB_Turn13-15":
+                if nameDiag == "AKZHT_Turn13-15":
                     canvas.itemconfig(segment_ids[("beforeM7", "M7")], width=2)
 
 
@@ -1820,35 +1831,35 @@ class interface_manager:
             if mode in ("right", "both"):
                 self.setBranchRight(nameDiag, right_cfg["connected"])
                 self.branchWidth(nameDiag, 6)
-                if nameDiag == "ALB_Turn19":
+                if nameDiag == "AKZHT_Turn19":
                     canvas.itemconfig(segment_ids[  ("Ч2M5mid", "Ч2M5third")], width=2)
-                if nameDiag == "ALB_Turn17":
+                if nameDiag == "AKZHT_Turn17":
                     canvas.itemconfig(segment_ids[("Ч3beforeM7", "Ч3M7mid")], width=2)
-                if nameDiag == "ALB_Turn1-3":
+                if nameDiag == "AKZHT_Turn1-3":
                     canvas.itemconfig(segment_ids[("M5M3mid", "M5M3third")], width=2)
-                if nameDiag == "ALB_Turn5-7":
+                if nameDiag == "AKZHT_Turn5-7":
                     canvas.itemconfig(segment_ids[("beforeM5", "M5")], width=2)
                     canvas.itemconfig(segment_ids[("Ч1M1second", "Ч1M1first")], width=2)
-                if nameDiag == "ALB_Turn13-15":
+                if nameDiag == "AKZHT_Turn13-15":
                     canvas.itemconfig(segment_ids[("beforeM7", "M7")], width=2)
-                if nameDiag == "ALB_Turn9-11":
+                if nameDiag == "AKZHT_Turn9-11":
                     canvas.itemconfig(segment_ids[("beforeM1", "M1")], width=2)
 
             else:
                 self.setBranchRight(nameDiag, right_cfg["disconnected"])
                 self.branchWidth(nameDiag, 2)
-                if nameDiag == "ALB_Turn19":
+                if nameDiag == "AKZHT_Turn19":
                     canvas.itemconfig(segment_ids[("Ч2M5mid", "Ч2M5third")], width=6)
-                if nameDiag == "ALB_Turn17":
+                if nameDiag == "AKZHT_Turn17":
                     canvas.itemconfig(segment_ids[("Ч3beforeM7", "Ч3M7mid")], width=6)
-                if nameDiag == "ALB_Turn1-3":
+                if nameDiag == "AKZHT_Turn1-3":
                     canvas.itemconfig(segment_ids[("M5M3mid", "M5M3third")], width=6)
-                if nameDiag == "ALB_Turn5-7":
+                if nameDiag == "AKZHT_Turn5-7":
                     canvas.itemconfig(segment_ids[("beforeM5", "M5")], width=6)
                     canvas.itemconfig(segment_ids[("Ч1M1second", "Ч1M1first")], width=6)
-                if nameDiag == "ALB_Turn13-15":
+                if nameDiag == "AKZHT_Turn13-15":
                     canvas.itemconfig(segment_ids[("beforeM7", "M7")], width=6)
-                if nameDiag == "ALB_Turn9-11":
+                if nameDiag == "AKZHT_Turn9-11":
                     canvas.itemconfig(segment_ids[("beforeM1", "M1")], width=6)
 
 
@@ -2132,20 +2143,20 @@ seg_occ_train = {
     ("M7", "pastM7"): 1,
 }
 diag_occ_train = {
-    "ALB_Turn19": 1,
-    "ALB_Turn17": 1,
+    "AKZHT_Turn19": 1,
+    "AKZHT_Turn17": 1,
 
-    "ALB_Turn5": 1,
-    "ALB_Turn7": 1,
+    "AKZHT_Turn5": 1,
+    "AKZHT_Turn7": 1,
 
-    "ALB_Turn1": 1,
-    "ALB_Turn3": 1,
+    "AKZHT_Turn1": 1,
+    "AKZHT_Turn3": 1,
 
-    "ALB_Turn9": 1,
-    "ALB_Turn11": 1,
+    "AKZHT_Turn9": 1,
+    "AKZHT_Turn11": 1,
 
-    "ALB_Turn13": 1,
-    "ALB_Turn15": 1,
+    "AKZHT_Turn13": 1,
+    "AKZHT_Turn15": 1,
 }
 
 for block, segs in segment_groups.items():
@@ -2207,7 +2218,7 @@ def create_switch_table():
     total_height = dy * len(switch_list)
     y_start = h - total_height - 420
 
-    x_text = w - 990
+    x_text = w - 1000
     x_rect = w - 980
 
     for i, name in enumerate(switch_list, start=1):
@@ -2309,19 +2320,33 @@ for a, b in segments:
     segment_ids[(b, a)] = seg
 
 
-AddDiagonal(430, 483.5, 240, 605, -25, -140, "ALB_Turn19")
+AddDiagonal(430, 483.5, 240, 605, -25, -140, "AKZHT_Turn19")
 
-AddDiagonal(350, 247, 170, 125, -43, -70, "ALB_Turn17")
+AddDiagonal(350, 247, 170, 125, -43, -70, "AKZHT_Turn17")
 
-AddSplitDiagonalDasAuto(565, 363.5,495, 487, -30, -30, "ALB_Turn5-7", "ALB_Turn5", "ALB_Turn7")
+AddSplitDiagonalDasAuto(565, 363.5,495, 487, -30, -30, "AKZHT_Turn5-7", "AKZHT_Turn5", "AKZHT_Turn7")
 
-AddSplitDiagonalDasAuto(495, 243.5,612, 366, 30, 30, "ALB_Turn13-15", "ALB_Turn13", "ALB_Turn15")
+AddSplitDiagonalDasAuto(495, 243.5,612, 366, 30, 30, "AKZHT_Turn13-15", "AKZHT_Turn13", "AKZHT_Turn15")
 
-AddSplitDiagonalDasAuto(770, 243.5,720, 367, -30, -30, "ALB_Turn9-11", "ALB_Turn9", "ALB_Turn11")
+AddSplitDiagonalDasAuto(770, 243.5,720, 367, -30, -30, "AKZHT_Turn9-11", "AKZHT_Turn9", "AKZHT_Turn11")
 
-AddSplitDiagonalDasAuto(685, 363.5,790, 487, 30, 30, "ALB_Turn1-3", "ALB_Turn1", "ALB_Turn3")
+AddSplitDiagonalDasAuto(685, 363.5,790, 487, 30, 30, "AKZHT_Turn1-3", "AKZHT_Turn1", "AKZHT_Turn3")
 
+canvas.create_text(440, 460, text="19", font=("Bahnschrift bold", 16), fill="#4a494a")
 
+canvas.create_text(565, 355, text="5", font=("Bahnschrift bold", 16), fill= "#4a494a")
+canvas.create_text(480, 500, text="7", font=("Bahnschrift bold", 16), fill="#4a494a")
+
+canvas.create_text(770, 500, text="1", font=("Bahnschrift bold", 16), fill="#4a494a")
+canvas.create_text(670, 354, text="3", font=("Bahnschrift bold", 16), fill="#4a494a")
+
+canvas.create_text(770, 230, text="9", font=("Bahnschrift bold", 16), fill="#4a494a")
+canvas.create_text(700, 345, text="11", font=("Bahnschrift bold", 16), fill="#4a494a")
+
+canvas.create_text(620, 345, text="13", font=("Bahnschrift bold", 16), fill="#4a494a")
+canvas.create_text(480, 230, text="15", font=("Bahnschrift bold", 16), fill="#4a494a")
+
+canvas.create_text(380, 260, text="17", font=("Bahnschrift bold", 16), fill="#4a494a")
 
 
 def get_switch_name_from_event(event):
@@ -2377,35 +2402,35 @@ def blink_diag(name, duration_ms=2000, interval_ms=200):
 
     def _step(state=True):
         if time.time() >= end_time:
-            if name == "ALB_Turn5-7":
-                interface_manager.paint_diagonal("ALB_Turn5", interface_manager.line_color_main)
-                interface_manager.paint_diagonal("ALB_Turn7", interface_manager.line_color_main)
-            if name == "ALB_Turn13-15":
-                interface_manager.paint_diagonal("ALB_Turn13", interface_manager.line_color_main)
-                interface_manager.paint_diagonal("ALB_Turn15", interface_manager.line_color_main)
-            if name == "ALB_Turn9-11":
-                interface_manager.paint_diagonal("ALB_Turn9", interface_manager.line_color_main)
-                interface_manager.paint_diagonal("ALB_Turn11", interface_manager.line_color_main)
-            if name == "ALB_Turn1-3":
-                interface_manager.paint_diagonal("ALB_Turn1", interface_manager.line_color_main)
-                interface_manager.paint_diagonal("ALB_Turn3", interface_manager.line_color_main)
+            if name == "AKZHT_Turn5-7":
+                interface_manager.paint_diagonal("AKZHT_Turn5", interface_manager.line_color_main)
+                interface_manager.paint_diagonal("AKZHT_Turn7", interface_manager.line_color_main)
+            if name == "AKZHT_Turn13-15":
+                interface_manager.paint_diagonal("AKZHT_Turn13", interface_manager.line_color_main)
+                interface_manager.paint_diagonal("AKZHT_Turn15", interface_manager.line_color_main)
+            if name == "AKZHT_Turn9-11":
+                interface_manager.paint_diagonal("AKZHT_Turn9", interface_manager.line_color_main)
+                interface_manager.paint_diagonal("AKZHT_Turn11", interface_manager.line_color_main)
+            if name == "AKZHT_Turn1-3":
+                interface_manager.paint_diagonal("AKZHT_Turn1", interface_manager.line_color_main)
+                interface_manager.paint_diagonal("AKZHT_Turn3", interface_manager.line_color_main)
             else:
                 interface_manager.paint_diagonal(name, interface_manager.line_color_main)
             return
 
         color = "#75CEFF" if state else interface_manager.line_color_main
-        if name == "ALB_Turn5-7":
-            interface_manager.paint_diagonal("ALB_Turn5", color)
-            interface_manager.paint_diagonal("ALB_Turn7", color)
-        if name == "ALB_Turn13-15":
-            interface_manager.paint_diagonal("ALB_Turn13", color)
-            interface_manager.paint_diagonal("ALB_Turn15", color)
-        if name == "ALB_Turn9-11":
-            interface_manager.paint_diagonal("ALB_Turn9", color)
-            interface_manager.paint_diagonal("ALB_Turn11", color)
-        if name == "ALB_Turn1-3":
-            interface_manager.paint_diagonal("ALB_Turn1", color)
-            interface_manager.paint_diagonal("ALB_Turn3", color)
+        if name == "AKZHT_Turn5-7":
+            interface_manager.paint_diagonal("AKZHT_Turn5", color)
+            interface_manager.paint_diagonal("AKZHT_Turn7", color)
+        if name == "AKZHT_Turn13-15":
+            interface_manager.paint_diagonal("AKZHT_Turn13", color)
+            interface_manager.paint_diagonal("AKZHT_Turn15", color)
+        if name == "AKZHT_Turn9-11":
+            interface_manager.paint_diagonal("AKZHT_Turn9", color)
+            interface_manager.paint_diagonal("AKZHT_Turn11", color)
+        if name == "AKZHT_Turn1-3":
+            interface_manager.paint_diagonal("AKZHT_Turn1", color)
+            interface_manager.paint_diagonal("AKZHT_Turn3", color)
         else:
             interface_manager.paint_diagonal(name, color)
         root.after(interval_ms, _step, not state)
@@ -2533,9 +2558,26 @@ for seg in seg_occ_train.keys():
         display_items.append({"type": "segment", "id": seg})
 
 
+
+
 for diag in diag_occ_train.keys():
     display_items.append({"type": "diag", "id": diag})
 
+button_labels = {
+
+    ('M1', 'H'): "После_Входного Н",
+    ('H', '1'): "После_Свет_1",
+    ('M5', 'M5M3mid'): "Между_М5_стрелкой",
+
+
+    "AKZHT_Turn13": "AKZHT_Turn15",
+    "AKZHT_Turn15": "AKZHT_Turn13",
+
+    "AKZHT_Turn1": "AKZHT_Turn3",
+    "AKZHT_Turn3": "AKZHT_Turn1",
+
+
+}
 
 def do(item_type, item_id):
     if item_type == "block":
@@ -2565,9 +2607,11 @@ def do(item_type, item_id):
 
 for i, item in enumerate(display_items):
 
+    display_name = button_labels.get(item["id"], str(item["id"]))
+
     button69 = tkinter.Button(
         root,
-        text=str(item["id"]),
+        text=display_name,
 
         command=lambda t=item["type"], v=item["id"]: do(t, v),
         relief="flat", font=("Bahnschrift light", 12),

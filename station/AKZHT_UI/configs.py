@@ -108,29 +108,29 @@ segment_to_block_type = {}
 
 
 segment_groups = {
-    "block_CH3M7": [
+    "УЧ_от_Ч3_до_М7": [
         {"type": "segment", "id": ("Ч3beforeM7", "Ч3")},
         {"type": "segment", "id":  ("Ч3beforeM7", "Ч3M7mid")},
         {"type": "segment", "id": ("beforeM7", "Ч3M7mid")},
         {"type": "segment", "id": ("beforeM7", "M7")},
     ],
-    "block_CH1M1MID": [
+    "УЧ_от_Ч1_до_Середины_1_Путь    ": [
         {"type": "segment", "id": ("Ч1M1first", "Ч1")},
         {"type": "segment", "id": ("Ч1M1second", "Ч1M1first")},
         {"type": "segment", "id": ("Ч1M1second", "Ч1M1mid")},
 
     ],
-    "block_C1M1MID_beforeM1": [
+    "УЧ_После_Середины_1_Путь": [
         {"type": "segment", "id":("beforeM1", "Ч1M1mid")},
         {"type": "segment", "id": ("beforeM1", "M1")},
     ],
-    "block_CH2M5": [
+    "УЧ_От_Ч2_до_М5": [
         {"type": "segment", "id": ("Ч2M5mid", "Ч2")},
         {"type": "segment", "id": ("Ч2M5mid", "Ч2M5third")},
         {"type": "segment", "id":("beforeM5", "Ч2M5third")},
         {"type": "segment", "id":("beforeM5", "M5")},
     ],
-    "block_M5M3mid": [
+    "УЧ_ПослеМ5_До_М3": [
         {"type": "segment", "id":("M5M3mid", "M5M3third")},
         {"type": "segment", "id": ("M3", "M5M3third")},
     ],
@@ -141,32 +141,32 @@ segment_groups = {
 }
 
 split_parts_map = {
-    "ALB_Turn5-7": {
-        "partA": "ALB_Turn5",
-        "partB": "ALB_Turn7"
+    "AKZHT_Turn5-7": {
+        "partA": "AKZHT_Turn5",
+        "partB": "AKZHT_Turn7"
     },
-    "ALB_Turn13-15": {
-        "partA": "ALB_Turn13",
-        "partB": "ALB_Turn15"
+    "AKZHT_Turn13-15": {
+        "partA": "AKZHT_Turn13",
+        "partB": "AKZHT_Turn15"
     },
-    "ALB_Turn9-11": {
-        "partA": "ALB_Turn9",
-        "partB": "ALB_Turn11"
+    "AKZHT_Turn9-11": {
+        "partA": "AKZHT_Turn9",
+        "partB": "AKZHT_Turn11"
     },
-    "ALB_Turn1-3": {
-        "partA": "ALB_Turn1",
-        "partB": "ALB_Turn3"
+    "AKZHT_Turn1-3": {
+        "partA": "AKZHT_Turn1",
+        "partB": "AKZHT_Turn3"
     },
 }
-switch_list = ["ALB_Turn19", "ALB_Turn17", "ALB_Turn5-7", "ALB_Turn13-15", "ALB_Turn9-11", "ALB_Turn1-3"]
+switch_list = ["AKZHT_Turn19", "AKZHT_Turn17", "AKZHT_Turn5-7", "AKZHT_Turn13-15", "AKZHT_Turn9-11", "AKZHT_Turn1-3"]
 
 default_switch_mode = {
-    "ALB_Turn19": "left",
-    "ALB_Turn17": "left",
-    "ALB_Turn5-7": "left",
-    "ALB_Turn13-15": "left",
-    "ALB_Turn9-11": "left",
-    "ALB_Turn1-3": "left",
+    "AKZHT_Turn19": "left",
+    "AKZHT_Turn17": "left",
+    "AKZHT_Turn5-7": "left",
+    "AKZHT_Turn13-15": "left",
+    "AKZHT_Turn9-11": "left",
+    "AKZHT_Turn1-3": "left",
 }
 segment_to_signal = {
     ("Ч3beforeM7", "Ч3"): "Ч3",
@@ -179,11 +179,18 @@ segment_to_signal = {
     ("beforeM1", "M1"): "M1",
 
     ("M1", "H"): "H",
+    ("M1", "H"): "Ч5",
+    ("M1", "H"): "Ч4",
+    ("M1", "H"): "Ч3",
+    ("M1", "H"): "Ч2",
+    ("M1", "H"): "Ч1",
+
     ("H", "1"): "1",
 
     ("Ч1M1first", "Ч1"): "Ч1",
     ("Ч1M1second", "Ч1M1first"): "Ч1",
     ("Ч1M1second", "Ч1M1mid"): "Ч1",
+
 
     ("Ч2M5mid", "Ч2"): "Ч2",
     ("Ч2M5mid", "Ч2M5third"): "Ч2",
@@ -194,47 +201,51 @@ segment_to_signal = {
     ("M5M3mid", "M5M3third"): "М3",
     ("M3", "M5M3third"): "М3",
 
-
+    ("M3", "M3MID6"): "Ч5",
+    ("M3", "M3MID6"): "Ч4",
+    ("M3", "M3MID6"): "Ч3",
+    ("M3", "M3MID6"): "Ч2",
+    ("M3", "M3MID6"): "Ч1",
 
 }
 
 diag_to_signal = {
-    "ALB_Turn19": "Ч4",
-    "ALB_Turn17": "Ч5",
+    "AKZHT_Turn19": "Ч4",
+    "AKZHT_Turn17": "Ч5",
 
 
 }
 diagonal_config = {
 
-    "ALB_Turn19": {
+    "AKZHT_Turn19": {
         "left":  {"exists": True, "connected": 0,  "disconnected": 0 },
         "right": {"exists": True, "connected": -5, "disconnected": +5},
         "default": "both"
     },
 
-    "ALB_Turn17": {
+    "AKZHT_Turn17": {
         "left": {"exists": True, "connected": 0, "disconnected": 0},
         "right": {"exists": True, "connected": +6, "disconnected": -6},
         "default": "both"
     },
 
-    "ALB_Turn5-7": {
+    "AKZHT_Turn5-7": {
         "left": {"exists": True, "connected": 5, "disconnected": 0},
         "right": {"exists": True, "connected": 5, "disconnected": 0},
         "default": "both"
     },
 
-    "ALB_Turn13-15": {
+    "AKZHT_Turn13-15": {
         "left": {"exists": True, "connected": 5, "disconnected": 0},
         "right": {"exists": True, "connected": 5, "disconnected": 0},
         "default": "both"
     },
-    "ALB_Turn9-11": {
+    "AKZHT_Turn9-11": {
         "left": {"exists": True, "connected": 5, "disconnected": 0},
         "right": {"exists": True, "connected": 5, "disconnected": 0},
         "default": "both"
     },
-    "ALB_Turn1-3": {
+    "AKZHT_Turn1-3": {
         "left": {"exists": True, "connected": 5, "disconnected": 0},
         "right": {"exists": True, "connected": 5, "disconnected": 0},
         "default": "both"
@@ -451,19 +462,19 @@ signals_config = {
 }
 ROUTE_SIGNAL_MAP: dict[tuple[str, str], dict[str, dict[str, object]]] = {
     ("Ч5", "6"): {
-        "Ч5": {"lamps": {"white": {"on": True, "blink": False}, }, },
+        "Ч5": {"lamps": {"yellow": {"on": True, "blink": False}, }, },
     },
     ("Ч3", "6"): {
-        "Ч3": {"lamps": {"white": {"on": True, "blink": False}, }, },
+        "Ч3": {"lamps": {"yellow": {"on": True, "blink": False}, }, },
     },
     ("Ч2", "6"): {
-        "Ч2": {"lamps": {"white": {"on": True, "blink": False}, }, },
+        "Ч2": {"lamps": {"green": {"on": True, "blink": False}, }, },
     },
     ("Ч1", "6"): {
-        "Ч1": {"lamps": {"white": {"on": True, "blink": False}, }, },
+        "Ч1": {"lamps": {"yellow": {"on": True, "blink": False}, }, },
     },
     ("Ч4", "6"): {
-        "Ч4": {"lamps": {"white": {"on": True, "blink": False}, }, },
+        "Ч4": {"lamps": {"yellow": {"on": True, "blink": False}, }, },
     },
 
 
@@ -500,16 +511,16 @@ routes_dir = {
 }
 routes = {
     ("Ч5", "6"): [
-        {"type": "diag", "name": "ALB_Turn17"},
+        {"type": "diag", "name": "AKZHT_Turn17"},
         {"type": "segment", "id":  ("Ч3beforeM7", "Ч3M7mid")},
         {"type": "segment", "id": ("beforeM7", "Ч3M7mid")},
         {"type": "segment", "id": ("beforeM7", "M7")},
-        {"type": "diag", "name": "ALB_Turn15"},
-        {"type": "diag", "name": "ALB_Turn13"},
+        {"type": "diag", "name": "AKZHT_Turn15"},
+        {"type": "diag", "name": "AKZHT_Turn13"},
         {"type": "segment", "id": ("beforeM1", "Ч1M1mid")},
         {"type": "segment", "id": ("beforeM1", "M1")},
-        {"type": "diag", "name": "ALB_Turn1"},
-        {"type": "diag", "name": "ALB_Turn3"},
+        {"type": "diag", "name": "AKZHT_Turn1"},
+        {"type": "diag", "name": "AKZHT_Turn3"},
         {"type": "segment", "id":("M3", "M5M3third")},
         {"type": "segment", "id": ("M3", "M3MID6")},
         {"type": "segment", "id": ("M3MID6", "6")},
@@ -519,12 +530,12 @@ routes = {
         {"type": "segment", "id": ("Ч3beforeM7", "Ч3M7mid")},
         {"type": "segment", "id": ("beforeM7", "Ч3M7mid")},
         {"type": "segment", "id": ("beforeM7", "M7")},
-        {"type": "diag", "name": "ALB_Turn15"},
-        {"type": "diag", "name": "ALB_Turn13"},
+        {"type": "diag", "name": "AKZHT_Turn15"},
+        {"type": "diag", "name": "AKZHT_Turn13"},
         {"type": "segment", "id": ("beforeM1", "Ч1M1mid")},
         {"type": "segment", "id": ("beforeM1", "M1")},
-        {"type": "diag", "name": "ALB_Turn1"},
-        {"type": "diag", "name": "ALB_Turn3"},
+        {"type": "diag", "name": "AKZHT_Turn1"},
+        {"type": "diag", "name": "AKZHT_Turn3"},
         {"type": "segment", "id": ("M3", "M5M3third")},
         {"type": "segment", "id": ("M3", "M3MID6")},
         {"type": "segment", "id": ("M3MID6", "6")},
@@ -536,8 +547,8 @@ routes = {
 
         {"type": "segment", "id": ("beforeM1", "Ч1M1mid")},
         {"type": "segment", "id": ("beforeM1", "M1")},
-        {"type": "diag", "name": "ALB_Turn1"},
-        {"type": "diag", "name": "ALB_Turn3"},
+        {"type": "diag", "name": "AKZHT_Turn1"},
+        {"type": "diag", "name": "AKZHT_Turn3"},
         {"type": "segment", "id": ("M3", "M5M3third")},
         {"type": "segment", "id": ("M3", "M3MID6")},
         {"type": "segment", "id": ("M3MID6", "6")},
@@ -554,7 +565,7 @@ routes = {
         {"type": "segment", "id": ("M3MID6", "6")},
     ],
     ("Ч4", "6"): [
-        {"type": "diag", "name": "ALB_Turn19"},
+        {"type": "diag", "name": "AKZHT_Turn19"},
         {"type": "segment", "id": ("Ч2M5mid", "Ч2M5third")},
         {"type": "segment", "id": ("beforeM5", "Ч2M5third")},
         {"type": "segment", "id": ("beforeM5", "M5")},
@@ -569,10 +580,10 @@ routes = {
 
 
 route_switch_modes = {
-    ("Ч5", "6"): {"ALB_Turn17":  "right", "ALB_Turn13-15": "right", "ALB_Turn1-3": "right"},
-    ("Ч3", "6"): {"ALB_Turn17":  "left", "ALB_Turn13-15": "right", "ALB_Turn1-3": "right"},
-    ("Ч1", "6"): {"ALB_Turn13-15": "left", "ALB_Turn1-3": "right", "ALB_Turn5-7": "left"},
-    ("Ч2", "6"): {"ALB_Turn1-3": "left", "ALB_Turn5-7": "left", "ALB_Turn19": "left"},
-    ("Ч4", "6"): {"ALB_Turn1-3": "left", "ALB_Turn5-7": "left", "ALB_Turn19": "right"},
+    ("Ч5", "6"): {"AKZHT_Turn17":  "right", "AKZHT_Turn13-15": "right", "AKZHT_Turn1-3": "right"},
+    ("Ч3", "6"): {"AKZHT_Turn17":  "left", "AKZHT_Turn13-15": "right", "AKZHT_Turn1-3": "right"},
+    ("Ч1", "6"): {"AKZHT_Turn13-15": "left", "AKZHT_Turn1-3": "right", "AKZHT_Turn5-7": "left"},
+    ("Ч2", "6"): {"AKZHT_Turn1-3": "left", "AKZHT_Turn5-7": "left", "AKZHT_Turn19": "left"},
+    ("Ч4", "6"): {"AKZHT_Turn1-3": "left", "AKZHT_Turn5-7": "left", "AKZHT_Turn19": "right"},
 
 }
