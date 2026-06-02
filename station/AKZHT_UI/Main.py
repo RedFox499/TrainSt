@@ -320,14 +320,14 @@ class SignalManager():
         self.signal_id_map[name] = dict(zip(list(config_colors.keys()), ids))
 
     def enable_two_yellow_train(self, name):
-        names = ["Ч1", "Ч2", "Ч3", "Ч4", "Ч5", "Н"]
+        names = ["Ч1", "Ч2", "Ч3", "Ч4", "Ч5", "H"]
         if name in names :
-            self.set_signal(name, "yellow1", True)
             self.set_signal(name, "yellow", True)
+            self.set_signal(name, "yellow1", True)
             for colors in self.get_lamp_colors(name):
                 if colors == "yellow" or colors == "yellow1":
                     continue
-                if colors == "white" and name == "Ч":
+                if colors == "white" and name in names:
                     continue
                 self.set_signal(name, colors, False)
         else:
@@ -399,12 +399,14 @@ class SignalManager():
                 self.enable_red_train(name)
 
     def calculate_enter_signal(self, name):
-        if get_switch_state_num("ALB_Turn2") == "-":
+        if get_switch_state_num("AKZHT_Turn13-15") == "-":
             self.enable_two_yellow_train(name)
-        if get_switch_state_num("ALB_Turn2") == "+" and get_switch_state_num("ALB_Turn4-6") == "-":
+        if get_switch_state_num("AKZHT_Turn5-7") == "+" and get_switch_state_num("AKZHT_Turn13-15") == "-":
             self.enable_two_yellow_train(name)
-        if get_switch_state_num("ALB_Turn2") == "+" and get_switch_state_num("ALB_Turn4-6") == "+":
+        if get_switch_state_num("AKZHT_Turn5-7") == "+" and get_switch_state_num("AKZHT_Turn13-15") == "+":
             self.enable_one_yellow_train(name)
+
+
 
 
     def set_signals_to_route(self, rid):
@@ -415,9 +417,7 @@ class SignalManager():
             key = (a, b)
             cfg = ROUTE_SIGNAL_MAP.get(key)
             for name in cfg:
-                if name[0] == "H":
-                    self.calculate_train_signal(name)
-                elif name == "Ч":
+                if name == "H":
                     self.calculate_enter_signal(name)
                 else:
                     for color, lamp_cfg in cfg[name]["lamps"].items():
@@ -595,9 +595,11 @@ class SignalManager():
             self.canvas.itemconfig(lamp_id, fill=hex_color)
 
     def after_train_passed_seg(self, seg, rev):
+        """
         signal_segment = segment_to_signal.get(seg)
+        print(signal_segment)
         if signal_segment == None:
-            signal_segment = segment_to_signal.get(rev)
+            signal_segment = segment_to_signal.get(rev, [])
         if self.has_signal_in_states(signal_segment):
             for colors in self.get_lamp_colors(signal_segment):
                 if colors == "red":
@@ -606,6 +608,19 @@ class SignalManager():
                     self.set_signal(signal_segment, colors, onStatus=True)
                 else:
                     self.set_signal(signal_segment, colors, onStatus=False)
+        """
+        signals = segment_to_signal.get(seg)
+
+        if signals is None:
+            signals = segment_to_signal.get(rev, [])
+
+        for signal_name in signals:
+            if self.has_signal_in_states(signal_name):
+                for color in self.get_lamp_colors(signal_name):
+                    if color in ("red", "blue"):
+                        self.set_signal(signal_name, color, onStatus=True)
+                    else:
+                        self.set_signal(signal_name, color, onStatus=False)
 
 
 
@@ -644,7 +659,7 @@ class SignalManager():
                 if self.is_signal_used_by_other_routes(name, rid):
                     continue
                 for lamp_name, lamp in self.signals_state[name]["lamps"].items():
-                    if lamp_name == "white" and name == "Ч":
+                    if lamp_name == "white" and name == "H":
                         continue
                     self.set_signal(name, lamp_name, onStatus=False)
                     lamp["blink"] = False
@@ -1071,8 +1086,10 @@ class RouteManager:
         ("M5M3mid", "M5M3third"): 0,
         ("M3", "M5M3third"): 0,
         ("M7", "pastM7"): 0,
+
         ("M3", "M3MID6"): 0,
         ("M3MID6", "6"): 0,
+
     }
     diag_active_counter = {
          "AKZHT_Turn19": 0,
@@ -2141,6 +2158,9 @@ seg_occ_train = {
     ("M5M3mid", "M5M3third"): 1,
     ("M3", "M5M3third"): 1,
     ("M7", "pastM7"): 1,
+
+    ("M3", "M3MID6"): 1,
+    ("M3MID6", "6"): 1,
 }
 diag_occ_train = {
     "AKZHT_Turn19": 1,
