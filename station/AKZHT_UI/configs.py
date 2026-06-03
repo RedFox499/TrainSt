@@ -457,19 +457,19 @@ signals_config = {
 }
 ROUTE_SIGNAL_MAP: dict[tuple[str, str], dict[str, dict[str, object]]] = {
     ("Ч5", "6"): {
-        "Ч5": {"lamps": {"yellow": {"on": True, "blink": False}, }, },
+        "Ч5": {"lamps": {"green": {"on": True, "blink": False}, }, },
     },
     ("Ч3", "6"): {
-        "Ч3": {"lamps": {"yellow": {"on": True, "blink": False}, }, },
+        "Ч3": {"lamps": {"green": {"on": True, "blink": False}, }, },
     },
     ("Ч2", "6"): {
         "Ч2": {"lamps": {"green": {"on": True, "blink": False}, }, },
     },
     ("Ч1", "6"): {
-        "Ч1": {"lamps": {"yellow": {"on": True, "blink": False}, }, },
+        "Ч1": {"lamps": {"green": {"on": True, "blink": False}, }, },
     },
     ("Ч4", "6"): {
-        "Ч4": {"lamps": {"yellow": {"on": True, "blink": False}, }, },
+        "Ч4": {"lamps": {"green": {"on": True, "blink": False}, }, },
     },
 
     ("1", "Ч4"): {

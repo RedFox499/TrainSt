@@ -4,10 +4,9 @@ import serial
 from tkinter.messagebox import showinfo
 from serial.tools import list_ports
 from tkinter import ttk
-from configs import *
-#from ArduinoCode import *
+from AKZHT_UI.configs import *
+from ArduinoCode import *
 import time
-from serial import SerialException
 from tkinter import messagebox
 
 
@@ -405,6 +404,8 @@ class SignalManager():
             self.enable_two_yellow_train(name)
         if get_switch_state_num("AKZHT_Turn5-7") == "+" and get_switch_state_num("AKZHT_Turn13-15") == "+":
             self.enable_one_yellow_train(name)
+        if get_switch_state_num("AKZHT_Turn5-7") == "-" and get_switch_state_num("AKZHT_Turn13-15") == "+":
+             self.enable_two_yellow_train(name)
 
 
 
@@ -718,11 +719,11 @@ class SignalManager():
                     else:
                         self.canvas.itemconfig(lamp_id, fill=SIGNAL_OFF_COLOR)
 
-       # import ArduinoCode
-        # Собираем кадр из 5 байт
-       # frame = ArduinoCode.build_hw_frame(self.signals_state, self.signal_blink_phase)
+        import ArduinoCode
+        #Собираем кадр из 5 байт
+        frame = ArduinoCode.build_hw_frame(self.signals_state, self.signal_blink_phase)
         # Отправляем в Ардуино (именно эта функция делает PRINT в терминал)
-       # ArduinoCode.send_lights_to_arduino(frame)
+        ArduinoCode.send_lights_to_arduino(frame)
 
 
     def _indices_for_color(self, sig_name: str, color: str) -> list[int]:
@@ -731,9 +732,12 @@ class SignalManager():
 
     def invite_signal_on_off(self, signalName):
         if self.get_lamp_state(signalName, 'white'):
+
+
             self.set_signal(signalName, 'white', onStatus=False)
             self.sync_sinple_CH_with_debug(signalName)
         elif not self.get_lamp_state(signalName, 'white'):
+
             self.set_signal(signalName, 'white', onStatus=True)
             self.sync_sinple_CH_with_debug(signalName)
 
@@ -2476,15 +2480,15 @@ def init_arduino():
 
         # 2. Если не нашли автоматически, берем дефолтный
         if arduino_port is None:
-            arduino_port = "COM5"  # У тебя в терминале был COM5
+            arduino_port = "COM7"  # У тебя в терминале был COM5
 
         # 3. Открываем соединение ОДИН раз
         arduino = serial.Serial(arduino_port, 9600, timeout=1)
         time.sleep(2)  # Ждем инициализацию
 
         # 4. ПЕРЕДАЕМ ПОРТ В МОДУЛЬ СВЕТОФОРОВ
-      #  import ArduinoCode
-      #  ArduinoCode.ser = arduino
+        import ArduinoCode
+        ArduinoCode.ser = arduino
 
         print(f"Arduino подключен к {arduino_port} и передан в ArduinoCode")
 
