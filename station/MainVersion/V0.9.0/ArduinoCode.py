@@ -52,12 +52,12 @@ HW_MAP_40: Dict[Tuple[str, str], Tuple[int, int]] = {
     ("H4", "green"): (3, 4),
     ("H4", "red"): (3, 5),
     ("H4", "yellow"): (3, 6),
-    ("ALB_Sect2", "red"): (3, 7),
+    ("ALB_Sect1-2_2", "red"): (3, 7),
 
 
     # Пятый байт (reg1)
-    ("ALB_Sect2", "yellow"): (4, 0),
-    ("ALB_Sect2", "green"): (4, 1),
+    ("ALB_Sect1-2_2", "yellow"): (4, 0),
+    ("ALB_Sect1-2_2", "green"): (4, 1),
     ("M6", "red"): (4, 2),
     ("M6", "white"): (4, 3),
 }

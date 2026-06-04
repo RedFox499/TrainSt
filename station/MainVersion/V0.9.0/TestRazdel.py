@@ -388,6 +388,16 @@ class SignalManager():
                 continue
             self.set_signal(name, colors, False)
 
+    def enable_one_yellow_train(self, name):
+        if name == "Ч":
+            self.set_signal(name, "yellow", True)
+            for colors in self.get_lamp_colors(name):
+                if colors == "yellow":
+                    continue
+                if colors == "white" and name == "Ч":
+                    continue
+                self.set_signal(name, colors, False)
+
     def enable_green_train(self,name):
         self.set_signal(name, "green", True)
         for colors in self.get_lamp_colors(name):
@@ -434,7 +444,7 @@ class SignalManager():
         if get_switch_state_num("ALB_Turn2") == "+" and get_switch_state_num("ALB_Turn4-6") == "-":
             self.enable_two_yellow_train(name)
         if get_switch_state_num("ALB_Turn2") == "+" and get_switch_state_num("ALB_Turn4-6") == "+":
-            self.enable_green_train(name)
+            self.enable_one_yellow_train(name)
 
 
     def set_signals_to_route(self, rid):
@@ -2479,7 +2489,7 @@ def init_arduino():
 
         # 2. Если не нашли автоматически, берем дефолтный
         if arduino_port is None:
-            arduino_port = "COM5"  # У тебя в терминале был COM5
+            arduino_port = "COM7"  # У тебя в терминале был COM5
 
         # 3. Открываем соединение ОДИН раз
         arduino = serial.Serial(arduino_port, 9600, timeout=1)
