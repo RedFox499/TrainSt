@@ -279,7 +279,7 @@ class SignalManager():
 
     def drawSignal(self, offsety, name, mount="bottom", pack_side="right", count=3, colors=None):
         x, y = positions[name]
-        r = 5
+        r = 8
         gap = 2 * r + 2
         stand_len = 15
         bar_len = 10
@@ -893,7 +893,7 @@ class SignalManager():
 
     def drawSignal_simple(self, offsety, name, mount="bottom", pack_side="right", count=0, colors=None):
         x, y = positions[name]
-        r = 8
+        r = 10
         gap = 2 * r + 2
         stand_len = 15
         bar_len = 10
@@ -1110,6 +1110,9 @@ class RouteManager:
 
         "AKZHT_Turn13": 0,
         "AKZHT_Turn15": 0,
+
+        "AKZHT_Turn6": 0,
+        "AKZHT_Turn8": 0,
     }
 
     def __init__(self):
@@ -1573,6 +1576,8 @@ class SwitchManager:
         self.set_diagonal_mode("AKZHT_Turn13-15", "left")
         self.set_diagonal_mode("AKZHT_Turn9-11", "left")
         self.set_diagonal_mode("AKZHT_Turn1-3", "left")
+        self.set_diagonal_mode("AKZHT_Turn6-8", "left")
+        self.set_diagonal_mode("AKZHT_Turn10-12", "left")
 
     def on_switch_mode_selected(self, name, mode):
         text = canvas.itemcget(switch_text_ids[name], "text")
@@ -1865,6 +1870,11 @@ class interface_manager:
                     canvas.itemconfig(segment_ids[("beforeM7", "M7")], width=2)
                 if nameDiag == "AKZHT_Turn9-11":
                     canvas.itemconfig(segment_ids[("beforeM1", "M1")], width=2)
+                if nameDiag == "AKZHT_Turn6-8":
+                    canvas.itemconfig(segment_ids[("Turn_6_B", "Turn_14_J")], width=2)
+                if nameDiag == "AKZHT_Turn10-12":
+                    canvas.itemconfig(segment_ids[("Turn_8_B", "M8")], width=2)
+
 
             else:
                 self.setBranchRight(nameDiag, right_cfg["disconnected"])
@@ -1882,6 +1892,10 @@ class interface_manager:
                     canvas.itemconfig(segment_ids[("beforeM7", "M7")], width=6)
                 if nameDiag == "AKZHT_Turn9-11":
                     canvas.itemconfig(segment_ids[("beforeM1", "M1")], width=6)
+                if nameDiag == "AKZHT_Turn6-8":
+                    canvas.itemconfig(segment_ids[("Turn_6_B", "Turn_14_J")], width=6)
+                if nameDiag == "AKZHT_Turn10-12":
+                    canvas.itemconfig(segment_ids[("Turn_8_B", "M8")], width=6)
 
 
     def on_switch_click(self, event):
@@ -2181,6 +2195,10 @@ diag_occ_train = {
 
     "AKZHT_Turn13": 1,
     "AKZHT_Turn15": 1,
+
+    "AKZHT_Turn10": 1,
+    "AKZHT_Turn12": 1,
+
 }
 
 for block, segs in segment_groups.items():
@@ -2238,21 +2256,21 @@ def create_switch_table():
     w = int(canvas["width"])
     h = int(canvas["height"])
 
-    dy = 25
+    dy = 35
     total_height = dy * len(switch_list)
-    y_start = h - total_height - 420
+    y_start = h - total_height - 200
 
-    x_text = w - 1000
-    x_rect = w - 980
+    x_text = w - 450
+    x_rect = w - 300
 
     for i, name in enumerate(switch_list, start=1):
         y = y_start + (i - 1) * dy
-        switch = canvas.create_text(x_text, y, text=f"{i}. {name}", anchor="w", font=("Bahnschrift SemiBold", 13), tags=(f"switch_{name}", "switch"), fill="white" )
+        switch = canvas.create_text(x_text, y, text=f"{i}. {name}", anchor="w", font=("Bahnschrift SemiBold", 16), tags=(f"switch_{name}", "switch"), fill="white" )
         switch_ids[name] = switch
-        label = canvas.create_text(x_rect+90, y, text="0", font=("Bahnschrift SemiBold", 14), fill="white",  tags=(f"switch_{name}", "switch"))
+        label = canvas.create_text(x_rect+90, y, text="0", font=("Bahnschrift SemiBold", 16), fill="white",  tags=(f"switch_{name}", "switch"))
 
         rect = canvas.create_rectangle(
-            x_rect + 110, y - 9, x_rect + 130, y + 9,
+            x_rect + 110, y - 9, x_rect + 140, y + 19,
             outline="black", fill="grey",  tags=(f"switch_{name}", "switch")
         )
         switch_text_ids[name] = label
@@ -2332,45 +2350,49 @@ for a, b in segments:
     x1, y1 = positions[a]
     x2, y2 = positions[b]
     a_and_b = (a,b)
-    BlockSegments = []
-    BlockSeg2 = []
+    BlockSegments = [("H2", "Ч2"),  ("H3", "Ч3"),  ("H1", "Ч1")]
     if a_and_b in BlockSegments:
-        seg = canvas.create_line(x1, y1, x2-10, y2, width=6, fill=interface_manager.line_color_main)
-    elif a_and_b in BlockSeg2:
-        seg = canvas.create_line(x1 -1, y1, x2 -13, y2, width=6, fill=interface_manager.line_color_main)
+        seg = canvas.create_line(x1, y1, x2-15, y2, width=6, fill=interface_manager.line_color_main)
     else:
         seg = canvas.create_line(x1, y1, x2 -7, y2, width=6, fill=interface_manager.line_color_main)
     segment_ids[(a, b)] = seg
     segment_ids[(b, a)] = seg
 
 
-AddDiagonal(430, 483.5, 240, 605, -25, -140, "AKZHT_Turn19")
+AddDiagonal(1230, 483.5, 1040, 605, -25, -140, "AKZHT_Turn19")
 
-AddDiagonal(350, 247, 170, 125, -43, -70, "AKZHT_Turn17")
+AddDiagonal(1150, 247, 970, 125, -43, -70, "AKZHT_Turn17")
 
-AddSplitDiagonalDasAuto(565, 363.5,495, 487, -30, -30, "AKZHT_Turn5-7", "AKZHT_Turn5", "AKZHT_Turn7")
+AddSplitDiagonalDasAuto(1365, 363.5,1295, 487, -30, -30, "AKZHT_Turn5-7", "AKZHT_Turn5", "AKZHT_Turn7")
 
-AddSplitDiagonalDasAuto(495, 243.5,612, 366, 30, 30, "AKZHT_Turn13-15", "AKZHT_Turn13", "AKZHT_Turn15")
+AddSplitDiagonalDasAuto(1295, 243.5,1412, 366, 30, 30, "AKZHT_Turn13-15", "AKZHT_Turn13", "AKZHT_Turn15")
 
-AddSplitDiagonalDasAuto(770, 243.5,720, 367, -30, -30, "AKZHT_Turn9-11", "AKZHT_Turn9", "AKZHT_Turn11")
+AddSplitDiagonalDasAuto(1570, 243.5,1520, 367, -30, -30, "AKZHT_Turn9-11", "AKZHT_Turn9", "AKZHT_Turn11")
 
-AddSplitDiagonalDasAuto(685, 363.5,790, 487, 30, 30, "AKZHT_Turn1-3", "AKZHT_Turn1", "AKZHT_Turn3")
+AddSplitDiagonalDasAuto(1485, 363.5,1590, 487, 30, 30, "AKZHT_Turn1-3", "AKZHT_Turn1", "AKZHT_Turn3")
 
-canvas.create_text(440, 460, text="19", font=("Bahnschrift bold", 16), fill="#4a494a")
+AddDiagonal(360, 480, 440, 605, 20, 20, "AKZHT_Turn_14")
 
-canvas.create_text(565, 355, text="5", font=("Bahnschrift bold", 16), fill= "#4a494a")
-canvas.create_text(480, 500, text="7", font=("Bahnschrift bold", 16), fill="#4a494a")
+AddSplitDiagonalDasAuto(320, 366, 250, 484, -20, -20, "AKZHT_Turn6-8", "AKZHT_Turn6", "AKZHT_Turn8")
 
-canvas.create_text(770, 500, text="1", font=("Bahnschrift bold", 16), fill="#4a494a")
-canvas.create_text(670, 354, text="3", font=("Bahnschrift bold", 16), fill="#4a494a")
+AddSplitDiagonalDasAuto(440, 245, 370, 365, -20, -20, "AKZHT_Turn10-12", "AKZHT_Turn10", "AKZHT_Turn12")
 
-canvas.create_text(770, 230, text="9", font=("Bahnschrift bold", 16), fill="#4a494a")
-canvas.create_text(700, 345, text="11", font=("Bahnschrift bold", 16), fill="#4a494a")
 
-canvas.create_text(620, 345, text="13", font=("Bahnschrift bold", 16), fill="#4a494a")
-canvas.create_text(480, 230, text="15", font=("Bahnschrift bold", 16), fill="#4a494a")
+canvas.create_text(1240, 460, text="19", font=("Bahnschrift bold", 16), fill="#4a494a")
 
-canvas.create_text(380, 260, text="17", font=("Bahnschrift bold", 16), fill="#4a494a")
+canvas.create_text(1365, 355, text="5", font=("Bahnschrift bold", 16), fill= "#4a494a")
+canvas.create_text(1280, 500, text="7", font=("Bahnschrift bold", 16), fill="#4a494a")
+
+canvas.create_text(1570, 500, text="1", font=("Bahnschrift bold", 16), fill="#4a494a")
+canvas.create_text(1470, 354, text="3", font=("Bahnschrift bold", 16), fill="#4a494a")
+
+canvas.create_text(1570, 230, text="9", font=("Bahnschrift bold", 16), fill="#4a494a")
+canvas.create_text(1500, 345, text="11", font=("Bahnschrift bold", 16), fill="#4a494a")
+
+canvas.create_text(1420, 345, text="13", font=("Bahnschrift bold", 16), fill="#4a494a")
+canvas.create_text(1280, 230, text="15", font=("Bahnschrift bold", 16), fill="#4a494a")
+
+canvas.create_text(1180, 260, text="17", font=("Bahnschrift bold", 16), fill="#4a494a")
 
 
 def get_switch_name_from_event(event):
@@ -2438,6 +2460,12 @@ def blink_diag(name, duration_ms=2000, interval_ms=200):
             if name == "AKZHT_Turn1-3":
                 interface_manager.paint_diagonal("AKZHT_Turn1", interface_manager.line_color_main)
                 interface_manager.paint_diagonal("AKZHT_Turn3", interface_manager.line_color_main)
+            if name == "AKZHT_Turn6-8":
+                interface_manager.paint_diagonal("AKZHT_Turn6", interface_manager.line_color_main)
+                interface_manager.paint_diagonal("AKZHT_Turn8", interface_manager.line_color_main)
+            if name == "AKZHT_Turn10-12":
+                interface_manager.paint_diagonal("AKZHT_Turn10", interface_manager.line_color_main)
+                interface_manager.paint_diagonal("AKZHT_Turn12", interface_manager.line_color_main)
             else:
                 interface_manager.paint_diagonal(name, interface_manager.line_color_main)
             return
@@ -2455,6 +2483,12 @@ def blink_diag(name, duration_ms=2000, interval_ms=200):
         if name == "AKZHT_Turn1-3":
             interface_manager.paint_diagonal("AKZHT_Turn1", color)
             interface_manager.paint_diagonal("AKZHT_Turn3", color)
+        if name == "AKZHT_Turn6-8":
+            interface_manager.paint_diagonal("AKZHT_Turn6", color)
+            interface_manager.paint_diagonal("AKZHT_Turn8", color)
+        if name == "AKZHT_Turn10-12":
+            interface_manager.paint_diagonal("AKZHT_Turn10", color)
+            interface_manager.paint_diagonal("AKZHT_Turn12", color)
         else:
             interface_manager.paint_diagonal(name, color)
         root.after(interval_ms, _step, not state)
@@ -2636,11 +2670,11 @@ for i, item in enumerate(display_items):
     button69 = tkinter.Button(
         root,
         text=display_name,
-
+        wraplength=130,
         command=lambda t=item["type"], v=item["id"]: do(t, v),
         relief="flat", font=("Bahnschrift light", 12),
     )
-    button69.place(x=1700, y=120 + i * 35)
+    button69.place(x=20 + i * 89, y=900)
 """
 all_keys = []
 
@@ -2696,7 +2730,7 @@ occupancy_manager.update_all_occupancy()
 switch_manager.initialize_switches()
 route_manager.check_visual_mode()
 root.protocol('WM_DELETE_WINDOW', quit_function)
-canvas.scale("all", 0, 0, 1.5, 1.5)
+canvas.scale("all", 0, 0, 0.92, 0.92)
 canvas.pack()
 
 root.mainloop()
