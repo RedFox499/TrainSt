@@ -8,12 +8,12 @@ Y_P4 = 605
 positions = {
     "before_M6": (100, Y_P2),
     "M6": (170, Y_P2),
-    "H4": (460, 605),
+    "H4": (500, 605),
     "H2": (460, Y_P2),
     "M8": (350, Y_P1),
     "M10": (330, Y_P3),
     "before_M10": (240, Y_P3),
-    "H5": (560, 125),
+    "H5": (600, 125),
     "H3": (560, Y_P3),
     "H1": (520, Y_P1),
     "1_AK": (200, Y_P1),
@@ -481,12 +481,59 @@ signals_config_simple = {
         "mount": "bottom",
         "pack_side": "right",
         "count": 1,
-        "colors": ["red", "white"],
+        "colors": ["grey", "white"],
         "single": True
-    }
+    },
+    "M8": {
+        "mount": "bottom",
+        "pack_side": "right",
+        "count": 1,
+        "colors": ["grey", "white"],
+        "single": True
+    },
+    "M6": {
+        "mount": "bottom",
+        "pack_side": "right",
+        "count": 1,
+        "colors": ["grey", "white"],
+        "single": True
+    },
+    "H5": {
+        "mount": "top",
+        "pack_side": "left",
+        "count": 2,
+        "colors": ["grey", "red"],
+        "single": True
+    },
+    "H3": {
+        "mount": "top",
+        "pack_side": "left",
+        "count": 2,
+        "colors": ["grey", "red"],
+        "single": True
+    },
+    "H1": {
+        "mount": "top",
+        "pack_side": "left",
+        "count": 2,
+        "colors": ["grey", "red"],
+        "single": True
+    },
+    "H2": {
+        "mount": "top",
+        "pack_side": "left",
+        "count": 2,
+        "colors": ["grey", "red"],
+        "single": True
+    },
+    "H4": {
+        "mount": "top",
+        "pack_side": "left",
+        "count": 2,
+        "colors": ["grey", "red"],
+        "single": True
+    },
 }
-
-
 
 
 signals_config = {
@@ -575,7 +622,51 @@ signals_config = {
         "count": 2,
         "colors": ["red", "white"],
         "type": "maneuver"
-    }
+    },
+    "M8": {
+        "mount": "bottom",
+        "pack_side": "right",
+        "count": 2,
+        "colors": ["blue", "white"],
+        "type": "maneuver"
+    },
+    "M6": {
+        "mount": "bottom",
+        "pack_side": "right",
+        "count": 2,
+        "colors": ["blue", "white"],
+        "type": "maneuver"
+    },
+    "H5": {
+        "mount": "top",
+        "pack_side": "left",
+        "count": 4,
+        "colors": ["white", "red", "green", "yellow"],
+    },
+    "H3": {
+        "mount": "top",
+        "pack_side": "left",
+        "count": 4,
+        "colors": ["white", "red", "green", "yellow"],
+    },
+    "H1": {
+        "mount": "top",
+        "pack_side": "left",
+        "count": 4,
+        "colors": ["white", "red", "green", "yellow"],
+    },
+    "H2": {
+        "mount": "top",
+        "pack_side": "left",
+        "count": 4,
+        "colors": ["white", "red", "green", "yellow"],
+    },
+    "H4": {
+        "mount": "top",
+        "pack_side": "left",
+        "count": 4,
+        "colors": ["white", "red", "green", "yellow"],
+    },
 }
 ROUTE_SIGNAL_MAP: dict[tuple[str, str], dict[str, dict[str, object]]] = {
     ("Ч5", "6"): {

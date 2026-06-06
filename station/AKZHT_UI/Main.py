@@ -161,7 +161,13 @@ class SignalManager():
             },
             "manual": False,
         },
-
+        "M8": {
+            "lamps": {
+                "white": {"on": True, "blink": False},
+                "blue": {"on": False, "blink": False},
+            },
+            "manual": False,
+        }
     }
     signals_state_simple = {
         "Ч1": {
@@ -208,7 +214,7 @@ class SignalManager():
         },
         "M7": {
             "lamps": {
-                "grey": {"on": True, "blink": False},
+                "gray": {"on": True, "blink": False},
                 "white": {"on": False, "blink": False},
             },
             "manual": False,
@@ -241,7 +247,48 @@ class SignalManager():
             },
             "manual": False,
         },
-
+        "H5": {
+            "lamps": {
+                "grey": {"on": True, "blink": False},
+                "white": {"on": False, "blink": False},
+            },
+            "manual": False,
+        },
+        "H3": {
+            "lamps": {
+                "grey": {"on": True, "blink": False},
+                "white": {"on": False, "blink": False},
+            },
+            "manual": False,
+        },
+        "H2": {
+            "lamps": {
+                "grey": {"on": True, "blink": False},
+                "white": {"on": False, "blink": False},
+            },
+            "manual": False,
+        },
+        "H1": {
+            "lamps": {
+                "grey": {"on": True, "blink": False},
+                "white": {"on": False, "blink": False},
+            },
+            "manual": False,
+        },
+        "H4": {
+            "lamps": {
+                "grey": {"on": True, "blink": False},
+                "white": {"on": False, "blink": False},
+            },
+            "manual": False,
+        },
+        "M10": {
+            "lamps": {
+                "grey": {"on": True, "blink": False},
+                "white": {"on": False, "blink": False},
+            },
+            "manual": False,
+        },
     }
     active_signal_routes = {}
     def __init__(self, canvas, root):
@@ -1722,7 +1769,12 @@ class interface_manager:
         self.btn_maneuver.place(x=center_x + offset - 100, y=buttons_y)
         self.btn_maneuver.place_forget()
 
-        bannedNames = ["pastM7", "Ч1M1mid", "M5M3mid", "Ч2M5mid", "Ч3beforeM7", "Ч3M7mid", "beforeM7", "Ч1M1second", "beforeM1", "M5M3third", "beforeM5", "Ч2M5third", "Ч1M1first", "M3MID6"]
+        bannedNames = ["pastM7", "Ч1M1mid", "M5M3mid", "Ч2M5mid", "Ч3beforeM7", "Ч3M7mid", "beforeM7", "Ч1M1second",
+                        "beforeM1", "M5M3third", "beforeM5", "Ч2M5third", "Ч1M1first", "M3MID6",
+                        "Turn8B_M8mid", "Turn_8_B", "Turn12_16mid",
+                        "Turn_14_J", "Turn_6_A",
+                        "Turn_6_B", "Turn_8_B",
+                        "before_M10", "1_AK", "before_M6"]
 
         for name, (x, y) in positions.items():
             if name in bannedNames:
@@ -2383,13 +2435,13 @@ AddSplitDiagonalDasAuto(1570, 243.5,1520, 367, -30, -30, "AKZHT_Turn9-11", "AKZH
 
 AddSplitDiagonalDasAuto(1485, 363.5,1590, 487, 30, 30, "AKZHT_Turn1-3", "AKZHT_Turn1", "AKZHT_Turn3")
 
-AddDiagonal(360, 480, 440, 605, 20, 20, "AKZHT_Turn_14")
+AddDiagonal(360, 490, 440, 605, 20, 60, "AKZHT_Turn_14")
 
 AddSplitDiagonalDasAuto(320, 366, 250, 484, -20, -20, "AKZHT_Turn6-8", "AKZHT_Turn6", "AKZHT_Turn8")
 
 AddSplitDiagonalDasAuto(440, 245, 370, 365, -20, -20, "AKZHT_Turn10-12", "AKZHT_Turn10", "AKZHT_Turn12")
 
-AddDiagonal(475, 242, 550, 125, 10, 20, "AKZHT_Turn16")
+AddDiagonal(475, 242, 550, 125, 10, 50, "AKZHT_Turn16")
 
 
 canvas.create_text(1240, 460, text="19", font=("Bahnschrift bold", 16), fill="#4a494a")
