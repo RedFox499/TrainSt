@@ -4,7 +4,7 @@ import serial
 from tkinter.messagebox import showinfo
 from serial.tools import list_ports
 from tkinter import ttk
-from AKZHT_UI.configs import *
+from configs import *
 from ArduinoCode import *
 import time
 from tkinter import messagebox
@@ -1093,7 +1093,9 @@ class RouteManager:
 
         ("M3", "M3MID6"): 0,
         ("M3MID6", "6"): 0,
-
+        ("M10", "Turn12_16mid"): 0,
+        ("Turn12_16mid", "H3"): 0,
+        ("Turn8B_M8mid", "H1"): 0,
     }
     diag_active_counter = {
          "AKZHT_Turn19": 0,
@@ -1113,6 +1115,7 @@ class RouteManager:
 
         "AKZHT_Turn6": 0,
         "AKZHT_Turn8": 0,
+        "AKZHT_Turn16": 0
     }
 
     def __init__(self):
@@ -1578,6 +1581,7 @@ class SwitchManager:
         self.set_diagonal_mode("AKZHT_Turn1-3", "left")
         self.set_diagonal_mode("AKZHT_Turn6-8", "left")
         self.set_diagonal_mode("AKZHT_Turn10-12", "left")
+        self.set_diagonal_mode("AKZHT_Turn16", "left")
 
     def on_switch_mode_selected(self, name, mode):
         text = canvas.itemcget(switch_text_ids[name], "text")
@@ -1833,6 +1837,9 @@ class interface_manager:
         if cfg is None:
             print(f"No config for {nameDiag}")
             return
+        
+        # Синий latch 5 пин
+        # clock оранжевый 
 
         left_cfg = cfg["left"]
         if left_cfg["exists"]:
@@ -1841,6 +1848,9 @@ class interface_manager:
                 self.branchWidth(nameDiag, 6)
                 if nameDiag == "AKZHT_Turn13-15":
                     canvas.itemconfig(segment_ids[("beforeM7", "M7")], width=6)
+                if nameDiag == "AKZHT_Turn10-12":
+                    print("lefted")
+                    canvas.itemconfig(segment_ids[("Turn8B_M8mid", "H1")], width=6)
             else:
                 self.setBranchLeft(nameDiag, left_cfg["disconnected"])
                 self.branchWidth(nameDiag, 2)
@@ -1872,10 +1882,11 @@ class interface_manager:
                     canvas.itemconfig(segment_ids[("beforeM1", "M1")], width=2)
                 if nameDiag == "AKZHT_Turn6-8":
                     canvas.itemconfig(segment_ids[("Turn_6_B", "Turn_14_J")], width=2)
+                if nameDiag == "AKZHT_Turn16":
+                    canvas.itemconfig(segment_ids[("Turn12_16mid", "H3")], width=2)
                 if nameDiag == "AKZHT_Turn10-12":
-                    canvas.itemconfig(segment_ids[("Turn_8_B", "M8")], width=2)
-
-
+                    print("righted")
+                    canvas.itemconfig(segment_ids[("Turn8B_M8mid", "H1")], width=2)
             else:
                 self.setBranchRight(nameDiag, right_cfg["disconnected"])
                 self.branchWidth(nameDiag, 2)
@@ -1894,8 +1905,8 @@ class interface_manager:
                     canvas.itemconfig(segment_ids[("beforeM1", "M1")], width=6)
                 if nameDiag == "AKZHT_Turn6-8":
                     canvas.itemconfig(segment_ids[("Turn_6_B", "Turn_14_J")], width=6)
-                if nameDiag == "AKZHT_Turn10-12":
-                    canvas.itemconfig(segment_ids[("Turn_8_B", "M8")], width=6)
+                if nameDiag == "AKZHT_Turn16":
+                    canvas.itemconfig(segment_ids[("Turn12_16mid", "H3")], width=6)
 
 
     def on_switch_click(self, event):
@@ -2198,6 +2209,7 @@ diag_occ_train = {
 
     "AKZHT_Turn10": 1,
     "AKZHT_Turn12": 1,
+    "AKZHT_Turn16": 1
 
 }
 
@@ -2377,6 +2389,8 @@ AddSplitDiagonalDasAuto(320, 366, 250, 484, -20, -20, "AKZHT_Turn6-8", "AKZHT_Tu
 
 AddSplitDiagonalDasAuto(440, 245, 370, 365, -20, -20, "AKZHT_Turn10-12", "AKZHT_Turn10", "AKZHT_Turn12")
 
+AddDiagonal(475, 242, 550, 125, 10, 20, "AKZHT_Turn16")
+
 
 canvas.create_text(1240, 460, text="19", font=("Bahnschrift bold", 16), fill="#4a494a")
 
@@ -2442,7 +2456,6 @@ def blink_route(start, end, duration_ms=2000, interval_ms=200):
     _step(True)
 
 def blink_diag(name, duration_ms=2000, interval_ms=200):
-    print(name)
     blinking_diags.add(name)
     end_time = time.time() + duration_ms / 1000.0
 

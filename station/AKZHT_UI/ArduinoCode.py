@@ -1,7 +1,7 @@
 # ArduinoCode.py
 from __future__ import annotations
 from typing import Dict, Tuple, List, Any
-from AKZHT_UI.configs import SEGMENT_ORDER, segment_groups, segment_to_block
+from configs import SEGMENT_ORDER, segment_groups, segment_to_block
 
 # ---------------------------------------------------------------------
 # SERIAL handle
