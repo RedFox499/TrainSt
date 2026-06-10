@@ -45,7 +45,7 @@ canvas = tk.Canvas(
     scheme_frame,
     width=1920,
     height=1080,
-    bg="#8ebfb9"
+    bg="#92acb0"
 )
 canvas.pack(fill="both", expand=True)
 
@@ -1219,7 +1219,11 @@ class RouteManager:
 
         "AKZHT_Turn6": 0,
         "AKZHT_Turn8": 0,
-        "AKZHT_Turn16": 0
+        "AKZHT_Turn16": 0,
+
+        "AKZHT_Turn10": 0,
+        "AKZHT_Turn12": 0,
+
     }
 
     def __init__(self):
@@ -1686,6 +1690,7 @@ class SwitchManager:
         self.set_diagonal_mode("AKZHT_Turn6-8", "left")
         self.set_diagonal_mode("AKZHT_Turn10-12", "left")
         self.set_diagonal_mode("AKZHT_Turn16", "left")
+        self.set_diagonal_mode("Перегон_03", "left")
 
     def on_switch_mode_selected(self, name, mode):
         text = canvas.itemcget(switch_text_ids[name], "text")
@@ -1958,7 +1963,6 @@ class interface_manager:
                 if nameDiag == "AKZHT_Turn13-15":
                     canvas.itemconfig(segment_ids[("beforeM7", "M7")], width=6)
                 if nameDiag == "AKZHT_Turn10-12":
-                    print("lefted")
                     canvas.itemconfig(segment_ids[("Turn8B_M8mid", "H1")], width=6)
             else:
                 self.setBranchLeft(nameDiag, left_cfg["disconnected"])
@@ -2293,8 +2297,22 @@ seg_occ_train = {
     ("M5M3mid", "M5M3third"): 1,
     ("M3", "M5M3third"): 1,
     ("M7", "pastM7"): 1,
-
     ("M3", "6"): 1,
+
+    ("H4", "Ч4"): 1,
+    ("H2", "Ч2"): 1,
+    ("H1", "Ч1"): 1,
+    ("H3", "Ч3"): 1,
+    ("H5", "Ч5"): 1,
+    ("M10", "Turn12_16mid"): 1,
+    ("Turn12_16mid", "H3"): 1,
+    ("Turn8B_M8mid", "H1"): 1,
+    ("M6", "Turn_6_A"): 1,
+    ("Turn_6_B", "Turn_6_A"): 1,
+    ("Turn_6_B", "Turn_14_J"): 1,
+    ("Turn_8_B", "1_AK"): 1,
+    ("Turn_8_B", "M8"): 1,
+    ("Turn_14_J", "H2"): 1,
 
 }
 diag_occ_train = {
@@ -2315,7 +2333,11 @@ diag_occ_train = {
 
     "AKZHT_Turn10": 1,
     "AKZHT_Turn12": 1,
-    "AKZHT_Turn16": 1
+    "AKZHT_Turn16": 1,
+
+    "AKZHT_Turn6": 1,
+    "AKZHT_Turn8": 1
+
 
 }
 
@@ -2376,16 +2398,16 @@ def create_switch_table():
 
     dy = 35
     total_height = dy * len(switch_list)
-    y_start = h - total_height - 200
+    y_start = h - total_height
 
-    x_text = w - 450
-    x_rect = w - 300
+    x_text = w - 320
+    x_rect = w - 170
 
     for i, name in enumerate(switch_list, start=1):
         y = y_start + (i - 1) * dy
-        switch = canvas.create_text(x_text, y, text=f"{i}. {name}", anchor="w", font=("Bahnschrift SemiBold", 16), tags=(f"switch_{name}", "switch"), fill="white" )
+        switch = canvas.create_text(x_text, y, text=f"{i}. {name}", anchor="w", font=("Bahnschrift regular", 16), tags=(f"switch_{name}", "switch"), fill="white" )
         switch_ids[name] = switch
-        label = canvas.create_text(x_rect+90, y, text="0", font=("Bahnschrift SemiBold", 16), fill="white",  tags=(f"switch_{name}", "switch"))
+        label = canvas.create_text(x_rect+70, y, text="0", font=("Bahnschrift light", 16), fill="white",  tags=(f"switch_{name}", "switch"))
 
         rect = canvas.create_rectangle(
             x_rect + 110, y - 9, x_rect + 140, y + 19,
@@ -2468,7 +2490,7 @@ for a, b in segments:
     x1, y1 = positions[a]
     x2, y2 = positions[b]
     a_and_b = (a,b)
-    BlockSegments = [("H2", "Ч2"),  ("H3", "Ч3"),  ("H1", "Ч1")]
+    BlockSegments = [("H2", "Ч2"),  ("H3", "Ч3"),  ("H1", "Ч1"), ]
     if a_and_b in BlockSegments:
         seg = canvas.create_line(x1, y1, x2-15, y2, width=6, fill=interface_manager.line_color_main)
     else:
@@ -2476,7 +2498,7 @@ for a, b in segments:
     segment_ids[(a, b)] = seg
     segment_ids[(b, a)] = seg
 
-
+AddDiagonal(0,0,0,0, 0,0, "Перегон_03")
 AddDiagonal(1230, 485.5, 1040, 605, -25, -140, "AKZHT_Turn19")
 
 AddDiagonal(1150, 244, 970, 125, -43, -70, "AKZHT_Turn17")
@@ -2734,11 +2756,9 @@ for seg in seg_occ_train.keys():
 
         display_items.append({"type": "segment", "id": seg})
 
-
-
-
 for diag in diag_occ_train.keys():
     display_items.append({"type": "diag", "id": diag})
+
 
 button_labels = {
 
@@ -2789,47 +2809,20 @@ for i, item in enumerate(display_items):
     button69 = tkinter.Button(
         root,
         text=display_name,
-        wraplength=130,
+        wraplength=155,
         command=lambda t=item["type"], v=item["id"]: do(t, v),
         relief="flat", font=("Bahnschrift light", 12),
     )
-    button69.place(x=20 + i * 89, y=900)
-"""
-all_keys = []
-
-def do(button_id):
-    if button_id < len(seg_occ_train):
-        seg = list(seg_occ_train.keys())[button_id]
-        block = segment_to_block.get(seg)
-        if block:
-            for s in segment_groups[block]:
-                if s['type'] == "segment":
-                    seg_occ_train[s['id']] = 1 if seg_occ_train[s['id']] == 0 else 0
-                elif s["type"] == "diag":
-                    diag_occ_train[s['name']] = 1 if diag_occ_train[s['name']] == 0 else 0
-        else:
-            seg_occ_train[seg] = 1 if seg_occ_train[seg] == 0 else 0
+    if i < 10:
+        button69.place(x=20, y=620+ i * 40)
+    elif i < 21:
+        button69.place(x=220, y=230 + (i * 39) )
+    elif i < 30:
+        button69.place(x=420, y=-150 + (i * 39))
     else:
-        seg = list(diag_occ_train.keys())[button_id - len(seg_occ_train)]
-        block = segment_to_block.get(seg)
-        if block:
-            for s in segment_groups[block]:
-                if s['type'] == "segment":
-                    seg_occ_train[s['id']] = 1 if seg_occ_train[s['id']] == 0 else 0
-                elif s["type"] == "diag":
-                    diag_occ_train[s['name']] = 1 if diag_occ_train[s['name']] == 0 else 0
-        else:
-            diag_occ_train[seg] = 1 if diag_occ_train[seg] == 0 else 0
+        button69.place(x=550, y=-400 + (i * 39))
 
-for i, key in enumerate(all_keys):
-    button69 = tkinter.Button(
-        root,
-        text=str(key),
-        command=lambda id=i: do(id),
-        relief="flat", font=("Bahnschrift light", 12),
-    )
-    button69.place(x=1700, y=120 + i * 35)
-"""
+
 
 init_arduino()
 poll_arduino()

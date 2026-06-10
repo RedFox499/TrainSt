@@ -38,10 +38,11 @@ HW_MAP_40: Dict[Tuple[str, str], Tuple[int, int]] = {
 # Карта соответствия имен в GUI и каналов сервоприводов (0-8) на плате PCA9685
 # Убедись, что индексы соответствуют твоей раскладке!
 SWITCH_HW_MAP = {
-    "ALB_Turn1": 1,  # Стрелка 1
-    "ALB_Turn2": 2,  # Стрелка 2
-    "ALB_Turn8": 8,  # Стрелка 8
-    "ALB_Turn4-6": 4,  # Стрелка 4 (совмещенная 4-6)
+    "Перегон_03": 1,
+    "AKZHT_Turn5-7": 4,
+    "AKZHT_Turn1-3": 6,
+    "AKZHT_Turn19": 7,
+    "AKZHT_Turn13-15": 8,
 }
 
 
@@ -56,10 +57,16 @@ def send_switch_command_to_hardware(switch_name: str, mode: str):
 
         try:
             # Если это спаренная стрелка, шлем команды для 4 и для 6 каналов
-            if switch_name == "ALB_Turn4-6":
-                command_str = f"W 4 {pos_val}\nW 6 {pos_val}\n"
+            if switch_name == "AKZHT_Turn1-3":
+                command_str = f"W 1 {pos_val}\nW 3 {pos_val}\n"
+            elif switch_name == "AKZHT_Turn5-7":
+                command_str = f"W 5 {pos_val}\nW 7 {pos_val}\n"
+            elif switch_name == "AKZHT_Turn13-15":
+                command_str = f"W 13 {pos_val}\nW 15 {pos_val}\n"
             else:
                 command_str = f"W {servo_id} {pos_val}\n"
+
+
 
             ser.write(command_str.encode('ascii'))
             print(f"[HW_SWITCH] Отправлено на макет для: {switch_name} -> {mode}")

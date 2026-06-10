@@ -10,7 +10,7 @@ positions = {
     "M6": (170, Y_P2),
     "H4": (500, 605),
     "H2": (460, Y_P2),
-    "M8": (350, Y_P1),
+    "M8": (340, Y_P1),
     "M10": (330, Y_P3),
     "before_M10": (240, Y_P3),
     "H5": (600, 125),
@@ -20,7 +20,7 @@ positions = {
     "Turn_14_J": (330, Y_P2),
     "Turn_6_A": (240, Y_P2),
     "Turn_6_B": (260, Y_P2),
-    "Turn_8_B": (320, Y_P1),
+    "Turn_8_B": (310, Y_P1),
     "H_fake": (1770, Y_P1),
 
     "Ч1": (1100, Y_P1),
@@ -60,44 +60,8 @@ positions = {
     "6": (1880, Y_P2),
 
     "Turn12_16mid": (465, 245),
-    "Turn8B_M8mid": (330, Y_P1)
+    "Turn8B_M8mid": (350, Y_P1)
 
-    # "Ч1": (100, Y_P1),
-    # "Ч2": (100, Y_P2),
-    # "Ч3": (100, Y_P3),
-    # "Ч4": (100, Y_P4),
-    # "Ч5": (100, Y_P5),
-    #
-    # "M1": (860, Y_P1),
-    # "M3": (890, Y_P2),
-    # "M5": (580, Y_P2),
-    # "M7": (580, Y_P3),
-    #
-    # "H": (970, Y_P1),
-    # "1": (1100, Y_P1),
-    #
-    # "Ч2M5mid": (410, Y_P2),
-    # "Ч2M5third": (460, Y_P2),
-    #
-    # "beforeM7": (500, Y_P3),
-    #
-    # "Ч1M1first": (520, Y_P1),
-    # "Ч1M1second": (570, Y_P1),
-    #
-    # "Ч1M1mid": (650, Y_P1),
-    # "Ч3M7mid": (400, Y_P3),
-    # "M5M3mid": (730, Y_P2),
-    # "M5M3third": (770, Y_P2),
-    # "beforeM5": (480, Y_P2),
-    #
-    # "beforeM1": (740, Y_P1),
-    #
-    # "Ч3beforeM7": (320, Y_P3),
-    #
-    # "pastM7": (800, Y_P3),
-    #
-    # "M3MID6": (970, Y_P2),
-    # "6": (1080, Y_P2),
 }
 segments = [
 
@@ -111,7 +75,7 @@ segments = [
     ("Turn_6_B", "Turn_6_A"),
     ("M6", "Turn_6_A"),
     ("before_M6", "M6"),
-    ("Turn_8_B", "M8"),
+    ("M8", "Turn_8_B"),
     ("Turn_8_B", "1_AK"),
     ("before_M10", "M10"),
 
@@ -210,14 +174,17 @@ segment_groups = {
         {"type": "segment", "id": ("Turn_6_B", "Turn_6_A")},
         {"type": "segment", "id":  ("M6", "Turn_6_A")},
     ],
-    "M10_до_H3": [
-        {"type": "segment", "id": ("M10", "Turn12_16mid")},
-        {"type": "segment", "id": ("Turn12_16mid", "H3")}
-    ],
     "M6_до_H2": [
-        {"type": "segment", "id": ("M6", "Turn_14_J")},
-        {"type": "segment", "id": ("Turn_14_J", "H2")},
+        {"type": "segment", "id": ("Turn_6_B", "Turn_14_J")},
+        {"type": "segment", "id":  ("Turn_6_B", "Turn_6_A")},
+        {"type": "segment", "id":   ("M6", "Turn_6_A")},
+
     ],
+    "ДоМ8": [
+        {"type": "segment", "id": ("Turn_8_B", "M8")},
+        {"type": "segment", "id": ("Turn_8_B", "1_AK")},
+    ],
+
 }
 
 split_parts_map = {
@@ -247,7 +214,7 @@ split_parts_map = {
     }
 }
 switch_list = ["AKZHT_Turn19", "AKZHT_Turn17", "AKZHT_Turn5-7", "AKZHT_Turn13-15", "AKZHT_Turn9-11", "AKZHT_Turn1-3", "AKZHT_Turn6-8", "AKZHT_Turn10-12",
-               "AKZHT_Turn16"]
+               "AKZHT_Turn16", "Перегон_03"]
 
 default_switch_mode = {
     "AKZHT_Turn19": "left",
@@ -258,7 +225,8 @@ default_switch_mode = {
     "AKZHT_Turn1-3": "left",
     "AKZHT_Turn6-8": "left",
     "AKZHT_Turn10-12": "left",
-    "AKZHT_Turn16": "left"
+    "AKZHT_Turn16": "left",
+    "Перегон_03": "left",
 }
 segment_to_signal = {
     ("Ч3beforeM7", "Ч3"): "Ч3",
@@ -349,6 +317,12 @@ diagonal_config = {
     },
 
     "AKZHT_Turn16": {
+        "left": {"exists": True, "connected": 0, "disconnected": 0},
+        "right": {"exists": True, "connected": +5, "disconnected": -5},
+        "default": "both"
+    },
+
+    "Перегон_03": {
         "left": {"exists": True, "connected": 0, "disconnected": 0},
         "right": {"exists": True, "connected": +5, "disconnected": -5},
         "default": "both"
