@@ -3,7 +3,7 @@ import serial
 import time
 
 # --- НАСТРОЙКИ ПОРТА ---
-PORT = 'COM5'
+PORT = 'COM6'
 BAUD = 9600
 
 try:

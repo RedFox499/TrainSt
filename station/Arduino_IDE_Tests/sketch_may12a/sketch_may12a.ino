@@ -1,5 +1,5 @@
 // Пины для светофоров (74HC595)
-#define DATA_PIN  2  // DS
+#define DATA_PIN  9  // DS
 #define LATCH_PIN 5  // ST_CP
 #define CLOCK_PIN 7  // SH_CP
 
