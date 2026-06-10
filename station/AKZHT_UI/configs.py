@@ -21,7 +21,7 @@ positions = {
     "Turn_6_A": (240, Y_P2),
     "Turn_6_B": (260, Y_P2),
     "Turn_8_B": (320, Y_P1),
-
+    "H_fake": (1770, Y_P1),
 
     "Ч1": (1100, Y_P1),
     "Ч2": (900, Y_P2),
@@ -57,7 +57,6 @@ positions = {
 
     "pastM7": (1600, Y_P3),
 
-    "M3MID6": (1770, Y_P2),
     "6": (1880, Y_P2),
 
     "Turn12_16mid": (465, 245),
@@ -148,8 +147,8 @@ segments = [
 
     ("M7", "pastM7"),
 
-    ("M3", "M3MID6"),
-    ("M3MID6", "6"),
+    ("M3", "6"),
+
 
     ("M10", "Turn12_16mid"),
     ("Turn12_16mid", "H3"),
@@ -271,7 +270,7 @@ segment_to_signal = {
     ("beforeM1", "Ч1M1mid"): "M1",
     ("beforeM1", "M1"): "M1",
 
-    ("M1", "H"): ["H", "Ч1", "Ч2", "Ч3", "Ч4", "Ч5"],
+    ("M1", "H"): ["H", "H_fake", "Ч1", "Ч2", "Ч3", "Ч4", "Ч5"],
 
 
     ("H", "1"): "1",
@@ -290,7 +289,7 @@ segment_to_signal = {
     ("M5M3mid", "M5M3third"): "М3",
     ("M3", "M5M3third"): "М3",
 
-    ("M3", "M3MID6"): ["Ч5", "Ч4", "Ч3", "Ч2", "Ч1"],
+    ("M3", "6"): ["Ч5", "Ч4", "Ч3", "Ч2", "Ч1"],
 
 
 
@@ -423,6 +422,19 @@ signals_config_simple = {
         }
     },
     "H": {
+        "mount": "top",
+        "pack_side": "left",
+        "count": 2,
+        "colors": ["red", "white", "yellow"],
+        "position_map": {
+            "red": [0],
+            "white": [0],
+            "green": [0],
+            "yellow1": [0, 1],
+            "yellow2": [0, 1],
+        }
+    },
+    "H_fake": {
         "mount": "top",
         "pack_side": "left",
         "count": 2,
@@ -609,6 +621,13 @@ signals_config = {
         "colors": ["yellow", "green", "red", "yellow1", "white"],
         "type": "train"
     },
+    "H_fake": {
+        "mount": "top",
+        "pack_side": "left",
+        "count": 5,
+        "colors": ["yellow", "green", "red", "yellow1", "white"],
+        "type": "train"
+    },
     "6": {
         "mount": "bottom",
         "pack_side": "right",
@@ -685,6 +704,39 @@ ROUTE_SIGNAL_MAP: dict[tuple[str, str], dict[str, dict[str, object]]] = {
         "Ч4": {"lamps": {"green": {"on": True, "blink": False}, }, },
     },
 
+    ("Ч5", "1"): {
+        "Ч5": {"lamps": {"green": {"on": True, "blink": False}, }, },
+    },
+    ("Ч4", "1"): {
+        "Ч4": {"lamps": {"green": {"on": True, "blink": False}, }, },
+    },
+    ("Ч3", "1"): {
+        "Ч3": {"lamps": {"green": {"on": True, "blink": False}, }, },
+    },
+    ("Ч2", "1"): {
+        "Ч2": {"lamps": {"green": {"on": True, "blink": False}, }, },
+    },
+    ("Ч1", "1"): {
+        "Ч1": {"lamps": {"green": {"on": True, "blink": False}, }, },
+    },
+
+    ("6", "Ч5"): {
+        "Ч5": {"lamps": { }, },
+    },
+    ("6", "Ч3"): {
+        "Ч3": {"lamps": { }, },
+    },
+    ("6", "Ч2"): {
+        "Ч2": {"lamps": {}, },
+    },
+    ("6", "Ч1"): {
+        "Ч1": {"lamps": { }, },
+    },
+    ("6", "Ч4"): {
+        "Ч4": {"lamps": {}, },
+    },
+
+
     ("1", "Ч4"): {
         "H": {"lamps": {"yellow": {"on": True, "blink": False}, }, },
     },
@@ -745,8 +797,7 @@ routes = {
         {"type": "diag", "name": "AKZHT_Turn1"},
         {"type": "diag", "name": "AKZHT_Turn3"},
         {"type": "segment", "id":("M3", "M5M3third")},
-        {"type": "segment", "id": ("M3", "M3MID6")},
-        {"type": "segment", "id": ("M3MID6", "6")},
+        {"type": "segment", "id": ("M3", "6")},
     ],
     ("Ч3", "6"): [
         {"type": "segment", "id": ("Ч3beforeM7", "Ч3")},
@@ -760,8 +811,7 @@ routes = {
         {"type": "diag", "name": "AKZHT_Turn1"},
         {"type": "diag", "name": "AKZHT_Turn3"},
         {"type": "segment", "id": ("M3", "M5M3third")},
-        {"type": "segment", "id": ("M3", "M3MID6")},
-        {"type": "segment", "id": ("M3MID6", "6")},
+        {"type": "segment", "id": ("M3", "6")},
     ],
     ("Ч1", "6"): [
         {"type": "segment", "id": ("Ч1M1first", "Ч1")},
@@ -773,8 +823,7 @@ routes = {
         {"type": "diag", "name": "AKZHT_Turn1"},
         {"type": "diag", "name": "AKZHT_Turn3"},
         {"type": "segment", "id": ("M3", "M5M3third")},
-        {"type": "segment", "id": ("M3", "M3MID6")},
-        {"type": "segment", "id": ("M3MID6", "6")},
+        {"type": "segment", "id": ("M3", "6")},
     ],
     ("Ч2", "6"): [
         {"type": "segment", "id": ("Ч2M5mid", "Ч2")},
@@ -784,8 +833,7 @@ routes = {
         {"type": "segment", "id": ("M5M3mid", "M5M3third")},
         {"type": "segment", "id": ("M5", "M5M3mid")},
         {"type": "segment", "id": ("M3", "M5M3third")},
-        {"type": "segment", "id": ("M3", "M3MID6")},
-        {"type": "segment", "id": ("M3MID6", "6")},
+        {"type": "segment", "id": ("M3", "6")},
     ],
     ("Ч4", "6"): [
         {"type": "diag", "name": "AKZHT_Turn19"},
@@ -795,8 +843,7 @@ routes = {
         {"type": "segment", "id": ("M5M3mid", "M5M3third")},
         {"type": "segment", "id": ("M5", "M5M3mid")},
         {"type": "segment", "id": ("M3", "M5M3third")},
-        {"type": "segment", "id": ("M3", "M3MID6")},
-        {"type": "segment", "id": ("M3MID6", "6")},
+        {"type": "segment", "id": ("M3", "6")},
     ],
 
     ("1", "Ч4"): [
@@ -865,24 +912,212 @@ routes = {
 
     ],
 
-    ("1", "Ч5"): [
+    ("Ч5", "1"): [
+        {"type": "diag", "name": "AKZHT_Turn17"},
+        {"type": "segment", "id": ("beforeM7", "M7")},
+        {"type": "segment", "id": ("beforeM7", "Ч3M7mid")},
+        {"type": "segment", "id": ("Ч3beforeM7", "Ч3M7mid")},
+        {"type": "segment", "id": ("Ч3beforeM7", "Ч3")},
+        {"type": "diag", "name": "AKZHT_Turn13"},
+        {"type": "diag", "name": "AKZHT_Turn15"},
+        {"type": "segment", "id": ("Ч1M1second", "Ч1M1first")},
+        {"type": "segment", "id": ("Ч1M1second", "Ч1M1mid")},
+        {"type": "segment", "id": ("beforeM1", "Ч1M1mid")},
+        {"type": "segment", "id": ("beforeM1", "M1")},
         {"type": "segment", "id": ("M1", "H")},
         {"type": "segment", "id": ("H", "1")},
+
+    ],
+
+    ("Ч4", "1"): [
+        {"type": "diag", "name": "AKZHT_Turn19"},
+        {"type": "segment", "id": ("beforeM5", "M5")},
+        {"type": "segment", "id": ("beforeM5", "Ч2M5third")},
+        {"type": "segment", "id": ("Ч2M5mid", "Ч2M5third")},
+        {"type": "diag", "name": "AKZHT_Turn7"},
+        {"type": "diag", "name": "AKZHT_Turn5"},
+        {"type": "segment", "id": ("Ч1M1second", "Ч1M1first")},
+        {"type": "segment", "id": ("Ч1M1second", "Ч1M1mid")},
+        {"type": "segment", "id": ("beforeM1", "Ч1M1mid")},
+        {"type": "segment", "id": ("beforeM1", "M1")},
+        {"type": "segment", "id": ("M1", "H")},
+        {"type": "segment", "id": ("H", "1")},
+    ],
+
+    ("Ч3", "1"): [
+        {"type": "segment", "id": ("beforeM7", "M7")},
+        {"type": "segment", "id": ("beforeM7", "Ч3M7mid")},
+        {"type": "segment", "id": ("Ч3beforeM7", "Ч3M7mid")},
+        {"type": "segment", "id": ("Ч3beforeM7", "Ч3")},
+        {"type": "diag", "name": "AKZHT_Turn13"},
+        {"type": "diag", "name": "AKZHT_Turn15"},
+        {"type": "segment", "id": ("Ч1M1second", "Ч1M1first")},
+        {"type": "segment", "id": ("Ч1M1second", "Ч1M1mid")},
+        {"type": "segment", "id": ("beforeM1", "Ч1M1mid")},
+        {"type": "segment", "id": ("beforeM1", "M1")},
+        {"type": "segment", "id": ("M1", "H")},
+        {"type": "segment", "id": ("H", "1")},
+
+    ],
+
+    ("Ч2", "1"): [
+        {"type": "segment", "id": ("Ч2M5mid", "Ч2")},
+        {"type": "segment", "id": ("beforeM5", "M5")},
+        {"type": "segment", "id": ("beforeM5", "Ч2M5third")},
+        {"type": "segment", "id": ("Ч2M5mid", "Ч2M5third")},
+        {"type": "diag", "name": "AKZHT_Turn7"},
+        {"type": "diag", "name": "AKZHT_Turn5"},
+        {"type": "segment", "id": ("Ч1M1second", "Ч1M1first")},
+        {"type": "segment", "id": ("Ч1M1second", "Ч1M1mid")},
+        {"type": "segment", "id": ("beforeM1", "Ч1M1mid")},
+        {"type": "segment", "id": ("beforeM1", "M1")},
+        {"type": "segment", "id": ("M1", "H")},
+        {"type": "segment", "id": ("H", "1")},
+
+    ],
+    ("Ч1", "1"): [
+
+        {"type": "segment", "id": ("Ч1M1first", "Ч1")},
+        {"type": "segment", "id": ("Ч1M1second", "Ч1M1first")},
+        {"type": "segment", "id": ("Ч1M1second", "Ч1M1mid")},
+        {"type": "segment", "id": ("beforeM1", "Ч1M1mid")},
+        {"type": "segment", "id": ("beforeM1", "M1")},
+        {"type": "segment", "id": ("M1", "H")},
+        {"type": "segment", "id": ("H", "1")},
+
+
+    ],
+
+
+
+    ("Ч5", "6"): [
+        {"type": "diag", "name": "AKZHT_Turn17"},
+        {"type": "segment", "id": ("Ч3beforeM7", "Ч3M7mid")},
+        {"type": "segment", "id": ("beforeM7", "Ч3M7mid")},
+        {"type": "segment", "id": ("beforeM7", "M7")},
+        {"type": "diag", "name": "AKZHT_Turn15"},
+        {"type": "diag", "name": "AKZHT_Turn13"},
+        {"type": "segment", "id": ("beforeM1", "Ч1M1mid")},
+        {"type": "segment", "id": ("beforeM1", "M1")},
+        {"type": "diag", "name": "AKZHT_Turn1"},
+        {"type": "diag", "name": "AKZHT_Turn3"},
+        {"type": "segment", "id": ("M3", "M5M3third")},
+        {"type": "segment", "id": ("M3", "6")},
+    ],
+    ("Ч3", "6"): [
+        {"type": "segment", "id": ("Ч3beforeM7", "Ч3")},
+        {"type": "segment", "id": ("Ч3beforeM7", "Ч3M7mid")},
+        {"type": "segment", "id": ("beforeM7", "Ч3M7mid")},
+        {"type": "segment", "id": ("beforeM7", "M7")},
+        {"type": "diag", "name": "AKZHT_Turn15"},
+        {"type": "diag", "name": "AKZHT_Turn13"},
+        {"type": "segment", "id": ("beforeM1", "Ч1M1mid")},
+        {"type": "segment", "id": ("beforeM1", "M1")},
+        {"type": "diag", "name": "AKZHT_Turn1"},
+        {"type": "diag", "name": "AKZHT_Turn3"},
+        {"type": "segment", "id": ("M3", "M5M3third")},
+        {"type": "segment", "id": ("M3", "6")},
+    ],
+    ("Ч1", "6"): [
+        {"type": "segment", "id": ("Ч1M1first", "Ч1")},
+        {"type": "segment", "id": ("Ч1M1second", "Ч1M1first")},
+        {"type": "segment", "id": ("Ч1M1second", "Ч1M1mid")},
+
+        {"type": "segment", "id": ("beforeM1", "Ч1M1mid")},
+        {"type": "segment", "id": ("beforeM1", "M1")},
+        {"type": "diag", "name": "AKZHT_Turn1"},
+        {"type": "diag", "name": "AKZHT_Turn3"},
+        {"type": "segment", "id": ("M3", "M5M3third")},
+        {"type": "segment", "id": ("M3", "6")},
+    ],
+    ("Ч2", "6"): [
+        {"type": "segment", "id": ("Ч2M5mid", "Ч2")},
+        {"type": "segment", "id": ("Ч2M5mid", "Ч2M5third")},
+        {"type": "segment", "id": ("beforeM5", "Ч2M5third")},
+        {"type": "segment", "id": ("beforeM5", "M5")},
+        {"type": "segment", "id": ("M5M3mid", "M5M3third")},
+        {"type": "segment", "id": ("M5", "M5M3mid")},
+        {"type": "segment", "id": ("M3", "M5M3third")},
+        {"type": "segment", "id": ("M3", "6")},
+    ],
+    ("Ч4", "6"): [
+        {"type": "diag", "name": "AKZHT_Turn19"},
+        {"type": "segment", "id": ("Ч2M5mid", "Ч2M5third")},
+        {"type": "segment", "id": ("beforeM5", "Ч2M5third")},
+        {"type": "segment", "id": ("beforeM5", "M5")},
+        {"type": "segment", "id": ("M5M3mid", "M5M3third")},
+        {"type": "segment", "id": ("M5", "M5M3mid")},
+        {"type": "segment", "id": ("M3", "M5M3third")},
+        {"type": "segment", "id": ("M3", "6")},
+    ],
+
+    ("6", "Ч1"): [
+        {"type": "segment", "id": ("M3", "6")},
+        {"type": "segment", "id": ("M3", "M5M3third")},
+        {"type": "diag", "name": "AKZHT_Turn3"},
+        {"type": "diag", "name": "AKZHT_Turn1"},
         {"type": "segment", "id": ("beforeM1", "M1")},
         {"type": "segment", "id": ("beforeM1", "Ч1M1mid")},
         {"type": "segment", "id": ("Ч1M1second", "Ч1M1mid")},
         {"type": "segment", "id": ("Ч1M1second", "Ч1M1first")},
-
-        {"type": "diag", "name": "AKZHT_Turn15"},
-        {"type": "diag", "name": "AKZHT_Turn13"},
-
-        {"type": "segment", "id":    ("Ч3beforeM7", "Ч3")},
-        {"type": "segment", "id": ("Ч3beforeM7", "Ч3M7mid")},
-        {"type": "segment", "id": ("beforeM7", "Ч3M7mid")},
-        {"type": "segment", "id":   ("beforeM7", "M7")},
-
-        {"type": "diag", "name": "AKZHT_Turn17"},
+        {"type": "segment", "id": ("Ч1M1first", "Ч1")},
     ],
+    ("6", "Ч2"): [
+        {"type": "segment", "id": ("M3", "6")},
+        {"type": "segment", "id": ("M3", "M5M3third")},
+        {"type": "segment", "id": ("M5", "M5M3mid")},
+        {"type": "segment", "id": ("M5M3mid", "M5M3third")},
+        {"type": "segment", "id": ("beforeM5", "M5")},
+        {"type": "segment", "id": ("beforeM5", "Ч2M5third")},
+        {"type": "segment", "id": ("Ч2M5mid", "Ч2M5third")},
+        {"type": "segment", "id": ("Ч2M5mid", "Ч2")},
+
+    ],
+    ("6", "Ч3"): [
+        {"type": "segment", "id": ("M3", "6")},
+        {"type": "segment", "id": ("M3", "M5M3third")},
+        {"type": "diag", "name": "AKZHT_Turn3"},
+        {"type": "diag", "name": "AKZHT_Turn1"},
+        {"type": "segment", "id": ("beforeM1", "M1")},
+        {"type": "segment", "id": ("beforeM1", "Ч1M1mid")},
+        {"type": "diag", "name": "AKZHT_Turn13"},
+        {"type": "diag", "name": "AKZHT_Turn15"},
+        {"type": "segment", "id": ("beforeM7", "M7")},
+        {"type": "segment", "id": ("beforeM7", "Ч3M7mid")},
+        {"type": "segment", "id": ("Ч3beforeM7", "Ч3M7mid")},
+        {"type": "segment", "id": ("Ч3beforeM7", "Ч3")},
+
+    ],
+    ("6", "Ч4"): [
+        {"type": "segment", "id": ("M3", "6")},
+        {"type": "segment", "id": ("M3", "M5M3third")},
+        {"type": "segment", "id": ("M5", "M5M3mid")},
+        {"type": "segment", "id": ("M5M3mid", "M5M3third")},
+        {"type": "segment", "id": ("beforeM5", "M5")},
+        {"type": "segment", "id": ("beforeM5", "Ч2M5third")},
+        {"type": "segment", "id": ("Ч2M5mid", "Ч2M5third")},
+        {"type": "diag", "name": "AKZHT_Turn19"},
+
+    ],
+
+    ("6", "Ч5"): [
+        {"type": "segment", "id": ("M3", "6")},
+        {"type": "segment", "id": ("M3", "M5M3third")},
+        {"type": "diag", "name": "AKZHT_Turn3"},
+        {"type": "diag", "name": "AKZHT_Turn1"},
+        {"type": "segment", "id": ("beforeM1", "M1")},
+        {"type": "segment", "id": ("beforeM1", "Ч1M1mid")},
+        {"type": "diag", "name": "AKZHT_Turn13"},
+        {"type": "diag", "name": "AKZHT_Turn15"},
+        {"type": "segment", "id": ("beforeM7", "M7")},
+        {"type": "segment", "id": ("beforeM7", "Ч3M7mid")},
+        {"type": "segment", "id": ("Ч3beforeM7", "Ч3M7mid")},
+        {"type": "diag", "name": "AKZHT_Turn17"},
+
+    ],
+
+
+
 }
 
 
@@ -892,6 +1127,24 @@ route_switch_modes = {
     ("Ч1", "6"): {"AKZHT_Turn13-15": "left", "AKZHT_Turn1-3": "right", "AKZHT_Turn5-7": "left"},
     ("Ч2", "6"): {"AKZHT_Turn1-3": "left", "AKZHT_Turn5-7": "left", "AKZHT_Turn19": "left"},
     ("Ч4", "6"): {"AKZHT_Turn1-3": "left", "AKZHT_Turn5-7": "left", "AKZHT_Turn19": "right"},
+
+    ("6", "Ч5"): {"AKZHT_Turn17":  "right", "AKZHT_Turn13-15": "right", "AKZHT_Turn1-3": "right"},
+    ("6", "Ч3"): {"AKZHT_Turn17":  "left", "AKZHT_Turn13-15": "right", "AKZHT_Turn1-3": "right"},
+    ("6", "Ч1"): {"AKZHT_Turn13-15": "left", "AKZHT_Turn1-3": "right", "AKZHT_Turn5-7": "left"},
+    ("6", "Ч2"): {"AKZHT_Turn1-3": "left", "AKZHT_Turn5-7": "left", "AKZHT_Turn19": "left"},
+    ("6", "Ч4"): {"AKZHT_Turn1-3": "left", "AKZHT_Turn5-7": "left", "AKZHT_Turn19": "right"},
+
+
+    ("Ч4", "1"): {"AKZHT_Turn19": "right", "AKZHT_Turn5-7": "right", "AKZHT_Turn1-3": "left", "AKZHT_Turn13-15": "left",
+                  "AKZHT_Turn9-11": "left"},
+    ("Ч2", "1"): {"AKZHT_Turn19": "left", "AKZHT_Turn5-7": "right", "AKZHT_Turn1-3": "left", "AKZHT_Turn13-15": "left",
+                  "AKZHT_Turn9-11": "left"},
+    ("Ч1", "1"): {"AKZHT_Turn5-7": "left", "AKZHT_Turn1-3": "left", "AKZHT_Turn13-15": "left",
+                  "AKZHT_Turn9-11": "left"},
+    ("Ч3", "1"): {"AKZHT_Turn1-3": "left", "AKZHT_Turn13-15": "right", "AKZHT_Turn9-11": "left",
+                  "AKZHT_Turn17": "left"},
+    ("Ч5", "1"): {"AKZHT_Turn1-3": "left", "AKZHT_Turn13-15": "right", "AKZHT_Turn9-11": "left",
+                  "AKZHT_Turn17": "right"},
 
     ("1", "Ч4"): {"AKZHT_Turn19": "right", "AKZHT_Turn5-7": "right",  "AKZHT_Turn1-3": "left", "AKZHT_Turn13-15": "left", "AKZHT_Turn9-11": "left"},
     ("1", "Ч2"): {"AKZHT_Turn19": "left", "AKZHT_Turn5-7": "right",  "AKZHT_Turn1-3": "left", "AKZHT_Turn13-15": "left", "AKZHT_Turn9-11": "left"},

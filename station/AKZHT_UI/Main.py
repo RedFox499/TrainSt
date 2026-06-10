@@ -334,31 +334,58 @@ class SignalManager():
         dy_sign = -1 if mount == "top" else 1
         sx, sy = x, y + dy_sign * stand_len
 
-        canvas.create_line(x, y, sx, sy + offsety, width=2, fill="white")
+        if name == "H_fake":
 
-        hx_sign = 1 if pack_side == "right" else -1
+            sy2 = sy + 39
+            canvas.create_line(x, y, sx, sy2 + offsety, width=2, fill="white")
+            hx_sign = 1 if pack_side == "right" else -1
 
-        hx0, hy0 = sx, sy
-        hx1, hy1 = sx + hx_sign * bar_len, sy
-        canvas.create_line(hx0, hy0 + offsety, hx1, hy1 + offsety, width=2, fill="white")
+            hx0, hy0 = sx, sy2
+            hx1, hy1 = sx + hx_sign * bar_len, sy2
+            canvas.create_line(hx0, hy0 + offsety, hx1, hy1 + offsety, width=2, fill="white")
 
-        ids = []
-        start_cx = hx1 + hx_sign * (r + 1)
+            ids = []
+            start_cx = hx1 + hx_sign * (r + 1)
 
-        for i in range(count):
-            cx = start_cx + hx_sign * i * gap
-            cy = sy
+            for i in range(count):
+                cx = start_cx + hx_sign * i * gap
+                cy = sy2
 
-            fill_color = ""
-            if colors is not None and i < len(colors):
-                fill_color = colors[i]
-            oid = canvas.create_oval(
-                cx - r, cy - r + offsety,
-                cx + r, cy + r + offsety,
-                outline="#F5F5F5", width=0.25, fill=fill_color
-            )
-            ids.append(oid)
+                fill_color = ""
+                if colors is not None and i < len(colors):
+                    fill_color = colors[i]
+                oid = canvas.create_oval(
+                    cx - r, cy - r + offsety,
+                    cx + r, cy + r + offsety,
+                    outline="#F5F5F5", width=0.25, fill=fill_color
+                )
+                ids.append(oid)
 
+        else:
+            canvas.create_line(x, y, sx, sy + offsety, width=2, fill="white")
+
+            hx_sign = 1 if pack_side == "right" else -1
+
+            hx0, hy0 = sx, sy
+            hx1, hy1 = sx + hx_sign * bar_len, sy
+            canvas.create_line(hx0, hy0 + offsety, hx1, hy1 + offsety, width=2, fill="white")
+
+            ids = []
+            start_cx = hx1 + hx_sign * (r + 1)
+
+            for i in range(count):
+                cx = start_cx + hx_sign * i * gap
+                cy = sy
+
+                fill_color = ""
+                if colors is not None and i < len(colors):
+                    fill_color = colors[i]
+                oid = canvas.create_oval(
+                    cx - r, cy - r + offsety,
+                    cx + r, cy + r + offsety,
+                    outline="#F5F5F5", width=0.25, fill=fill_color
+                )
+                ids.append(oid)
 
         self.make_signal_state(name, colors)
         self.signal_ids[name] = ids
@@ -662,6 +689,16 @@ class SignalManager():
         if signals is None:
             signals = segment_to_signal.get(rev, [])
 
+        if seg == ("M3", "6") or seg == ("M3", "6"):
+            for route_id, route_data in route_manager.get_active_routes_items():
+                if route_data["end"] == "1" or route_data["start"] == "1":
+                    signals = []
+
+        if seg == ("H", "M1") or seg == ("M1", "H"):
+            for route_id, route_data in route_manager.get_active_routes_items():
+                if route_data["end"] == "6" or route_data["start"] == "6":
+                    signals = []
+
         for signal_name in signals:
             if self.has_signal_in_states(signal_name):
                 for color in self.get_lamp_colors(signal_name):
@@ -809,7 +846,11 @@ class SignalManager():
         """
 
     def set_signal(self, name, color, onStatus):
-        self.signals_state[name]["lamps"][color]["on"] = onStatus
+        if name == "H":
+            self.signals_state[name]["lamps"][color]["on"] = onStatus
+            self.signals_state["H_fake"]["lamps"][color]["on"] = onStatus
+        else:
+            self.signals_state[name]["lamps"][color]["on"] = onStatus
 
     def set_signal_simple(self, name, color, onStatus):
         self.signals_state_simple[name]["lamps"][color]["on"] = onStatus
@@ -1014,6 +1055,7 @@ class OccupancyManager:
         self.route_manager = route_manager
         self.signal_manager = signal_manager
 
+    ### КРАСИТ СЕГМЕНТЫ В КРАСНЫЙ ПРИ ЗАНЯТОСТИ, В ЖЁЛТЫЙ РЕЗЕРВИРОВАННЫЙ МАРШРУТ, ЧЁРНЫЙ - СТАНДАРТ
     def update_paint_segments(self):
         for (a, b), seg_id in segment_ids.items():
             seg = (a,b)
@@ -1039,6 +1081,7 @@ class OccupancyManager:
                 continue
             self.interface_manager.paint_segment((a, b), interface_manager.line_color_main)
 
+    ### красит диагонали
     def update_paint_diagonals(self):
         for diag_name, lines in diag_ids.items():
             if diag_occ_train.get(diag_name, 1) == 0:
@@ -1049,6 +1092,7 @@ class OccupancyManager:
                 continue
             interface_manager.paint_diagonal(diag_name, interface_manager.line_color_main)
 
+    ### обновляет логику диагоналей после занятия её поездом
     def update_routes_diagonals(self):
         for diag in diag_occ_train:
             if diag_occ_train.get(diag, 1) == 0:
@@ -1069,6 +1113,8 @@ class OccupancyManager:
 
     prev_seg_state = {}
 
+
+
     def update_routes_segment(self):
         for seg in seg_occ_train:
             rev = (seg[1], seg[0])
@@ -1077,6 +1123,18 @@ class OccupancyManager:
 
             if prev == 1 and current == 0:
                 SignalManage.after_train_passed_seg(seg, rev)
+###             ВРЕМЕННАЯ НА ПРЕЗЕНТАЦИЮ
+                if seg == '("M1", "H")' or seg == ("H", "M1"):
+                    for route_id, route_data in route_manager.get_active_routes_items():
+                        if route_data["start"] == "1" or route_data["end"] == "1":
+                            route_manager.release_route(route_id)
+
+                if seg == '("M3", "6")' or seg == ("M3", "6"):
+                    print("1111")
+                    for route_id, route_data in route_manager.get_active_routes_items():
+                        if route_data["end"] == "6" or  route_data["start"] == "6":
+                            route_manager.release_route(route_id)
+###
                 block = segment_to_block.get(seg)
                 self.route_manager.check_if_route_finished(seg, rev, diag="")
                 if block:
@@ -1138,8 +1196,7 @@ class RouteManager:
         ("M3", "M5M3third"): 0,
         ("M7", "pastM7"): 0,
 
-        ("M3", "M3MID6"): 0,
-        ("M3MID6", "6"): 0,
+        ("M3", "6"): 0,
         ("M10", "Turn12_16mid"): 0,
         ("Turn12_16mid", "H3"): 0,
         ("Turn8B_M8mid", "H1"): 0,
@@ -1250,7 +1307,7 @@ class RouteManager:
         return self.active_routes.get(rid)
 
     def get_active_routes_items(self):
-        return self.active_routes.items()
+        return list(self.active_routes.items())
 
     def get_active_routes_other_id(self, other_rid):
         return self.active_routes[other_rid]["segments"]
@@ -1774,7 +1831,7 @@ class interface_manager:
                         "Turn8B_M8mid", "Turn_8_B", "Turn12_16mid",
                         "Turn_14_J", "Turn_6_A",
                         "Turn_6_B", "Turn_8_B",
-                        "before_M10", "1_AK", "before_M6"]
+                        "before_M10", "1_AK", "before_M6", "H_fake"]
 
         for name, (x, y) in positions.items():
             if name in bannedNames:
@@ -1993,14 +2050,8 @@ class interface_manager:
         combobox1.set('')
 
     def check(self):
-        print(diag_ids)
-       # print("Активные маршруты")
-        #print(self.route_manager.active_routes)
-        #print("="*20)
-        #print(self.signal_manager.active_signal_routes)
-        #print("------------------")
-        #print("список маршрутов с счётчиком:")
-        print(self.route_manager.segments_active_counter)
+        print(self.route_manager.active_routes)
+
 
     def visualSwitch(self, key):
         list = [("M2", "H1"), ("M2", "M8"), ("M2", "M1"), ("H1", "M2"), ("M1", "M2")]
@@ -2008,6 +2059,7 @@ class interface_manager:
         if key in list:
             canvas.itemconfig(segment_ids[needRoutes[0]], width=6)
 
+    ### две точки выбраны и выстраивается маршрут
     def on_two_nodes_selected(self, a, b):
         if self.route_manager.check_route_conflict(a, b):
             #self.showInfo("Ошибка построения", "Маршрут конфликтует с уже установленными!")
@@ -2024,6 +2076,7 @@ class interface_manager:
             print("Для этого маршрута нет настроек стрелок")
             self.reset_node_selection()
             return
+
 
         route_cfg = route_switch_modes[key]
         last_switch_check = {}
@@ -2058,6 +2111,7 @@ class interface_manager:
 
         self.reset_node_selection()
         self.visualSwitch(key)
+
 
         def finalize():
             rid = self.route_manager.register_route(a, b)
@@ -2240,8 +2294,8 @@ seg_occ_train = {
     ("M3", "M5M3third"): 1,
     ("M7", "pastM7"): 1,
 
-    ("M3", "M3MID6"): 1,
-    ("M3MID6", "6"): 1,
+    ("M3", "6"): 1,
+
 }
 diag_occ_train = {
     "AKZHT_Turn19": 1,
@@ -2423,17 +2477,17 @@ for a, b in segments:
     segment_ids[(b, a)] = seg
 
 
-AddDiagonal(1230, 483.5, 1040, 605, -25, -140, "AKZHT_Turn19")
+AddDiagonal(1230, 485.5, 1040, 605, -25, -140, "AKZHT_Turn19")
 
-AddDiagonal(1150, 247, 970, 125, -43, -70, "AKZHT_Turn17")
+AddDiagonal(1150, 244, 970, 125, -43, -70, "AKZHT_Turn17")
 
-AddSplitDiagonalDasAuto(1365, 363.5,1295, 487, -30, -30, "AKZHT_Turn5-7", "AKZHT_Turn5", "AKZHT_Turn7")
+AddSplitDiagonalDasAuto(1365, 365.5,1295, 484.5, -30, -30, "AKZHT_Turn5-7", "AKZHT_Turn5", "AKZHT_Turn7")
 
-AddSplitDiagonalDasAuto(1295, 243.5,1412, 366, 30, 30, "AKZHT_Turn13-15", "AKZHT_Turn13", "AKZHT_Turn15")
+AddSplitDiagonalDasAuto(1295, 244.5,1412, 364.5, 30, 30, "AKZHT_Turn13-15", "AKZHT_Turn13", "AKZHT_Turn15")
 
-AddSplitDiagonalDasAuto(1570, 243.5,1520, 367, -30, -30, "AKZHT_Turn9-11", "AKZHT_Turn9", "AKZHT_Turn11")
+AddSplitDiagonalDasAuto(1570, 244.5,1520, 365, -30, -30, "AKZHT_Turn9-11", "AKZHT_Turn9", "AKZHT_Turn11")
 
-AddSplitDiagonalDasAuto(1485, 363.5,1590, 487, 30, 30, "AKZHT_Turn1-3", "AKZHT_Turn1", "AKZHT_Turn3")
+AddSplitDiagonalDasAuto(1485, 365.5,1590, 484, 30, 30, "AKZHT_Turn1-3", "AKZHT_Turn1", "AKZHT_Turn3")
 
 AddDiagonal(360, 490, 440, 605, 20, 60, "AKZHT_Turn_14")
 
