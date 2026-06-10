@@ -45,7 +45,7 @@ canvas = tk.Canvas(
     scheme_frame,
     width=1920,
     height=1080,
-    bg="#92acb0"
+    bg="#8ebfb9"
 )
 canvas.pack(fill="both", expand=True)
 
@@ -593,7 +593,7 @@ class SignalManager():
 
     def sync_sinple_CH_with_debug(self, name):
         names2 = ["Ч1", "Ч2", "Ч3", "Ч4", "Ч5"]
-        names = ["H"]
+        names = ["H", "H_fake"]
         if name in names2:
             if self.get_lamp_state(name, "white"):
                 self.set_simple_signal_aspect(name, "INVITE")
@@ -695,6 +695,7 @@ class SignalManager():
                     signals = []
 
         if seg == ("H", "M1") or seg == ("M1", "H"):
+
             for route_id, route_data in route_manager.get_active_routes_items():
                 if route_data["end"] == "6" or route_data["start"] == "6":
                     signals = []
@@ -1124,13 +1125,17 @@ class OccupancyManager:
             if prev == 1 and current == 0:
                 SignalManage.after_train_passed_seg(seg, rev)
 ###             ВРЕМЕННАЯ НА ПРЕЗЕНТАЦИЮ
-                if seg == '("M1", "H")' or seg == ("H", "M1"):
+
+                if seg == ("M1", "H") or seg == ("H", "M1"):
+
                     for route_id, route_data in route_manager.get_active_routes_items():
+
                         if route_data["start"] == "1" or route_data["end"] == "1":
+
                             route_manager.release_route(route_id)
 
-                if seg == '("M3", "6")' or seg == ("M3", "6"):
-                    print("1111")
+                if seg == ("M3", "6") or seg == ("M3", "6"):
+
                     for route_id, route_data in route_manager.get_active_routes_items():
                         if route_data["end"] == "6" or  route_data["start"] == "6":
                             route_manager.release_route(route_id)
@@ -1768,8 +1773,8 @@ class SwitchManager:
         diagonal_modes[nameDiag] = mode
         update_switch_indicator(nameDiag)
         # --- СВЯЗЬ С РЕАЛЬНЫМ ЖЕЛЕЗОМ СТРЕЛОК ---
-        #import ArduinoCode
-      #  ArduinoCode.send_switch_command_to_hardware(nameDiag, mode)
+        import ArduinoCode
+        ArduinoCode.send_switch_command_to_hardware(nameDiag, mode)
 
 
     def set_dependencies(self, route_manager, interface_manager ):
@@ -2695,7 +2700,7 @@ def poll_arduino():
                     # Выводим в консоль для конА=троля (ты это уже видишь)
                     print(f"ПОЛУЧЕНО: {line}")
                     # Скармливаем строку парсеру
-                    #parse_arduino_string(line, seg_occ_train, diag_occ_train)
+                    parse_arduino_string(line, seg_occ_train, diag_occ_train)
         except Exception as e:
             print(f"Ошибка чтения порта: {e}")
 

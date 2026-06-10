@@ -121,19 +121,13 @@ segments = [
 
 SEGMENT_ORDER = [
     # Твои 6 реальных сегментов (названия строго как в ключах кортежей)
-    ("M6", "beforeM6"),
-    ("M2", "Ч"),
-    ("M10", "H3"),
-    ("M8", "H1"),
-    ("M10", "H3"),
-    ("M8mid", "M8"),
-    ("M2", "M2H1_mid"),
-    ("ALB_Sect1", "ALB_Sect1-2"),
-    ("M6H2", "M6"),
+    ("M1", "H"),
 
+    ("M3", "6"),
 
-    # И 18 пустых заглушек, чтобы цикл в Python не упал
     "EMPTY", "EMPTY", "EMPTY", "EMPTY",
+    # И 18 пустых заглушек, чтобы цикл в Python не упал
+    "EMPTY", "EMPTY", "EMPTY", "EMPTY", "EMPTY", "EMPTY",
     "EMPTY", "EMPTY", "EMPTY", "EMPTY", "EMPTY", "EMPTY",
     "EMPTY", "EMPTY", "EMPTY", "EMPTY", "EMPTY", "EMPTY"
 ]

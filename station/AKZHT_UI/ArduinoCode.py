@@ -15,20 +15,24 @@ ser = None  # Ожидается объект serial.Serial из основно�
 # ---------------------------------------------------------------------
 HW_MAP_40: Dict[Tuple[str, str], Tuple[int, int]] = {
     # Первый байт (reg5)
-    ("Ч1", "green"): (0, 0),  # Верхний
-    ("Ч2", "green"): (0, 1),
-    ("Ч3", "green"): (0, 2),
-    ("Ч4", "green"): (0, 3),  # Нижний
-    ("Ч5", "green"): (0, 4),
+    ("H", "red"): (0, 0),  # Верхний
+    ("H", "yellow"): (0, 1),
+    ("H", "yellow1"): (0, 2),
+
+    ("H_fake", "red"): (1, 5),
+
+    ("Ч1", "red"): (0, 3),  # Нижний
+    ("Ч1", "green"): (0, 4),
+    ("Ч2", "red"): (0, 5),
+    ("Ч2", "green"): (0, 6),
+    ("Ч3", "red"): (0, 7),
 
     # Второй байт (reg4)
-    ("H", "green"): (1, 0),
-    ("H", "white"): (1, 1),
-    ("H", "yellow"): (1, 2),
-    ("H", "yellow1"): (1, 3),
-
-
-
+    ("Ч3", "green"): (1, 0),
+    ("Ч4", "red"): (1, 1),
+    ("Ч4", "green"): (1, 2),
+    ("Ч5", "red"): (1, 3),
+    ("Ч5", "green"): (1, 4),
 
 }
 
@@ -58,11 +62,11 @@ def send_switch_command_to_hardware(switch_name: str, mode: str):
         try:
             # Если это спаренная стрелка, шлем команды для 4 и для 6 каналов
             if switch_name == "AKZHT_Turn1-3":
-                command_str = f"W 1 {pos_val}\nW 3 {pos_val}\n"
+                command_str = f"W 6 {pos_val}\nW 3 {pos_val}\n"
             elif switch_name == "AKZHT_Turn5-7":
-                command_str = f"W 5 {pos_val}\nW 7 {pos_val}\n"
+                command_str = f"W 4 {pos_val}\nW 5 {pos_val}\n"
             elif switch_name == "AKZHT_Turn13-15":
-                command_str = f"W 13 {pos_val}\nW 15 {pos_val}\n"
+                command_str = f"W 8 {pos_val}\nW 15 {pos_val}\n"
             else:
                 command_str = f"W {servo_id} {pos_val}\n"
 
@@ -79,34 +83,45 @@ def send_switch_command_to_hardware(switch_name: str, mode: str):
 # ПРИЕМ ДАННЫХ ОТ ARDUINO (Датчики занятости)
 # ---------------------------------------------------------------------
 def parse_arduino_string(line, seg_occ_dict, diag_occ_dict):
+    # Очищаем строку от префиксов, если они летят из Ардуино
+    bin_str = line.replace("Data: ", "").strip()
 
+    # Проверяем, что прилетел пакет именно из 3 датчиков
+    if len(bin_str) != 3:
+        return
 
-    raw_bin = line.replace("Data: ", "").strip()
-    bin_str = raw_bin.zfill(9)[::-1]
-
+    # Идем по 3 символам пакета
     for idx, char in enumerate(bin_str):
         if idx >= len(SEGMENT_ORDER):
             break
 
         seg = SEGMENT_ORDER[idx]
-        if seg == "EMPTY" or not isinstance(seg, tuple):
+        if seg == "EMPTY":
             continue
 
+        # 0 = Поезд на рельсах (Занят), 1 = Свободен
         is_occupied = (char == '0')
 
         if is_occupied:
-            print(f"[Occupancy] Сработал бит №{idx} для сегмента {seg}")
+            print(f"[Occupancy] Поезд на секции! Датчик №{idx} -> {seg}")
 
-        block = segment_to_block.get(seg)
-        if block:
-            for s in segment_groups[block]:
-                if s['type'] == "segment":
-                    seg_occ_dict[s['id']] = 0 if is_occupied else 1
-                elif s["type"] == "diag":
-                    diag_occ_dict[s['name']] = 0 if is_occupied else 1
-        else:
-            seg_occ_dict[seg] = 0 if is_occupied else 1
+        # Если это стандартный сегмент-путь (кортеж нод)
+        if isinstance(seg, tuple):
+            block = segment_to_block.get(seg)
+            # Если сегмент привязан к блоку, красим весь блок
+            if block:
+                for s in segment_groups[block]:
+                    if s['type'] == "segment":
+                        seg_occ_dict[s['id']] = 0 if is_occupied else 1
+                    elif s["type"] == "diag":
+                        diag_occ_dict[s['name']] = 0 if is_occupied else 1
+            else:
+                # Иначе красим только этот конкретный сегмент
+                seg_occ_dict[seg] = 0 if is_occupied else 1
 
+        # Если привязал к стрелке-диагонали (строка)
+        elif isinstance(seg, str):
+            diag_occ_dict[seg] = 0 if is_occupied else 1
 
 # ---------------------------------------------------------------------
 # ОТПРАВКА ДАННЫХ НА ARDUINO (Светофоры)
