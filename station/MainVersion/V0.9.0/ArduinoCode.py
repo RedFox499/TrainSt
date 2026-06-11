@@ -168,6 +168,7 @@ def send_lights_to_arduino(frame: List[int]):
     try:
         packet = bytearray([ord('L')]) + bytearray(frame)
         ser.write(packet)
+        ser.flush()
         # Отладочный вывод для контроля
         #print(f"DEBUG [{time.strftime('%H:%M:%S')}]: {' '.join(f'{b:08b}' for b in frame)}")
     except Exception as e:

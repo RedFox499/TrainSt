@@ -2503,7 +2503,7 @@ def init_arduino():
             arduino_port = "COM7"  # У тебя в терминале был COM5
 
         # 3. Открываем соединение ОДИН раз
-        arduino = serial.Serial(arduino_port, 9600, timeout=1)
+        arduino = serial.Serial(arduino_port, 9600, timeout=1, write_timeout=0.1)
         time.sleep(2)  # Ждем инициализацию
 
         # 4. ПЕРЕДАЕМ ПОРТ В МОДУЛЬ СВЕТОФОРОВ
@@ -2520,6 +2520,44 @@ def init_arduino():
         arduino = None
         if arduino_status_label is not None:
             arduino_status_label.config(text="Arduino: нет соединения", fg="red")
+
+
+def manual_reconnect():
+    global ser, arduino
+    print("[MANUAL RECONNECT]: Ручной перезапуск связи...")
+
+    # Жестко закрываем старый порт, чтобы Windows его освободила
+    if ser is not None:
+        try:
+            ser.close()
+        except:
+            pass
+    if arduino is not None:
+        try:
+            arduino.close()
+        except:
+            pass
+
+    try:
+        # Автоматический поиск порта
+        ports = list(serial.tools.list_ports.comports())
+        port_name = "COM7"  # твой дефолтный порт
+        for p in ports:
+            if "CH340" in p.description or "Arduino" in p.description:
+                port_name = p.device
+                break
+
+        # Открываем порт заново с предохранителем write_timeout
+        arduino = serial.Serial(port_name, 9600, timeout=1, write_timeout=0.1)
+        ser = arduino  # подменяем обе твои глобалки связи
+        time.sleep(2)  # ждем перезагрузку чипа CH340
+
+        print(f"[MANUAL RECONNECT]: Железо ожило на порту {port_name}!")
+        arduino_status_label.config(text=f"Arduino: {port_name}", fg="green")
+    except Exception as e:
+        print(f"[MANUAL RECONNECT]: Не удалось подключиться: {e}")
+        arduino_status_label.config(text="Arduino: Ошибка связи", fg="red")
+
 
 def set_arduino_status(connected: bool, text: str = ""):
     if connected:
@@ -2637,6 +2675,18 @@ for i, key in enumerate(all_keys):
         relief="flat", font=("Bahnschrift light", 12),
     )
     button69.place(x=1700, y=120 + i * 35)
+
+btn_reconnect = tk.Button(
+    root,
+    text="СБРОС И СВЯЗЬ",
+    font=("Bahnschrift SemiBold", 10),
+    bg="#00b5a3",
+    fg="white",
+    relief="flat",
+    command=manual_reconnect
+)
+
+btn_reconnect.place(x=300, y=50)
 
 
 init_arduino()
