@@ -566,6 +566,9 @@ class SignalManager():
            self.set_simple_signal_aspect(name, "DOUBLE_YELLOW")
         elif self.get_lamp_state(name, "green"):
             self.set_simple_signal_aspect(name, "WHITE_GREEN")
+        elif self.get_lamp_state(name, "yellow") and not self.get_lamp_state(name, 'yellow1'):
+            self.set_simple_signal_aspect(name, "WHITE_YELLOW")
+
 
 
     def get_ch_current_apect(self):
@@ -697,7 +700,7 @@ class SignalManager():
                     self.set_signal("ALB_Sect1-2_2", colors, False)
             self.set_signal("ALB_Sect1-2_2", "red", True)
 
-        elif self.get_lamp_state("Ч", "yellow1") and not self.get_lamp_state("Ч", "yellow"):
+        elif self.get_lamp_state("Ч", "yellow") and not self.get_lamp_state("Ч", "yellow1"):
             for colors in self.get_lamp_colors("ALB_Sect1-2_2"):
                 if colors != "green":
                     self.set_signal("ALB_Sect1-2_2", colors, False)
@@ -1985,9 +1988,10 @@ class interface_manager:
     def on_two_nodes_selected(self, a, b):
         if self.route_manager.check_route_conflict(a, b):
             #self.showInfo("Ошибка построения", "Маршрут конфликтует с уже установленными!")
-            print("Маршрут конфликтует с уже установленными!")
-            self.reset_node_selection()
-            return
+            #print("Маршрут конфликтует с уже установленными!")
+            #self.reset_node_selection()
+            #return
+            pass
         if switch_manager.is_settingRoute():
             self.reset_node_selection()
             return
@@ -2393,6 +2397,13 @@ for a, b in segments:
         seg = canvas.create_line(x1 - 5, y1, x2 + 5, y2, width=6, fill=interface_manager.line_color_main)
     segment_ids[(a, b)] = seg
     segment_ids[(b, a)] = seg
+
+canvas.create_text(250, 318, text="2", font=("Bahnschrift bold", 16), fill="#4a494a")
+canvas.create_text(965, 318, text="1", font=("Bahnschrift bold", 16), fill="#4a494a")
+canvas.create_text(460, 241.5, text="8", font=("Bahnschrift bold", 16), fill="#4a494a")
+canvas.create_text(340, 341.5, text="4", font=("Bahnschrift bold", 16), fill="#4a494a")
+canvas.create_text(445, 218, text="6", font=("Bahnschrift bold", 16), fill="#4a494a")
+
 
 
 AddDiagonal(260, 328, 350, 430, 20, 38, "ALB_Turn2")

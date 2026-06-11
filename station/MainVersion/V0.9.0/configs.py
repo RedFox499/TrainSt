@@ -795,7 +795,7 @@ route_switch_modes = {
     ("M6", "4"): {"ALB_Turn4-6": "left", "ALB_Turn8": "right"},
     ("H3", "Ч"): {"ALB_Turn2": "right"},
     ("H1", "Ч"): {"ALB_Turn2": "left", "ALB_Turn4-6": "left"},
-    ("H2", "Ч"): {"ALB_Turn4-6": "right", "ALB_Turn2": "left",},
+    ("H2", "Ч"): {"ALB_Turn4-6": "right", "ALB_Turn2": "left", "ALB_Turn8": "left"},
     ("H4", "Ч"): {"ALB_Turn4-6": "right", "ALB_Turn2": "left", "ALB_Turn8": "right"},
 
 }
